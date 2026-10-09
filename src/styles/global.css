@@ -26,7 +26,15 @@ h2 { font-size: 1.1rem; margin-bottom: 12px; }
 
 /* Encabezado */
 .encabezado { background: var(--primario); color: #fff; padding: 16px; }
-.encabezado h1 { font-size: 1.3rem; max-width: 1200px; margin: 0 auto 12px; }
+.encabezado h1 { font-size: 1.3rem; margin: 0; }
+.encabezado-fila { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; max-width: 1200px; margin: 0 auto 12px; }
+.sesion { display: flex; align-items: center; gap: 10px; font-size: .9rem; }
+
+/* Inicio de sesión */
+.login { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+.login .formulario { width: 100%; max-width: 380px; display: grid; gap: 12px; }
+.login h2 { margin: 0; }
+.campos.una-columna { grid-template-columns: 1fr; margin-bottom: 0; }
 .pestanas { display: flex; gap: 8px; flex-wrap: wrap; max-width: 1200px; margin: 0 auto; }
 .pestana { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.5); }
 .pestana.activa { background: #fff; color: var(--primario); }

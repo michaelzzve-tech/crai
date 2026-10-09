@@ -5,7 +5,8 @@ inventario, préstamos activos (con alerta de vencidos), devoluciones con observ
 
 ![Pantalla de préstamos](docs/captura.png)
 
-Hecha con **React + TypeScript + Vite**. Los datos se guardan en el navegador (localStorage).
+Hecha con **React + TypeScript + Vite**. Los datos se guardan en una base de datos en línea
+(**Supabase**, gratuita) o, si no se configura, en el navegador (localStorage).
 
 ## Cómo usarla
 
@@ -22,7 +23,26 @@ npm run build    # genera la versión final en dist/
 La app se publica sola en GitHub Pages cada vez que se actualiza la rama `main`:
 https://michaelzzve-tech.github.io/crai/
 
-Cada persona que la abre tiene sus propios datos, guardados en su navegador.
+Con Supabase configurado, todos los bibliotecarios ven los mismos datos después de iniciar sesión.
+Sin Supabase, cada persona que la abre tiene sus propios datos, guardados en su navegador.
+
+## Base de datos (Supabase)
+
+1. Cree una cuenta gratis en https://supabase.com y un proyecto nuevo.
+2. En el proyecto, abra **SQL Editor → New query**, pegue el contenido de
+   [`supabase/esquema.sql`](supabase/esquema.sql) y pulse **Run**. Esto crea las tablas.
+3. En **Authentication → Users → Add user → Create new user**, cree una cuenta (correo y
+   contraseña) para cada bibliotecario. Marque "Auto Confirm User".
+4. En **Authentication → Sign In / Providers**, desactive **Allow new users to sign up**
+   para que nadie más pueda crearse una cuenta.
+5. En **Project Settings → API** copie el **Project URL** y la clave **anon public**.
+6. En GitHub, en el repositorio, abra **Settings → Secrets and variables → Actions →
+   New repository secret** y cree dos secretos con esos valores:
+   `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
+7. Vuelva a publicar la web: **Actions → Publicar en GitHub Pages → Run workflow**.
+
+Para usar la base de datos en su computadora, copie `.env.example` como `.env.local`
+y pegue los mismos dos valores.
 
 ## Funciones
 
@@ -42,15 +62,18 @@ src/
 ├── types/            Tipos de datos (Laptop, Prestamo…)
 ├── data/             Acceso a datos
 │   ├── repository.ts             Interfaz `Repositorio`
+│   ├── supabaseRepository.ts     Implementación con Supabase
 │   ├── localStorageRepository.ts Implementación en el navegador
 │   └── index.ts                  Aquí se elige qué implementación usar
 ├── services/
 │   └── prestamoService.ts        Reglas del negocio (prestar, devolver, validar)
 ├── hooks/
-│   └── useBiblioteca.ts          Carga y refresca los datos
+│   ├── useBiblioteca.ts          Carga y refresca los datos
+│   └── useSesion.ts              Inicio de sesión de bibliotecarios
 ├── utils/            Fechas e IDs
 ├── components/       Una carpeta por componente
-│   ├── Encabezado/        Título y pestañas
+│   ├── Encabezado/        Título, pestañas y cerrar sesión
+│   ├── Login/             Pantalla de inicio de sesión
 │   ├── Resumen/           Tarjetas con totales
 │   ├── EstadoBadge/       Etiqueta de color para estados
 │   ├── LaptopForm/        Formulario de nueva laptop
@@ -70,7 +93,7 @@ src/
 | Cambiar o agregar reglas | `src/services/prestamoService.ts` |
 | Agregar un campo a la laptop o al préstamo | `src/types/index.ts` y el formulario correspondiente |
 | Cambiar colores | variables al inicio de `src/styles/global.css` |
-| Usar un servidor / base de datos | crear una clase que implemente `Repositorio` y usarla en `src/data/index.ts` |
+| Cambiar las tablas de la base de datos | `supabase/esquema.sql` y `src/data/supabaseRepository.ts` |
+| Usar otra base de datos | crear una clase que implemente `Repositorio` y usarla en `src/data/index.ts` |
 
-> Importante: con localStorage los datos viven solo en ese navegador y esa computadora.
-> Para que varios mostradores compartan la información hay que conectar un backend (ver la última fila).
+> Sin Supabase los datos viven solo en ese navegador y esa computadora.
