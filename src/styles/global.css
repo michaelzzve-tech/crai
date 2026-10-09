@@ -1,0 +1,80 @@
+:root {
+  --fondo: #f4f6f8;
+  --superficie: #ffffff;
+  --texto: #1f2933;
+  --texto-suave: #616e7c;
+  --borde: #d9e2ec;
+  --primario: #1d4ed8;
+  --primario-hover: #1e40af;
+  --exito: #15803d;
+  --exito-fondo: #dcfce7;
+  --alerta: #b91c1c;
+  --alerta-fondo: #fee2e2;
+  --aviso: #a16207;
+  --aviso-fondo: #fef9c3;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--texto);
+  background: var(--fondo);
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--fondo); }
+h1, h2 { margin: 0; }
+h2 { font-size: 1.1rem; margin-bottom: 12px; }
+
+.app main { max-width: 1200px; margin: 0 auto; padding: 20px 16px 48px; display: grid; gap: 20px; }
+
+/* Encabezado */
+.encabezado { background: var(--primario); color: #fff; padding: 16px; }
+.encabezado h1 { font-size: 1.3rem; max-width: 1200px; margin: 0 auto 12px; }
+.pestanas { display: flex; gap: 8px; flex-wrap: wrap; max-width: 1200px; margin: 0 auto; }
+.pestana { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.5); }
+.pestana.activa { background: #fff; color: var(--primario); }
+
+/* Resumen */
+.resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.tarjeta { background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; }
+.tarjeta-valor { font-size: 1.8rem; font-weight: 700; }
+.tarjeta-titulo { color: var(--texto-suave); font-size: .9rem; }
+.tarjeta.alerta { border-color: var(--alerta); background: var(--alerta-fondo); color: var(--alerta); }
+
+/* Paneles y formularios */
+.panel, .formulario { background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 16px; overflow-x: auto; }
+.panel-encabezado { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.panel-encabezado h2 { margin: 0; }
+.campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.campos .ancho { grid-column: 1 / -1; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--texto-suave); }
+input, select { font: inherit; padding: 8px 10px; border: 1px solid var(--borde); border-radius: 6px; color: var(--texto); background: #fff; }
+.buscador { min-width: 260px; }
+
+button { font: inherit; padding: 7px 12px; border-radius: 6px; border: 1px solid var(--borde); background: #fff; cursor: pointer; }
+button:hover { border-color: var(--primario); }
+button.primario { background: var(--primario); border-color: var(--primario); color: #fff; }
+button.primario:hover { background: var(--primario-hover); }
+button.peligro { color: var(--alerta); }
+
+/* Tablas */
+table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+th { text-align: left; color: var(--texto-suave); font-weight: 600; border-bottom: 2px solid var(--borde); padding: 8px; }
+td { border-bottom: 1px solid var(--borde); padding: 8px; vertical-align: top; }
+.acciones { white-space: nowrap; text-align: right; }
+.acciones button + button { margin-left: 6px; }
+.devolucion { display: flex; gap: 6px; }
+.secundario { color: var(--texto-suave); font-size: .82rem; }
+.texto-alerta { color: var(--alerta); }
+.fila-vencida { background: var(--alerta-fondo); }
+.vacio { color: var(--texto-suave); margin: 0; }
+
+/* Etiquetas de estado */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .78rem; font-weight: 600; }
+.badge-disponible, .badge-activo, .badge-devuelto { background: var(--exito-fondo); color: var(--exito); }
+.badge-prestada { background: #dbeafe; color: var(--primario); }
+.badge-mantenimiento { background: var(--aviso-fondo); color: var(--aviso); }
+.badge-vencido { background: var(--alerta); color: #fff; }
+
+/* Avisos */
+.aviso { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 8px; }
+.aviso button { border: none; background: transparent; font-size: 1.2rem; padding: 0 4px; }
+.aviso-exito { background: var(--exito-fondo); color: var(--exito); }
+.aviso-error { background: var(--alerta-fondo); color: var(--alerta); }
