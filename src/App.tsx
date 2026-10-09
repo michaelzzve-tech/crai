@@ -3,11 +3,13 @@ import { Encabezado, type Pestana } from './components/Encabezado';
 import { Historial } from './components/Historial';
 import { LaptopForm } from './components/LaptopForm';
 import { LaptopList } from './components/LaptopList';
+import { Login } from './components/Login';
 import { PrestamoForm } from './components/PrestamoForm';
 import { PrestamosActivos } from './components/PrestamosActivos';
 import { Resumen } from './components/Resumen';
 import type { EjecutarAccion } from './components/tipos';
 import { useBiblioteca } from './hooks/useBiblioteca';
+import { useSesion } from './hooks/useSesion';
 
 interface Aviso {
   texto: string;
@@ -15,6 +17,18 @@ interface Aviso {
 }
 
 export default function App() {
+  const { requiereLogin, cargando, correo, cerrarSesion } = useSesion();
+  if (cargando) return null;
+  if (requiereLogin) return <Login />;
+  return <Biblioteca correo={correo} onCerrarSesion={cerrarSesion} />;
+}
+
+interface PropsBiblioteca {
+  correo?: string;
+  onCerrarSesion?: () => void;
+}
+
+function Biblioteca({ correo, onCerrarSesion }: PropsBiblioteca) {
   const { laptops, prestamos, recargar } = useBiblioteca();
   const [pestana, setPestana] = useState<Pestana>('prestamos');
   const [aviso, setAviso] = useState<Aviso | null>(null);
@@ -34,7 +48,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <Encabezado activa={pestana} onCambiar={setPestana} />
+      <Encabezado activa={pestana} onCambiar={setPestana} correo={correo} onCerrarSesion={onCerrarSesion} />
       <main>
         {aviso && (
           <div className={`aviso aviso-${aviso.tipo}`} role="status">
