@@ -17,6 +17,13 @@ npm run dev      # abre http://localhost:5173
 npm run build    # genera la versión final en dist/
 ```
 
+## Verla en línea
+
+La app se publica sola en GitHub Pages cada vez que se actualiza la rama `main`:
+https://michaelzzve-tech.github.io/crai/
+
+Cada persona que la abre tiene sus propios datos, guardados en su navegador.
+
 ## Funciones
 
 - **Inventario**: registrar laptops (código, marca, modelo, serie, notas), buscar, enviar a mantenimiento, eliminar.
