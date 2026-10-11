@@ -1,16 +1,17 @@
-import type { EstadoLaptop } from '../../types';
+import type { EstadoRecurso } from '../../types';
 
-type Estado = EstadoLaptop | 'vencido' | 'activo' | 'devuelto';
+type Estado = EstadoRecurso | 'vencido' | 'activo';
 
 const TEXTOS: Record<Estado, string> = {
   disponible: 'Disponible',
-  prestada: 'Prestada',
+  ocupado: 'En uso',
   mantenimiento: 'Mantenimiento',
   vencido: 'Vencido',
   activo: 'A tiempo',
-  devuelto: 'Devuelto',
 };
 
-export function EstadoBadge({ estado }: { estado: Estado }) {
-  return <span className={`badge badge-${estado}`}>{TEXTOS[estado]}</span>;
+/** Etiqueta de color para un estado. `textoOcupado` cambia "En uso" por "Prestada", "Reservado"… */
+export function EstadoBadge({ estado, textoOcupado }: { estado: Estado; textoOcupado?: string }) {
+  const texto = estado === 'ocupado' && textoOcupado ? textoOcupado : TEXTOS[estado];
+  return <span className={`badge badge-${estado}`}>{texto}</span>;
 }

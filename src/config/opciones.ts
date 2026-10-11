@@ -23,5 +23,4 @@ export const CARRERA_POR_INSTITUTO: Record<string, CampoCarrera> = {
 
 export const MOTIVOS = ['Estudio', 'Tarea', 'Entretenimiento'];
 
-/** Cantidad de laptops de la biblioteca, numeradas del 1 a este número. */
-export const TOTAL_LAPTOPS = 25;
+// La cantidad de laptops y de cubículos está en src/config/modulos.ts.

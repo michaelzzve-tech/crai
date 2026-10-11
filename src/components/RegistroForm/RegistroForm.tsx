@@ -1,29 +1,25 @@
 import { useState, type FormEvent } from 'react';
 import { CARRERA_POR_INSTITUTO, CONDICIONES, INSTITUTOS, MOTIVOS } from '../../config/opciones';
-import { prestarLaptop } from '../../services/prestamoService';
-import type { Laptop, NuevoPrestamo } from '../../types';
+import type { Modulo } from '../../config/modulos';
+import { registrar } from '../../services/registroService';
+import type { NuevoRegistro, Recurso } from '../../types';
 import { duracionEntreHoras, horaActual } from '../../utils/fechas';
 import type { EjecutarAccion } from '../tipos';
 
-const vacio = (): NuevoPrestamo => ({
+const vacio = (): NuevoRegistro => ({
   nombre: '',
   instituto: '',
   condicion: '',
   carrera: '',
-  laptopId: '',
+  recursoId: '',
   motivo: '',
   horaInicio: horaActual(),
   horaFin: '',
 });
 
-const TEXTO_ESTADO: Record<Laptop['estado'], string> = {
-  disponible: '',
-  prestada: ' (prestada)',
-  mantenimiento: ' (en mantenimiento)',
-};
-
 interface Props {
-  laptops: Laptop[];
+  modulo: Modulo;
+  recursos: Recurso[];
   ejecutar: EjecutarAccion;
 }
 
@@ -56,13 +52,13 @@ function CampoCarreraOAnio({ instituto, valor, onCambiar }: {
 }) {
   const campo = CARRERA_POR_INSTITUTO[instituto];
   if (campo?.tipo === 'menu') {
-    return <Desplegable id="prestamo-carrera" titulo="Carrera o año" valor={valor} opciones={campo.opciones} onCambiar={onCambiar} />;
+    return <Desplegable id="registro-carrera" titulo="Carrera o año" valor={valor} opciones={campo.opciones} onCambiar={onCambiar} />;
   }
   return (
-    <label htmlFor="prestamo-carrera">
+    <label htmlFor="registro-carrera">
       Carrera o año
       <input
-        id="prestamo-carrera"
+        id="registro-carrera"
         type="number"
         min={1}
         step={1}
@@ -76,59 +72,64 @@ function CampoCarreraOAnio({ instituto, valor, onCambiar }: {
   );
 }
 
-export function PrestamoForm({ laptops, ejecutar }: Props) {
-  const [datos, setDatos] = useState<NuevoPrestamo>(vacio);
-  const cambiar = (campo: keyof NuevoPrestamo) => (valor: string) =>
+/** Formulario de préstamo o reserva; el campo del recurso cambia según el módulo. */
+export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
+  const [datos, setDatos] = useState<NuevoRegistro>(vacio);
+  const cambiar = (campo: keyof NuevoRegistro) => (valor: string) =>
     setDatos({ ...datos, [campo]: valor });
+
+  const textoEstado = (r: Recurso) =>
+    r.estado === 'ocupado' ? ` (${modulo.ocupado.toLowerCase()})`
+      : r.estado === 'mantenimiento' ? ' (en mantenimiento)' : '';
 
   async function enviar(e: FormEvent) {
     e.preventDefault();
-    const numero = laptops.find((l) => l.id === datos.laptopId)?.numero;
-    const ok = await ejecutar(() => prestarLaptop(datos), `Laptop ${numero} prestada a ${datos.nombre}.`);
+    const numero = recursos.find((r) => r.id === datos.recursoId)?.numero ?? 0;
+    const ok = await ejecutar(() => registrar(modulo, datos), modulo.mensajeRegistrado(numero, datos.nombre));
     if (ok) setDatos(vacio());
   }
 
   return (
     <form className="formulario" onSubmit={enviar}>
-      <h2>Nuevo préstamo</h2>
+      <h2>{modulo.nuevo}</h2>
       <div className="campos">
-        <label htmlFor="prestamo-nombre">
+        <label htmlFor="registro-nombre">
           Nombre
-          <input id="prestamo-nombre" required value={datos.nombre} onChange={(e) => cambiar('nombre')(e.target.value)} />
+          <input id="registro-nombre" required value={datos.nombre} onChange={(e) => cambiar('nombre')(e.target.value)} />
         </label>
         <Desplegable
-          id="prestamo-instituto"
+          id="registro-instituto"
           titulo="Instituto"
           valor={datos.instituto}
           opciones={INSTITUTOS}
           onCambiar={(instituto) => setDatos({ ...datos, instituto, carrera: '' })}
         />
-        <Desplegable id="prestamo-condicion" titulo="Condición" valor={datos.condicion} opciones={CONDICIONES} onCambiar={cambiar('condicion')} />
+        <Desplegable id="registro-condicion" titulo="Condición" valor={datos.condicion} opciones={CONDICIONES} onCambiar={cambiar('condicion')} />
         <CampoCarreraOAnio instituto={datos.instituto} valor={datos.carrera} onCambiar={cambiar('carrera')} />
-        <label htmlFor="prestamo-laptop">
-          Laptop
-          <select id="prestamo-laptop" required value={datos.laptopId} onChange={(e) => cambiar('laptopId')(e.target.value)}>
+        <label htmlFor="registro-recurso">
+          {modulo.recurso}
+          <select id="registro-recurso" required value={datos.recursoId} onChange={(e) => cambiar('recursoId')(e.target.value)}>
             <option value="">Seleccione…</option>
-            {laptops.map((l) => (
-              <option key={l.id} value={l.id} disabled={l.estado !== 'disponible'}>
-                {l.numero}{TEXTO_ESTADO[l.estado]}
+            {recursos.map((r) => (
+              <option key={r.id} value={r.id} disabled={r.estado !== 'disponible'}>
+                {r.numero}{textoEstado(r)}
               </option>
             ))}
           </select>
         </label>
-        <Desplegable id="prestamo-motivo" titulo="Motivo de uso" valor={datos.motivo} opciones={MOTIVOS} onCambiar={cambiar('motivo')} />
-        <label htmlFor="prestamo-inicio">
+        <Desplegable id="registro-motivo" titulo="Motivo de uso" valor={datos.motivo} opciones={MOTIVOS} onCambiar={cambiar('motivo')} />
+        <label htmlFor="registro-inicio">
           Hora de inicio
-          <input id="prestamo-inicio" type="time" required value={datos.horaInicio} onChange={(e) => cambiar('horaInicio')(e.target.value)} />
+          <input id="registro-inicio" type="time" required value={datos.horaInicio} onChange={(e) => cambiar('horaInicio')(e.target.value)} />
         </label>
-        <label htmlFor="prestamo-fin">
+        <label htmlFor="registro-fin">
           Hora de fin
-          <input id="prestamo-fin" type="time" required value={datos.horaFin} onChange={(e) => cambiar('horaFin')(e.target.value)} />
+          <input id="registro-fin" type="time" required value={datos.horaFin} onChange={(e) => cambiar('horaFin')(e.target.value)} />
         </label>
-        <label htmlFor="prestamo-duracion">
+        <label htmlFor="registro-duracion">
           Duración
           <input
-            id="prestamo-duracion"
+            id="registro-duracion"
             readOnly
             tabIndex={-1}
             className="calculado"
@@ -137,7 +138,7 @@ export function PrestamoForm({ laptops, ejecutar }: Props) {
           />
         </label>
       </div>
-      <button type="submit" className="primario">Registrar préstamo</button>
+      <button type="submit" className="primario">{modulo.registrar}</button>
     </form>
   );
 }

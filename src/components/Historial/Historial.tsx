@@ -1,20 +1,22 @@
 import { useState } from 'react';
-import type { Laptop, Prestamo } from '../../types';
+import type { Modulo } from '../../config/modulos';
+import type { Recurso, Registro } from '../../types';
 import { duracionEntreFechas, formatearFecha, formatearHora } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 
 interface Props {
-  prestamos: Prestamo[];
-  laptops: Laptop[];
+  modulo: Modulo;
+  registros: Registro[];
+  recursos: Recurso[];
 }
 
-export function Historial({ prestamos, laptops }: Props) {
+export function Historial({ modulo, registros, recursos }: Props) {
   const [filtro, setFiltro] = useState('');
-  const numeroDe = (id: string) => String(laptops.find((l) => l.id === id)?.numero ?? id);
+  const numeroDe = (id: string) => String(recursos.find((r) => r.id === id)?.numero ?? id);
 
   const texto = filtro.toLowerCase();
-  const visibles = prestamos.filter((p) =>
-    [numeroDe(p.laptopId), p.nombre, p.instituto, p.condicion, p.carrera, p.motivo].some((v) =>
+  const visibles = registros.filter((r) =>
+    [numeroDe(r.recursoId), r.nombre, r.instituto, r.condicion, r.carrera, r.motivo].some((v) =>
       v.toLowerCase().includes(texto),
     ),
   );
@@ -22,21 +24,21 @@ export function Historial({ prestamos, laptops }: Props) {
   return (
     <section className="panel">
       <div className="panel-encabezado">
-        <h2>Historial de préstamos ({prestamos.length})</h2>
+        <h2>Historial de {modulo.registros.toLowerCase()} ({registros.length})</h2>
         <input
           className="buscador"
-          placeholder="Buscar por nombre, laptop, instituto, carrera…"
+          placeholder={`Buscar por nombre, ${modulo.recurso.toLowerCase()}, instituto, carrera…`}
           value={filtro}
           onChange={(e) => setFiltro(e.target.value)}
         />
       </div>
       {visibles.length === 0 ? (
-        <p className="vacio">No hay préstamos que mostrar.</p>
+        <p className="vacio">No hay {modulo.registros.toLowerCase()} que mostrar.</p>
       ) : (
         <table>
           <thead>
             <tr>
-              <th>Laptop</th>
+              <th>{modulo.recurso}</th>
               <th>Nombre</th>
               <th>Instituto</th>
               <th>Condición</th>
@@ -45,35 +47,35 @@ export function Historial({ prestamos, laptops }: Props) {
               <th>Inicio</th>
               <th>Fin</th>
               <th>Duración</th>
-              <th>Devuelta</th>
+              <th>{modulo.finalizado}</th>
               <th>Observaciones</th>
             </tr>
           </thead>
           <tbody>
-            {visibles.map((p) => {
-              const tarde = p.fechaDevolucion && p.fechaDevolucion > p.fechaLimite;
+            {visibles.map((r) => {
+              const tarde = r.finReal && r.finReal > r.fin;
               return (
-                <tr key={p.id}>
-                  <td><strong>{numeroDe(p.laptopId)}</strong></td>
-                  <td>{p.nombre}</td>
-                  <td>{p.instituto}</td>
-                  <td>{p.condicion}</td>
-                  <td>{p.carrera}</td>
-                  <td>{p.motivo}</td>
-                  <td>{formatearFecha(p.fechaPrestamo)}</td>
-                  <td>{formatearHora(p.fechaLimite)}</td>
-                  <td>{duracionEntreFechas(p.fechaPrestamo, p.fechaLimite)}</td>
+                <tr key={r.id}>
+                  <td><strong>{numeroDe(r.recursoId)}</strong></td>
+                  <td>{r.nombre}</td>
+                  <td>{r.instituto}</td>
+                  <td>{r.condicion}</td>
+                  <td>{r.carrera}</td>
+                  <td>{r.motivo}</td>
+                  <td>{formatearFecha(r.inicio)}</td>
+                  <td>{formatearHora(r.fin)}</td>
+                  <td>{duracionEntreFechas(r.inicio, r.fin)}</td>
                   <td>
-                    {p.fechaDevolucion ? (
+                    {r.finReal ? (
                       <>
-                        {formatearHora(p.fechaDevolucion)}
+                        {formatearHora(r.finReal)}
                         {tarde && <div className="secundario texto-alerta">Con retraso</div>}
                       </>
                     ) : (
-                      <EstadoBadge estado="prestada" />
+                      <EstadoBadge estado="ocupado" textoOcupado={modulo.ocupado} />
                     )}
                   </td>
-                  <td>{p.observacionesDevolucion}</td>
+                  <td>{r.observaciones}</td>
                 </tr>
               );
             })}

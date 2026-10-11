@@ -1,35 +1,37 @@
-// Tipos compartidos por toda la aplicación.
+// Tipos compartidos por toda la aplicación. Sirven para todos los módulos
+// (laptops, cubículos…): un recurso numerado y sus préstamos o reservas.
 
-export type EstadoLaptop = 'disponible' | 'prestada' | 'mantenimiento';
+export type EstadoRecurso = 'disponible' | 'ocupado' | 'mantenimiento';
 
-export interface Laptop {
+export interface Recurso {
   id: string; // Igual al número como texto: "1", "2"…
   numero: number;
-  estado: EstadoLaptop;
+  estado: EstadoRecurso;
   notas?: string;
 }
 
-export interface Prestamo {
+/** Un préstamo de laptop o una reserva de cubículo. */
+export interface Registro {
   id: string;
-  laptopId: string;
+  recursoId: string;
   nombre: string;
   instituto: string;
   condicion: string;
   carrera: string;
   motivo: string;
-  fechaPrestamo: string; // Hora de inicio, ISO 8601
-  fechaLimite: string; // Hora de fin, ISO 8601
-  fechaDevolucion?: string; // ISO 8601, vacío mientras está activo
-  observacionesDevolucion?: string;
+  inicio: string; // Hora de inicio, ISO 8601
+  fin: string; // Hora de fin, ISO 8601
+  finReal?: string; // Cuándo se devolvió o liberó; vacío mientras está activo
+  observaciones?: string;
 }
 
-/** Datos del formulario de préstamo, en el mismo orden en que se muestran. */
-export interface NuevoPrestamo {
+/** Datos del formulario, en el mismo orden en que se muestran. */
+export interface NuevoRegistro {
   nombre: string;
   instituto: string;
   condicion: string;
   carrera: string;
-  laptopId: string;
+  recursoId: string;
   motivo: string;
   horaInicio: string; // "HH:MM"
   horaFin: string; // "HH:MM"

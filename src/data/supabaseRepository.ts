@@ -1,20 +1,22 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Laptop, Prestamo } from '../types';
+import type { Recurso, Registro } from '../types';
 import type { Repositorio } from './repository';
 
 // La base de datos usa nombres en snake_case (ver supabase/esquema.sql);
 // estas funciones traducen entre esas columnas y los tipos de la app.
+// Todas las tablas de recursos tienen las mismas columnas, y también
+// todas las de registros.
 
-interface FilaLaptop {
+interface FilaRecurso {
   id: string;
   numero: number;
-  estado: Laptop['estado'];
+  estado: Recurso['estado'];
   notas: string | null;
 }
 
-interface FilaPrestamo {
+interface FilaRegistro {
   id: string;
-  laptop_id: string;
+  recurso_id: string;
   nombre: string;
   instituto: string;
   condicion: string;
@@ -22,52 +24,52 @@ interface FilaPrestamo {
   motivo: string;
   hora_inicio: string;
   hora_fin: string;
-  fecha_devolucion: string | null;
-  observaciones_devolucion: string | null;
+  fin_real: string | null;
+  observaciones: string | null;
 }
 
 const iso = (fecha: string) => new Date(fecha).toISOString();
 
-const aLaptop = (f: FilaLaptop): Laptop => ({
+const aRecurso = (f: FilaRecurso): Recurso => ({
   id: f.id,
   numero: f.numero,
   estado: f.estado,
   notas: f.notas ?? undefined,
 });
 
-const aFilaLaptop = (l: Laptop): FilaLaptop => ({
-  id: l.id,
-  numero: l.numero,
-  estado: l.estado,
-  notas: l.notas ?? null,
+const aFilaRecurso = (r: Recurso): FilaRecurso => ({
+  id: r.id,
+  numero: r.numero,
+  estado: r.estado,
+  notas: r.notas ?? null,
 });
 
-const aPrestamo = (f: FilaPrestamo): Prestamo => ({
+const aRegistro = (f: FilaRegistro): Registro => ({
   id: f.id,
-  laptopId: f.laptop_id,
+  recursoId: f.recurso_id,
   nombre: f.nombre,
   instituto: f.instituto,
   condicion: f.condicion,
   carrera: f.carrera,
   motivo: f.motivo,
-  fechaPrestamo: iso(f.hora_inicio),
-  fechaLimite: iso(f.hora_fin),
-  fechaDevolucion: f.fecha_devolucion ? iso(f.fecha_devolucion) : undefined,
-  observacionesDevolucion: f.observaciones_devolucion ?? undefined,
+  inicio: iso(f.hora_inicio),
+  fin: iso(f.hora_fin),
+  finReal: f.fin_real ? iso(f.fin_real) : undefined,
+  observaciones: f.observaciones ?? undefined,
 });
 
-const aFilaPrestamo = (p: Prestamo): FilaPrestamo => ({
-  id: p.id,
-  laptop_id: p.laptopId,
-  nombre: p.nombre,
-  instituto: p.instituto,
-  condicion: p.condicion,
-  carrera: p.carrera,
-  motivo: p.motivo,
-  hora_inicio: p.fechaPrestamo,
-  hora_fin: p.fechaLimite,
-  fecha_devolucion: p.fechaDevolucion ?? null,
-  observaciones_devolucion: p.observacionesDevolucion ?? null,
+const aFilaRegistro = (r: Registro): FilaRegistro => ({
+  id: r.id,
+  recurso_id: r.recursoId,
+  nombre: r.nombre,
+  instituto: r.instituto,
+  condicion: r.condicion,
+  carrera: r.carrera,
+  motivo: r.motivo,
+  hora_inicio: r.inicio,
+  hora_fin: r.fin,
+  fin_real: r.finReal ?? null,
+  observaciones: r.observaciones ?? null,
 });
 
 function revisar(error: { message: string } | null): void {
@@ -82,25 +84,25 @@ export class SupabaseRepositorio implements Repositorio {
     this.db = db;
   }
 
-  async listarLaptops() {
-    const { data, error } = await this.db.from('laptops').select('*');
+  async listarRecursos(tabla: string) {
+    const { data, error } = await this.db.from(tabla).select('*');
     revisar(error);
-    return (data as FilaLaptop[]).map(aLaptop);
+    return (data as FilaRecurso[]).map(aRecurso);
   }
 
-  async guardarLaptop(laptop: Laptop) {
-    const { error } = await this.db.from('laptops').upsert(aFilaLaptop(laptop));
+  async guardarRecurso(tabla: string, recurso: Recurso) {
+    const { error } = await this.db.from(tabla).upsert(aFilaRecurso(recurso));
     revisar(error);
   }
 
-  async listarPrestamos() {
-    const { data, error } = await this.db.from('prestamos').select('*');
+  async listarRegistros(tabla: string) {
+    const { data, error } = await this.db.from(tabla).select('*');
     revisar(error);
-    return (data as FilaPrestamo[]).map(aPrestamo);
+    return (data as FilaRegistro[]).map(aRegistro);
   }
 
-  async guardarPrestamo(prestamo: Prestamo) {
-    const { error } = await this.db.from('prestamos').upsert(aFilaPrestamo(prestamo));
+  async guardarRegistro(tabla: string, registro: Registro) {
+    const { error } = await this.db.from(tabla).upsert(aFilaRegistro(registro));
     revisar(error);
   }
 }

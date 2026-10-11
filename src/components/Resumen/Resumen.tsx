@@ -1,22 +1,23 @@
-import { estaVencido } from '../../services/prestamoService';
-import type { Laptop, Prestamo } from '../../types';
+import type { Modulo } from '../../config/modulos';
+import { estaVencido } from '../../services/registroService';
+import type { Recurso, Registro } from '../../types';
 
 interface Props {
-  laptops: Laptop[];
-  prestamos: Prestamo[];
+  modulo: Modulo;
+  recursos: Recurso[];
+  registros: Registro[];
 }
 
-export function Resumen({ laptops, prestamos }: Props) {
-  const contar = (estado: Laptop['estado']) =>
-    laptops.filter((l) => l.estado === estado).length;
-  const vencidos = prestamos.filter((p) => estaVencido(p)).length;
+export function Resumen({ modulo, recursos, registros }: Props) {
+  const contar = (estado: Recurso['estado']) => recursos.filter((r) => r.estado === estado).length;
+  const vencidos = registros.filter((r) => estaVencido(r)).length;
 
   const tarjetas = [
-    { titulo: 'Total de laptops', valor: laptops.length },
+    { titulo: `Total de ${modulo.recursos.toLowerCase()}`, valor: recursos.length },
     { titulo: 'Disponibles', valor: contar('disponible') },
-    { titulo: 'Prestadas', valor: contar('prestada') },
+    { titulo: `${modulo.ocupado}s`, valor: contar('ocupado') },
     { titulo: 'En mantenimiento', valor: contar('mantenimiento') },
-    { titulo: 'Préstamos vencidos', valor: vencidos, alerta: vencidos > 0 },
+    { titulo: modulo.vencidos, valor: vencidos, alerta: vencidos > 0 },
   ];
 
   return (

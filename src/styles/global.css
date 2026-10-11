@@ -37,6 +37,9 @@ h2 { font-size: 1.1rem; margin-bottom: 12px; }
 .campos.una-columna { grid-template-columns: 1fr; margin-bottom: 0; }
 .pestanas { display: flex; gap: 8px; flex-wrap: wrap; max-width: 1200px; margin: 0 auto; }
 .pestana { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.5); }
+.modulos { display: flex; gap: 8px; flex-wrap: wrap; max-width: 1200px; margin: 0 auto 12px; }
+.modulo { background: transparent; color: var(--sobre-primario); border: none; border-bottom: 3px solid transparent; border-radius: 0; padding: 4px 2px; font-weight: 600; font-size: 1rem; }
+.modulo.activo { border-bottom-color: var(--sobre-primario); }
 .pestana.activa { background: #fff; color: var(--primario); }
 
 /* Resumen */
@@ -78,7 +81,7 @@ td { border-bottom: 1px solid var(--borde); padding: 8px; vertical-align: top; }
 /* Etiquetas de estado */
 .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .78rem; font-weight: 600; }
 .badge-disponible, .badge-activo, .badge-devuelto { background: var(--exito-fondo); color: var(--exito); }
-.badge-prestada { background: #dbeafe; color: var(--primario); }
+.badge-ocupado { background: #dbeafe; color: var(--primario); }
 .badge-mantenimiento { background: var(--aviso-fondo); color: var(--aviso); }
 .badge-vencido { background: var(--alerta); color: #fff; }
 

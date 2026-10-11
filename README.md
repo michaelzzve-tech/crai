@@ -1,7 +1,12 @@
-# Préstamo de laptops · Biblioteca universitaria
+# Préstamos y reservas · Biblioteca universitaria
 
-Aplicación web para llevar el registro de las laptops que la biblioteca presta a los estudiantes:
-préstamos activos (con alerta de vencidos), devoluciones con observaciones, estado de las laptops e historial.
+Aplicación web con dos módulos que funcionan igual:
+
+- **Laptops**: préstamo de las laptops 1 a 25.
+- **Cubículos**: reserva de los cubículos 1 a 6.
+
+Cada módulo tiene su formulario, la lista de préstamos o reservas en curso (con alerta de
+vencidos), el estado de cada laptop o cubículo y el historial.
 
 ![Pantalla de préstamos](docs/captura.png)
 
@@ -46,45 +51,47 @@ y pegue los mismos dos valores.
 
 ## Funciones
 
-- **Préstamos**: registrar un préstamo con estos campos, en este orden: nombre, instituto
-  (ITJO, IUJO, CFJO), condición (estudiante, docente, otro), carrera o año (ITJO: año del 1 al 6;
-  IUJO: carrera; CFJO: un número escrito a mano), laptop (1 a 25),
-  motivo de uso (estudio, tarea, entretenimiento), hora de inicio, hora de fin y duración
-  (se calcula sola).
-- **Devoluciones**: registrar la devolución con observaciones (daños, faltantes).
-- **Laptops**: ver el estado de las 25 laptops y enviar alguna a mantenimiento.
-- **Historial**: todos los préstamos, con búsqueda y marca de devoluciones con retraso.
-- **Resumen**: totales de disponibles, prestadas, en mantenimiento y préstamos vencidos.
+- **Formulario** (igual en los dos módulos), en este orden: nombre, instituto (ITJO, IUJO, CFJO),
+  condición (estudiante, docente, otro), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
+  CFJO: un número escrito a mano), laptop (1 a 25) o cubículo (1 a 6), motivo de uso
+  (estudio, tarea, entretenimiento), hora de inicio, hora de fin y duración (se calcula sola).
+- **En curso**: préstamos o reservas activos; desde ahí se registra la devolución de la
+  laptop o la salida del cubículo, con observaciones.
+- **Laptops / Cubículos**: estado de cada uno y opción de enviarlo a mantenimiento.
+- **Historial**: todos los registros, con búsqueda y marca de los que terminaron con retraso.
+- **Resumen**: disponibles, en uso, en mantenimiento y vencidos.
 
-Reglas incluidas: solo se prestan laptops disponibles (las prestadas o en mantenimiento
-aparecen desactivadas en el menú) y la hora de fin debe ser posterior a la de inicio.
+Reglas incluidas: solo se usan laptops o cubículos disponibles (los ocupados o en
+mantenimiento aparecen desactivados en el menú) y la hora de fin debe ser posterior a la de inicio.
 
 ## Estructura (por componentes)
 
 ```
 src/
-├── config/opciones.ts Opciones de los menús desplegables y número de laptops
-├── types/            Tipos de datos (Laptop, Prestamo…)
+├── config/
+│   ├── modulos.ts        Módulos (laptops, cubículos): cantidad, tablas y textos
+│   └── opciones.ts       Opciones de los menús desplegables
+├── types/            Tipos de datos (Recurso, Registro…)
 ├── data/             Acceso a datos
 │   ├── repository.ts             Interfaz `Repositorio`
 │   ├── supabaseRepository.ts     Implementación con Supabase
 │   ├── localStorageRepository.ts Implementación en el navegador
 │   └── index.ts                  Aquí se elige qué implementación usar
 ├── services/
-│   └── prestamoService.ts        Reglas del negocio (prestar, devolver, validar)
+│   └── registroService.ts        Reglas del negocio (registrar, finalizar, validar)
 ├── hooks/
 │   ├── useBiblioteca.ts          Carga y refresca los datos
 │   └── useSesion.ts              Inicio de sesión de bibliotecarios
 ├── utils/            Fechas e IDs
 ├── components/       Una carpeta por componente
-│   ├── Encabezado/        Título, pestañas y cerrar sesión
+│   ├── Encabezado/        Título, módulos, pestañas y cerrar sesión
 │   ├── Login/             Pantalla de inicio de sesión
 │   ├── Resumen/           Tarjetas con totales
 │   ├── EstadoBadge/       Etiqueta de color para estados
-│   ├── LaptopList/        Estado de las laptops
-│   ├── PrestamoForm/      Formulario de nuevo préstamo
-│   ├── PrestamosActivos/  Préstamos en curso y devolución
-│   └── Historial/         Historial de préstamos
+│   ├── RecursoList/       Estado de las laptops o cubículos
+│   ├── RegistroForm/      Formulario de préstamo o reserva
+│   ├── RegistrosActivos/  Registros en curso y devolución o salida
+│   └── Historial/         Historial de préstamos o reservas
 ├── styles/global.css  Estilos y colores (variables al inicio)
 └── App.tsx            Une los componentes
 ```
@@ -94,9 +101,10 @@ src/
 | Quiero… | Archivo |
 |---|---|
 | Cambiar las opciones de un menú (institutos, carreras, años, motivos…) | `src/config/opciones.ts` |
-| Cambiar la cantidad de laptops | `TOTAL_LAPTOPS` en `src/config/opciones.ts` |
-| Cambiar o agregar reglas | `src/services/prestamoService.ts` |
-| Agregar un campo al préstamo | `src/types/index.ts`, `src/components/PrestamoForm/PrestamoForm.tsx` y la base de datos |
+| Cambiar la cantidad de laptops o cubículos | `total` en `src/config/modulos.ts` |
+| Agregar otro módulo (por ejemplo, salas) | una entrada en `src/config/modulos.ts` y sus tablas en `supabase/esquema.sql` |
+| Cambiar o agregar reglas | `src/services/registroService.ts` |
+| Agregar un campo al formulario | `src/types/index.ts`, `src/components/RegistroForm/RegistroForm.tsx` y la base de datos |
 | Cambiar colores | variables al inicio de `src/styles/global.css` |
 | Cambiar las tablas de la base de datos | `supabase/esquema.sql` y `src/data/supabaseRepository.ts` |
 | Usar otra base de datos | crear una clase que implemente `Repositorio` y usarla en `src/data/index.ts` |

@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Encabezado, type Pestana } from './components/Encabezado';
 import { Historial } from './components/Historial';
-import { LaptopList } from './components/LaptopList';
 import { Login } from './components/Login';
-import { PrestamoForm } from './components/PrestamoForm';
-import { PrestamosActivos } from './components/PrestamosActivos';
+import { RecursoList } from './components/RecursoList';
+import { RegistroForm } from './components/RegistroForm';
+import { RegistrosActivos } from './components/RegistrosActivos';
 import { Resumen } from './components/Resumen';
 import type { EjecutarAccion } from './components/tipos';
+import { MODULOS, type Modulo } from './config/modulos';
 import { useBiblioteca } from './hooks/useBiblioteca';
 import { useSesion } from './hooks/useSesion';
 
@@ -17,19 +18,32 @@ interface Aviso {
 
 export default function App() {
   const { requiereLogin, cargando, correo, cerrarSesion } = useSesion();
+  const [modulo, setModulo] = useState<Modulo>(MODULOS[0]);
+  const [pestana, setPestana] = useState<Pestana>('registro');
+
   if (cargando) return null;
   if (requiereLogin) return <Login />;
-  return <Biblioteca correo={correo} onCerrarSesion={cerrarSesion} />;
+
+  return (
+    <div className="app">
+      <Encabezado
+        modulos={MODULOS}
+        modulo={modulo}
+        onCambiarModulo={setModulo}
+        activa={pestana}
+        onCambiar={setPestana}
+        correo={correo}
+        onCerrarSesion={cerrarSesion}
+      />
+      {/* `key` hace que cada módulo empiece con su propio estado. */}
+      <VistaModulo key={modulo.id} modulo={modulo} pestana={pestana} />
+    </div>
+  );
 }
 
-interface PropsBiblioteca {
-  correo?: string;
-  onCerrarSesion?: () => void;
-}
-
-function Biblioteca({ correo, onCerrarSesion }: PropsBiblioteca) {
-  const { laptops, prestamos, recargar, error } = useBiblioteca();
-  const [pestana, setPestana] = useState<Pestana>('prestamos');
+/** Contenido de un módulo: resumen y la pestaña elegida. */
+function VistaModulo({ modulo, pestana }: { modulo: Modulo; pestana: Pestana }) {
+  const { recursos, registros, recargar, error } = useBiblioteca(modulo);
   const [aviso, setAviso] = useState<Aviso | null>(null);
 
   const ejecutar: EjecutarAccion = async (accion, mensajeExito) => {
@@ -46,29 +60,24 @@ function Biblioteca({ correo, onCerrarSesion }: PropsBiblioteca) {
   };
 
   return (
-    <div className="app">
-      <Encabezado activa={pestana} onCambiar={setPestana} correo={correo} onCerrarSesion={onCerrarSesion} />
-      <main>
-        {error && <div className="aviso aviso-error" role="alert">No se pudieron cargar los datos. {error}</div>}
-        {aviso && (
-          <div className={`aviso aviso-${aviso.tipo}`} role="status">
-            {aviso.texto}
-            <button onClick={() => setAviso(null)} aria-label="Cerrar">×</button>
-          </div>
-        )}
-        <Resumen laptops={laptops} prestamos={prestamos} />
+    <main>
+      {error && <div className="aviso aviso-error" role="alert">No se pudieron cargar los datos. {error}</div>}
+      {aviso && (
+        <div className={`aviso aviso-${aviso.tipo}`} role="status">
+          {aviso.texto}
+          <button onClick={() => setAviso(null)} aria-label="Cerrar">×</button>
+        </div>
+      )}
+      <Resumen modulo={modulo} recursos={recursos} registros={registros} />
 
-        {pestana === 'prestamos' && (
-          <>
-            <PrestamoForm laptops={laptops} ejecutar={ejecutar} />
-            <PrestamosActivos prestamos={prestamos} laptops={laptops} ejecutar={ejecutar} />
-          </>
-        )}
-        {pestana === 'laptops' && (
-<LaptopList laptops={laptops} ejecutar={ejecutar} />
-        )}
-        {pestana === 'historial' && <Historial prestamos={prestamos} laptops={laptops} />}
-      </main>
-    </div>
+      {pestana === 'registro' && (
+        <>
+          <RegistroForm modulo={modulo} recursos={recursos} ejecutar={ejecutar} />
+          <RegistrosActivos modulo={modulo} registros={registros} recursos={recursos} ejecutar={ejecutar} />
+        </>
+      )}
+      {pestana === 'recursos' && <RecursoList modulo={modulo} recursos={recursos} ejecutar={ejecutar} />}
+      {pestana === 'historial' && <Historial modulo={modulo} registros={registros} recursos={recursos} />}
+    </main>
   );
 }
