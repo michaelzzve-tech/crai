@@ -66,6 +66,7 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
     id: generarId(),
     recursoId: recurso.id,
     nombre: datos.nombre.trim(),
+    genero: datos.genero,
     instituto: datos.instituto,
     condicion: datos.condicion,
     carrera: datos.carrera,

@@ -15,7 +15,7 @@ export function Historial({ modulo, registros }: Props) {
 
   const texto = filtro.toLowerCase();
   const visibles = registros.filter((r) =>
-    [r.recursoId, r.nombre, r.instituto, r.condicion, r.carrera, r.motivo].some((v) =>
+    [r.recursoId, r.nombre, r.genero ?? '', r.instituto, r.condicion, r.carrera, r.motivo].some((v) =>
       v.toLowerCase().includes(texto),
     ),
   );
@@ -39,6 +39,7 @@ export function Historial({ modulo, registros }: Props) {
             <tr>
               <th>{modulo.recurso}</th>
               <th>Nombre</th>
+              <th>Género</th>
               <th>Instituto</th>
               <th>Condición</th>
               <th>Carrera o año</th>
@@ -61,6 +62,7 @@ export function Historial({ modulo, registros }: Props) {
                 <tr key={r.id}>
                   <td><strong>{r.recursoId}</strong></td>
                   <td>{r.nombre}</td>
+                  <td>{r.genero ?? '—'}</td>
                   <td>{r.instituto}</td>
                   <td>{r.condicion}</td>
                   <td>{r.carrera}</td>

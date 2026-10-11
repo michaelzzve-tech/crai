@@ -123,3 +123,10 @@ td { border-bottom: 1px solid var(--borde); padding: 8px; vertical-align: top; }
 .destacado-texto { flex: 1; text-align: left; display: grid; gap: 2px; padding: 12px 14px; }
 .destacado-texto strong { font-size: 1rem; }
 .destacado-cerrar { font-size: 1.3rem; padding: 8px 12px; }
+
+/* Informes */
+.informe .tarjeta { gap: 4px; }
+button:disabled { opacity: .6; cursor: default; }
+.desgloses { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px 24px; }
+.desglose h3 { font-size: .95rem; margin: 0 0 6px; }
+.numero { text-align: right; }

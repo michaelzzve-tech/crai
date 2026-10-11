@@ -39,6 +39,8 @@ Sin Supabase, cada persona que la abre tiene sus propios datos, guardados en su 
    Si ya había creado las tablas antes del cambio de devolución automática, en vez de
    eso basta con ejecutar esta línea (no borra datos):
    `alter table prestamos alter column hora_fin drop not null;`
+   Y para el campo Género (tampoco borra datos):
+   `alter table prestamos add column if not exists genero text; alter table reservas add column if not exists genero text;`
 3. En **Authentication → Users → Add user → Create new user**, cree una cuenta (correo y
    contraseña) para cada bibliotecario. Marque "Auto Confirm User".
 4. En **Authentication → Sign In / Providers**, desactive **Allow new users to sign up**
@@ -54,7 +56,7 @@ y pegue los mismos dos valores.
 
 ## Funciones
 
-- **Formulario**, en este orden: nombre, instituto (ITJO, IUJO, CFJO),
+- **Formulario**, en este orden: nombre, género (masculino, femenino), instituto (ITJO, IUJO, CFJO),
   condición (estudiante, docente, otro), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
   CFJO: un número escrito a mano), laptop (1 a 25) o cubículo (1 a 6 o POD), motivo de uso
   (estudio, tarea, entretenimiento) y hora de inicio. Los cubículos piden además hora de fin
@@ -68,6 +70,10 @@ y pegue los mismos dos valores.
   se marca en amarillo (por vencer) o en rojo (vencida). Desde la campana se pueden activar
   los avisos del sistema para verlos aunque la página esté en segundo plano. Los minutos se
   cambian en `MINUTOS_AVISO` (`src/services/registroService.ts`).
+- **Informes**: totales de un rango de fechas (por defecto, el mes actual): préstamos de
+  laptops, horas de uso de laptops (de la hora de inicio a la devolución), reservas de
+  cubículos y horas reservadas de cubículos, con el desglose de cada uno por instituto,
+  género, condición, carrera o año y motivo de uso. El botón **Descargar PDF** guarda el informe.
 - **Hora de Caracas**: todas las horas se muestran y se registran en hora de Caracas,
   Venezuela, aunque la computadora tenga otra zona horaria.
 - **Laptops / Cubículos**: estado de cada uno y opción de enviarlo a mantenimiento.

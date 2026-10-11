@@ -64,7 +64,7 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                   <td><strong>{r.recursoId}</strong></td>
                   <td>
                     {r.nombre}
-                    <div className="secundario">{r.instituto} · {r.condicion}</div>
+                    <div className="secundario">{[r.genero, r.instituto, r.condicion].filter(Boolean).join(' · ')}</div>
                   </td>
                   <td>{r.carrera}</td>
                   <td>{r.motivo}</td>

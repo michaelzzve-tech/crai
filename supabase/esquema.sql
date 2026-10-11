@@ -26,6 +26,7 @@ create table prestamos (
   id text primary key,
   recurso_id text not null references laptops (id),
   nombre text not null,
+  genero text,
   instituto text not null,
   condicion text not null,
   carrera text not null,
