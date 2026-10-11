@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import logo from '../../assets/logo-crai.png';
 import { supabase } from '../../data/supabaseClient';
 
 /** Pantalla de inicio de sesión para bibliotecarios (solo con base de datos). */
@@ -26,6 +27,7 @@ export function Login() {
   return (
     <div className="login">
       <form className="formulario" onSubmit={entrar}>
+        <img className="login-logo" src={logo} alt="CRAI · Centro de Recursos de Aprendizaje e Investigación" />
         <h2>Biblioteca · Préstamos y reservas</h2>
         <p className="secundario">Inicia sesión con tu cuenta de bibliotecario.</p>
         <div className="campos una-columna">
