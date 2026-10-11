@@ -121,21 +121,25 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
           Hora de inicio
           <input id="registro-inicio" type="time" required value={datos.horaInicio} onChange={(e) => cambiar('horaInicio')(e.target.value)} />
         </label>
-        <label htmlFor="registro-fin">
-          Hora de fin
-          <input id="registro-fin" type="time" required value={datos.horaFin} onChange={(e) => cambiar('horaFin')(e.target.value)} />
-        </label>
-        <label htmlFor="registro-duracion">
-          Duración
-          <input
-            id="registro-duracion"
-            readOnly
-            tabIndex={-1}
-            className="calculado"
-            placeholder="Se calcula con las horas"
-            value={duracionEntreHoras(datos.horaInicio, datos.horaFin)}
-          />
-        </label>
+        {modulo.conHoraFin && (
+          <>
+            <label htmlFor="registro-fin">
+              Hora de fin
+              <input id="registro-fin" type="time" required value={datos.horaFin} onChange={(e) => cambiar('horaFin')(e.target.value)} />
+            </label>
+            <label htmlFor="registro-duracion">
+              Duración
+              <input
+                id="registro-duracion"
+                readOnly
+                tabIndex={-1}
+                className="calculado"
+                placeholder="Se calcula con las horas"
+                value={duracionEntreHoras(datos.horaInicio, datos.horaFin)}
+              />
+            </label>
+          </>
+        )}
       </div>
       <button type="submit" className="primario">{modulo.registrar}</button>
     </form>

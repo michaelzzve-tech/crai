@@ -36,6 +36,9 @@ Sin Supabase, cada persona que la abre tiene sus propios datos, guardados en su 
 1. Cree una cuenta gratis en https://supabase.com y un proyecto nuevo.
 2. En el proyecto, abra **SQL Editor → New query**, pegue el contenido de
    [`supabase/esquema.sql`](supabase/esquema.sql) y pulse **Run**. Esto crea las tablas.
+   Si ya había creado las tablas antes del cambio de devolución automática, en vez de
+   eso basta con ejecutar esta línea (no borra datos):
+   `alter table prestamos alter column hora_fin drop not null;`
 3. En **Authentication → Users → Add user → Create new user**, cree una cuenta (correo y
    contraseña) para cada bibliotecario. Marque "Auto Confirm User".
 4. En **Authentication → Sign In / Providers**, desactive **Allow new users to sign up**
@@ -51,18 +54,22 @@ y pegue los mismos dos valores.
 
 ## Funciones
 
-- **Formulario** (igual en los dos módulos), en este orden: nombre, instituto (ITJO, IUJO, CFJO),
+- **Formulario**, en este orden: nombre, instituto (ITJO, IUJO, CFJO),
   condición (estudiante, docente, otro), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
   CFJO: un número escrito a mano), laptop (1 a 25) o cubículo (1 a 6 o POD), motivo de uso
-  (estudio, tarea, entretenimiento), hora de inicio, hora de fin y duración (se calcula sola).
+  (estudio, tarea, entretenimiento) y hora de inicio. Los cubículos piden además hora de fin
+  y muestran la duración (se calcula sola).
 - **En curso**: préstamos o reservas activos; desde ahí se registra la devolución de la
-  laptop o la salida del cubículo, con observaciones.
+  laptop o la salida del cubículo. En las laptops, la hora de devolución
+  se toma sola en el momento y se muestra el **tiempo transcurrido** desde la hora de inicio.
+- **Hora de Caracas**: todas las horas se muestran y se registran en hora de Caracas,
+  Venezuela, aunque la computadora tenga otra zona horaria.
 - **Laptops / Cubículos**: estado de cada uno y opción de enviarlo a mantenimiento.
 - **Historial**: todos los registros, con búsqueda y marca de los que terminaron con retraso.
-- **Resumen**: disponibles, en uso, en mantenimiento y vencidos.
+- **Resumen**: disponibles, en uso, en mantenimiento y (en cubículos) reservas vencidas.
 
 Reglas incluidas: solo se usan laptops o cubículos disponibles (los ocupados o en
-mantenimiento aparecen desactivados en el menú) y la hora de fin debe ser posterior a la de inicio.
+mantenimiento aparecen desactivados en el menú) y, en los cubículos, la hora de fin debe ser posterior a la de inicio.
 
 ## Estructura (por componentes)
 

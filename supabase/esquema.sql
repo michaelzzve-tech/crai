@@ -31,9 +31,8 @@ create table prestamos (
   carrera text not null,
   motivo text not null,
   hora_inicio timestamptz not null,
-  hora_fin timestamptz not null,
-  fin_real timestamptz,
-  observaciones text
+  hora_fin timestamptz, -- vacío en préstamos de laptops (se usa fin_real)
+  fin_real timestamptz
 );
 
 create table reservas (

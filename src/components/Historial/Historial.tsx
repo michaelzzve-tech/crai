@@ -11,6 +11,7 @@ interface Props {
 
 export function Historial({ modulo, registros }: Props) {
   const [filtro, setFiltro] = useState('');
+  const conFin = modulo.conHoraFin;
 
   const texto = filtro.toLowerCase();
   const visibles = registros.filter((r) =>
@@ -43,15 +44,19 @@ export function Historial({ modulo, registros }: Props) {
               <th>Carrera o año</th>
               <th>Motivo</th>
               <th>Inicio</th>
-              <th>Fin</th>
-              <th>Duración</th>
+              {conFin && (
+                <>
+                  <th>Fin</th>
+                  <th>Duración</th>
+                </>
+              )}
               <th>{modulo.finalizado}</th>
-              <th>Observaciones</th>
+              {!conFin && <th>Tiempo transcurrido</th>}
             </tr>
           </thead>
           <tbody>
             {visibles.map((r) => {
-              const tarde = r.finReal && r.finReal > r.fin;
+              const tarde = r.finReal && r.fin && r.finReal > r.fin;
               return (
                 <tr key={r.id}>
                   <td><strong>{r.recursoId}</strong></td>
@@ -61,8 +66,12 @@ export function Historial({ modulo, registros }: Props) {
                   <td>{r.carrera}</td>
                   <td>{r.motivo}</td>
                   <td>{formatearFecha(r.inicio)}</td>
-                  <td>{formatearHora(r.fin)}</td>
-                  <td>{duracionEntreFechas(r.inicio, r.fin)}</td>
+                  {conFin && (
+                    <>
+                      <td>{formatearHora(r.fin)}</td>
+                      <td>{r.fin ? duracionEntreFechas(r.inicio, r.fin) : '—'}</td>
+                    </>
+                  )}
                   <td>
                     {r.finReal ? (
                       <>
@@ -73,7 +82,7 @@ export function Historial({ modulo, registros }: Props) {
                       <EstadoBadge estado="ocupado" textoOcupado={modulo.ocupado} />
                     )}
                   </td>
-                  <td>{r.observaciones}</td>
+                  {!conFin && <td>{r.finReal ? duracionEntreFechas(r.inicio, r.finReal) : '—'}</td>}
                 </tr>
               );
             })}

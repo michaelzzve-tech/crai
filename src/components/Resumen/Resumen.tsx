@@ -17,7 +17,7 @@ export function Resumen({ modulo, recursos, registros }: Props) {
     { titulo: 'Disponibles', valor: contar('disponible') },
     { titulo: `${modulo.ocupado}s`, valor: contar('ocupado') },
     { titulo: 'En mantenimiento', valor: contar('mantenimiento') },
-    { titulo: modulo.vencidos, valor: vencidos, alerta: vencidos > 0 },
+    ...(modulo.conHoraFin ? [{ titulo: modulo.vencidos, valor: vencidos, alerta: vencidos > 0 }] : []),
   ];
 
   return (

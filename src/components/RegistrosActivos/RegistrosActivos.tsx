@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Modulo } from '../../config/modulos';
 import { estaVencido, finalizar } from '../../services/registroService';
 import type { Registro } from '../../types';
+import { useAhora } from '../../hooks/useAhora';
 import { duracionEntreFechas, formatearHora } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 import type { EjecutarAccion } from '../tipos';
@@ -15,19 +16,17 @@ interface Props {
 /** Préstamos o reservas en curso, con el botón para devolver o liberar. */
 export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
   const [finalizando, setFinalizando] = useState<string | null>(null);
-  const [observaciones, setObservaciones] = useState('');
+  const ahora = useAhora();
+  const conFin = modulo.conHoraFin;
 
   const activos = registros.filter((r) => !r.finReal);
 
   async function confirmar(registro: Registro) {
     const ok = await ejecutar(
-      () => finalizar(modulo, registro, observaciones),
+      () => finalizar(modulo, registro),
       modulo.mensajeFinalizado(registro.recursoId),
     );
-    if (ok) {
-      setFinalizando(null);
-      setObservaciones('');
-    }
+    if (ok) setFinalizando(null);
   }
 
   return (
@@ -44,9 +43,15 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
               <th>Carrera o año</th>
               <th>Motivo</th>
               <th>Inicio</th>
-              <th>Fin</th>
-              <th>Duración</th>
-              <th>Estado</th>
+              {conFin ? (
+                <>
+                  <th>Fin</th>
+                  <th>Duración</th>
+                  <th>Estado</th>
+                </>
+              ) : (
+                <th>Tiempo transcurrido</th>
+              )}
               <th></th>
             </tr>
           </thead>
@@ -63,23 +68,29 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                   <td>{r.carrera}</td>
                   <td>{r.motivo}</td>
                   <td>{formatearHora(r.inicio)}</td>
-                  <td>{formatearHora(r.fin)}</td>
-                  <td>{duracionEntreFechas(r.inicio, r.fin)}</td>
-                  <td><EstadoBadge estado={vencido ? 'vencido' : 'activo'} /></td>
+                  {conFin && r.fin ? (
+                    <>
+                      <td>{formatearHora(r.fin)}</td>
+                      <td>{duracionEntreFechas(r.inicio, r.fin)}</td>
+                      <td><EstadoBadge estado={vencido ? 'vencido' : 'activo'} /></td>
+                    </>
+                  ) : (
+                    <td>{duracionEntreFechas(r.inicio, ahora)}</td>
+                  )}
                   <td className="acciones">
                     {finalizando === r.id ? (
                       <div className="devolucion">
-                        <input
-                          autoFocus
-                          placeholder="Observaciones (daños, faltantes…)"
-                          value={observaciones}
-                          onChange={(e) => setObservaciones(e.target.value)}
-                        />
-                        <button className="primario" onClick={() => confirmar(r)}>Confirmar</button>
+                        {!conFin && (
+                          <span className="secundario">
+                            Hora de devolución: <strong>{formatearHora(ahora.toISOString())}</strong>
+                            {' · '}Tiempo transcurrido: <strong>{duracionEntreFechas(r.inicio, ahora)}</strong>
+                          </span>
+                        )}
+                        <button className="primario" autoFocus onClick={() => confirmar(r)}>Confirmar</button>
                         <button onClick={() => setFinalizando(null)}>Cancelar</button>
                       </div>
                     ) : (
-                      <button className="primario" onClick={() => { setFinalizando(r.id); setObservaciones(''); }}>
+                      <button className="primario" onClick={() => setFinalizando(r.id)}>
                         {modulo.finalizar}
                       </button>
                     )}

@@ -10,13 +10,17 @@ export interface Modulo {
   recurso: string; // Nombre del campo del formulario: "Laptop"
   recursos: string; // Plural: "Laptops"
   opciones: string[]; // Opciones del menú: "1", "2"… y nombres como "POD"
+  // true: el formulario pide hora de fin y muestra la duración (y hay vencidos).
+  // false: solo hora de inicio; la hora de fin se toma sola al devolver y se
+  // muestra el tiempo transcurrido.
+  conHoraFin: boolean;
   tablaRecursos: string; // Tabla de la base de datos con los recursos
   tablaRegistros: string; // Tabla de la base de datos con los préstamos o reservas
   registros: string; // "Préstamos"
   nuevo: string; // Título del formulario
   registrar: string; // Botón del formulario
   activos: string; // Título de la lista de registros en curso
-  vencidos: string; // Tarjeta del resumen
+  vencidos: string; // Tarjeta del resumen (solo si conHoraFin)
   ocupado: string; // Estado del recurso mientras está en uso
   finalizar: string; // Botón para terminar un registro
   finalizado: string; // Columna del historial con la hora real de fin
@@ -29,6 +33,7 @@ export const LAPTOPS: Modulo = {
   recurso: 'Laptop',
   recursos: 'Laptops',
   opciones: del1Al(25),
+  conHoraFin: false,
   tablaRecursos: 'laptops',
   tablaRegistros: 'prestamos',
   registros: 'Préstamos',
@@ -48,6 +53,7 @@ export const CUBICULOS: Modulo = {
   recurso: 'Cubículo',
   recursos: 'Cubículos',
   opciones: [...del1Al(6), 'POD'],
+  conHoraFin: true,
   tablaRecursos: 'cubiculos',
   tablaRegistros: 'reservas',
   registros: 'Reservas',
