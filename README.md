@@ -74,6 +74,9 @@ y pegue los mismos dos valores.
   laptops, horas de uso de laptops (de la hora de inicio a la devolución), reservas de
   cubículos y horas reservadas de cubículos, con el desglose de cada uno por instituto,
   género, condición, carrera o año y motivo de uso. El botón **Descargar PDF** guarda el informe.
+- **Páginas de 30**: cada tabla muestra como máximo 30 registros; si hay más, aparecen flechas
+  (« ‹ › ») para pasar de página. El número se cambia en `REGISTROS_POR_PAGINA`
+  (`src/hooks/usePaginacion.ts`).
 - **Hora de Caracas**: todas las horas se muestran y se registran en hora de Caracas,
   Venezuela, aunque la computadora tenga otra zona horaria.
 - **Laptops / Cubículos**: estado de cada uno y opción de enviarlo a mantenimiento.

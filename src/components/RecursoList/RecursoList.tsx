@@ -2,6 +2,8 @@ import type { Modulo } from '../../config/modulos';
 import { cambiarMantenimiento } from '../../services/registroService';
 import type { Recurso } from '../../types';
 import { EstadoBadge } from '../EstadoBadge';
+import { usePaginacion } from '../../hooks/usePaginacion';
+import { Paginador } from '../Paginador';
 import type { EjecutarAccion } from '../tipos';
 
 interface Props {
@@ -12,6 +14,7 @@ interface Props {
 
 /** Los recursos del módulo (laptops 1–25, cubículos 1–6 y POD…) con su estado. */
 export function RecursoList({ modulo, recursos, ejecutar }: Props) {
+  const paginacion = usePaginacion(recursos);
   return (
     <section className="panel">
       <h2>{modulo.recursos} ({recursos.length})</h2>
@@ -24,7 +27,7 @@ export function RecursoList({ modulo, recursos, ejecutar }: Props) {
           </tr>
         </thead>
         <tbody>
-          {recursos.map((r) => (
+          {paginacion.items.map((r) => (
             <tr key={r.id}>
               <td><strong>{r.id}</strong></td>
               <td><EstadoBadge estado={r.estado} textoOcupado={modulo.ocupado} /></td>
@@ -46,6 +49,7 @@ export function RecursoList({ modulo, recursos, ejecutar }: Props) {
           ))}
         </tbody>
       </table>
+      <Paginador paginacion={paginacion} />
     </section>
   );
 }
