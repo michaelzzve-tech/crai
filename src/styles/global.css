@@ -34,6 +34,7 @@ h2 { font-size: 1.1rem; margin-bottom: 12px; }
 .login { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
 .login .formulario { width: 100%; max-width: 380px; display: grid; gap: 12px; }
 .login h2 { margin: 0; }
+.cargando { text-align: center; color: var(--texto-suave); padding: 48px 16px; }
 .campos.una-columna { grid-template-columns: 1fr; margin-bottom: 0; }
 .pestanas { display: flex; gap: 8px; flex-wrap: wrap; max-width: 1200px; margin: 0 auto; }
 .pestana { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.5); }
