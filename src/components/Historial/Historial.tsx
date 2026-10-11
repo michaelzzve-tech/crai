@@ -3,6 +3,8 @@ import type { Modulo } from '../../config/modulos';
 import type { Registro } from '../../types';
 import { duracionEntreFechas, formatearFecha, formatearHora } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
+import { usePaginacion } from '../../hooks/usePaginacion';
+import { Paginador } from '../Paginador';
 
 interface Props {
   modulo: Modulo;
@@ -19,6 +21,7 @@ export function Historial({ modulo, registros }: Props) {
       v.toLowerCase().includes(texto),
     ),
   );
+  const paginacion = usePaginacion(visibles);
 
   return (
     <section className="panel">
@@ -28,7 +31,7 @@ export function Historial({ modulo, registros }: Props) {
           className="buscador"
           placeholder={`Buscar por nombre, ${modulo.recurso.toLowerCase()}, instituto, carrera…`}
           value={filtro}
-          onChange={(e) => setFiltro(e.target.value)}
+          onChange={(e) => { setFiltro(e.target.value); paginacion.irA(0); }}
         />
       </div>
       {visibles.length === 0 ? (
@@ -56,7 +59,7 @@ export function Historial({ modulo, registros }: Props) {
             </tr>
           </thead>
           <tbody>
-            {visibles.map((r) => {
+            {paginacion.items.map((r) => {
               const tarde = r.finReal && r.fin && r.finReal > r.fin;
               return (
                 <tr key={r.id}>
@@ -91,6 +94,7 @@ export function Historial({ modulo, registros }: Props) {
           </tbody>
         </table>
       )}
+      <Paginador paginacion={paginacion} />
     </section>
   );
 }

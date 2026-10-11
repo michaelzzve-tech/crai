@@ -130,3 +130,8 @@ button:disabled { opacity: .6; cursor: default; }
 .desgloses { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px 24px; }
 .desglose h3 { font-size: .95rem; margin: 0 0 6px; }
 .numero { text-align: right; }
+
+/* Paginación */
+.paginador { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; margin-top: 12px; color: var(--texto-suave); font-size: .9rem; }
+.paginador button { min-width: 36px; font-size: 1.1rem; line-height: 1; padding: 6px 10px; }
+.paginador span { padding: 0 8px; }

@@ -3,8 +3,10 @@ import type { Modulo } from '../../config/modulos';
 import { estaPorVencer, estaVencido, finalizar } from '../../services/registroService';
 import type { Registro } from '../../types';
 import { useAhora } from '../../hooks/useAhora';
+import { usePaginacion } from '../../hooks/usePaginacion';
 import { duracionEntreFechas, formatearHora } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
+import { Paginador } from '../Paginador';
 import type { EjecutarAccion } from '../tipos';
 
 interface Props {
@@ -20,6 +22,7 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
   const conFin = modulo.conHoraFin;
 
   const activos = registros.filter((r) => !r.finReal);
+  const paginacion = usePaginacion(activos);
 
   async function confirmar(registro: Registro) {
     const ok = await ejecutar(
@@ -56,7 +59,7 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
             </tr>
           </thead>
           <tbody>
-            {activos.map((r) => {
+            {paginacion.items.map((r) => {
               const vencido = estaVencido(r, ahora);
               const porVencer = estaPorVencer(r, ahora);
               return (
@@ -102,6 +105,7 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
           </tbody>
         </table>
       )}
+      <Paginador paginacion={paginacion} />
     </section>
   );
 }
