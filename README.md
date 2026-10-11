@@ -47,7 +47,8 @@ y pegue los mismos dos valores.
 ## Funciones
 
 - **Préstamos**: registrar un préstamo con estos campos, en este orden: nombre, instituto
-  (ITJO, IUJO, CFJO), condición (estudiante, docente, otro), carrera o año, laptop (1 a 25),
+  (ITJO, IUJO, CFJO), condición (estudiante, docente, otro), carrera o año (ITJO: año del 1 al 6;
+  IUJO: carrera; CFJO: un número escrito a mano), laptop (1 a 25),
   motivo de uso (estudio, tarea, entretenimiento), hora de inicio y hora de fin.
 - **Devoluciones**: registrar la devolución con observaciones (daños, faltantes).
 - **Laptops**: ver el estado de las 25 laptops y enviar alguna a mantenimiento.
@@ -91,7 +92,7 @@ src/
 
 | Quiero… | Archivo |
 |---|---|
-| Cambiar las opciones de un menú (institutos, carreras, motivos…) | `src/config/opciones.ts` |
+| Cambiar las opciones de un menú (institutos, carreras, años, motivos…) | `src/config/opciones.ts` |
 | Cambiar la cantidad de laptops | `TOTAL_LAPTOPS` en `src/config/opciones.ts` |
 | Cambiar o agregar reglas | `src/services/prestamoService.ts` |
 | Agregar un campo al préstamo | `src/types/index.ts`, `src/components/PrestamoForm/PrestamoForm.tsx` y la base de datos |

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { CARRERAS, CONDICIONES, INSTITUTOS, MOTIVOS } from '../../config/opciones';
+import { CARRERA_POR_INSTITUTO, CONDICIONES, INSTITUTOS, MOTIVOS } from '../../config/opciones';
 import { prestarLaptop } from '../../services/prestamoService';
 import type { Laptop, NuevoPrestamo } from '../../types';
 import { horaActual } from '../../utils/fechas';
@@ -48,6 +48,34 @@ function Desplegable({ id, titulo, valor, opciones, onCambiar }: {
   );
 }
 
+/** "Carrera o año": su forma depende del instituto (ver CARRERA_POR_INSTITUTO). */
+function CampoCarreraOAnio({ instituto, valor, onCambiar }: {
+  instituto: string;
+  valor: string;
+  onCambiar: (valor: string) => void;
+}) {
+  const campo = CARRERA_POR_INSTITUTO[instituto];
+  if (campo?.tipo === 'menu') {
+    return <Desplegable id="prestamo-carrera" titulo="Carrera o año" valor={valor} opciones={campo.opciones} onCambiar={onCambiar} />;
+  }
+  return (
+    <label htmlFor="prestamo-carrera">
+      Carrera o año
+      <input
+        id="prestamo-carrera"
+        type="number"
+        min={1}
+        step={1}
+        required
+        disabled={!campo}
+        placeholder={campo ? 'Escriba un número' : 'Primero elija un instituto'}
+        value={valor}
+        onChange={(e) => onCambiar(e.target.value)}
+      />
+    </label>
+  );
+}
+
 export function PrestamoForm({ laptops, ejecutar }: Props) {
   const [datos, setDatos] = useState<NuevoPrestamo>(vacio);
   const cambiar = (campo: keyof NuevoPrestamo) => (valor: string) =>
@@ -68,9 +96,15 @@ export function PrestamoForm({ laptops, ejecutar }: Props) {
           Nombre
           <input id="prestamo-nombre" required value={datos.nombre} onChange={(e) => cambiar('nombre')(e.target.value)} />
         </label>
-        <Desplegable id="prestamo-instituto" titulo="Instituto" valor={datos.instituto} opciones={INSTITUTOS} onCambiar={cambiar('instituto')} />
+        <Desplegable
+          id="prestamo-instituto"
+          titulo="Instituto"
+          valor={datos.instituto}
+          opciones={INSTITUTOS}
+          onCambiar={(instituto) => setDatos({ ...datos, instituto, carrera: '' })}
+        />
         <Desplegable id="prestamo-condicion" titulo="Condición" valor={datos.condicion} opciones={CONDICIONES} onCambiar={cambiar('condicion')} />
-        <Desplegable id="prestamo-carrera" titulo="Carrera o año" valor={datos.carrera} opciones={CARRERAS} onCambiar={cambiar('carrera')} />
+        <CampoCarreraOAnio instituto={datos.instituto} valor={datos.carrera} onCambiar={cambiar('carrera')} />
         <label htmlFor="prestamo-laptop">
           Laptop
           <select id="prestamo-laptop" required value={datos.laptopId} onChange={(e) => cambiar('laptopId')(e.target.value)}>
