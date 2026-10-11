@@ -14,14 +14,19 @@ export function Login() {
     setEnviando(true);
     setError('');
     const { error } = await supabase.auth.signInWithPassword({ email: correo, password: clave });
-    if (error) setError('Correo o contraseña incorrectos.');
+    if (error) {
+      // status 400: datos incorrectos; sin status: no hubo conexión con Supabase.
+      setError(error.status === 400
+        ? 'Correo o contraseña incorrectos.'
+        : `No se pudo conectar con la base de datos (${error.message}). Revise el secreto VITE_SUPABASE_URL.`);
+    }
     setEnviando(false);
   }
 
   return (
     <div className="login">
       <form className="formulario" onSubmit={entrar}>
-        <h2>Préstamo de laptops · Biblioteca</h2>
+        <h2>Biblioteca · Préstamos y reservas</h2>
         <p className="secundario">Inicia sesión con tu cuenta de bibliotecario.</p>
         <div className="campos una-columna">
           <label>

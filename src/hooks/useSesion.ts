@@ -12,10 +12,10 @@ export function useSesion() {
 
   useEffect(() => {
     if (!supabase) return;
-    supabase.auth.getSession().then(({ data }) => {
-      setSesion(data.session);
-      setCargando(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => setSesion(data.session))
+      .finally(() => setCargando(false));
     const { data } = supabase.auth.onAuthStateChange((_evento, nueva) => setSesion(nueva));
     return () => data.subscription.unsubscribe();
   }, []);
