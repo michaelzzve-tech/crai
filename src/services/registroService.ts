@@ -10,8 +10,22 @@ import { generarId } from '../utils/id';
  * hablan directamente con el almacenamiento.
  */
 
+/** Minutos antes de la hora de fin en que se avisa que una reserva está por vencer. */
+export const MINUTOS_AVISO = 10;
+
+/** Evento del navegador que se emite tras registrar o finalizar, para refrescar las notificaciones. */
+export const EVENTO_CAMBIO = 'biblioteca:cambio';
+const avisarCambio = () => window.dispatchEvent(new Event(EVENTO_CAMBIO));
+
 export function estaVencido(registro: Registro, ahora = new Date()): boolean {
-  return !registro.finReal && !!registro.fin && new Date(registro.fin) < ahora;
+  return !registro.finReal && !!registro.fin && new Date(registro.fin) <= ahora;
+}
+
+/** Activo y a MINUTOS_AVISO minutos o menos de su hora de fin (sin haberla pasado). */
+export function estaPorVencer(registro: Registro, ahora = new Date()): boolean {
+  if (registro.finReal || !registro.fin) return false;
+  const restante = new Date(registro.fin).getTime() - ahora.getTime();
+  return restante > 0 && restante <= MINUTOS_AVISO * 60_000;
 }
 
 /** Crea los recursos del módulo (sus opciones del menú) que todavía no existan. */
@@ -61,6 +75,7 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
   };
   await repositorio.guardarRegistro(modulo.tablaRegistros, registro);
   await repositorio.guardarRecurso(modulo.tablaRecursos, { ...recurso, estado: 'ocupado' });
+  avisarCambio();
   return registro;
 }
 
@@ -73,4 +88,5 @@ export async function finalizar(modulo: Modulo, registro: Registro) {
   const recursos = await repositorio.listarRecursos(modulo.tablaRecursos);
   const recurso = recursos.find((r) => r.id === registro.recursoId);
   if (recurso) await repositorio.guardarRecurso(modulo.tablaRecursos, { ...recurso, estado: 'disponible' });
+  avisarCambio();
 }
