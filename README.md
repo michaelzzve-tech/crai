@@ -49,7 +49,8 @@ y pegue los mismos dos valores.
 - **Préstamos**: registrar un préstamo con estos campos, en este orden: nombre, instituto
   (ITJO, IUJO, CFJO), condición (estudiante, docente, otro), carrera o año (ITJO: año del 1 al 6;
   IUJO: carrera; CFJO: un número escrito a mano), laptop (1 a 25),
-  motivo de uso (estudio, tarea, entretenimiento), hora de inicio y hora de fin.
+  motivo de uso (estudio, tarea, entretenimiento), hora de inicio, hora de fin y duración
+  (se calcula sola).
 - **Devoluciones**: registrar la devolución con observaciones (daños, faltantes).
 - **Laptops**: ver el estado de las 25 laptops y enviar alguna a mantenimiento.
 - **Historial**: todos los préstamos, con búsqueda y marca de devoluciones con retraso.

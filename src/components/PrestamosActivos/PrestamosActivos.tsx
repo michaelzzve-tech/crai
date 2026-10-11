@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { devolverLaptop, estaVencido } from '../../services/prestamoService';
 import type { Laptop, Prestamo } from '../../types';
-import { formatearHora } from '../../utils/fechas';
+import { duracionEntreFechas, formatearHora } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 import type { EjecutarAccion } from '../tipos';
 
@@ -44,6 +44,7 @@ export function PrestamosActivos({ prestamos, laptops, ejecutar }: Props) {
               <th>Motivo</th>
               <th>Inicio</th>
               <th>Fin</th>
+              <th>Duración</th>
               <th>Estado</th>
               <th></th>
             </tr>
@@ -62,6 +63,7 @@ export function PrestamosActivos({ prestamos, laptops, ejecutar }: Props) {
                   <td>{p.motivo}</td>
                   <td>{formatearHora(p.fechaPrestamo)}</td>
                   <td>{formatearHora(p.fechaLimite)}</td>
+                  <td>{duracionEntreFechas(p.fechaPrestamo, p.fechaLimite)}</td>
                   <td><EstadoBadge estado={vencido ? 'vencido' : 'activo'} /></td>
                   <td className="acciones">
                     {devolviendo === p.id ? (

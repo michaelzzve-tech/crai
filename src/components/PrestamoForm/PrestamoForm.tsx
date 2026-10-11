@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { CARRERA_POR_INSTITUTO, CONDICIONES, INSTITUTOS, MOTIVOS } from '../../config/opciones';
 import { prestarLaptop } from '../../services/prestamoService';
 import type { Laptop, NuevoPrestamo } from '../../types';
-import { horaActual } from '../../utils/fechas';
+import { duracionEntreHoras, horaActual } from '../../utils/fechas';
 import type { EjecutarAccion } from '../tipos';
 
 const vacio = (): NuevoPrestamo => ({
@@ -124,6 +124,17 @@ export function PrestamoForm({ laptops, ejecutar }: Props) {
         <label htmlFor="prestamo-fin">
           Hora de fin
           <input id="prestamo-fin" type="time" required value={datos.horaFin} onChange={(e) => cambiar('horaFin')(e.target.value)} />
+        </label>
+        <label htmlFor="prestamo-duracion">
+          Duración
+          <input
+            id="prestamo-duracion"
+            readOnly
+            tabIndex={-1}
+            className="calculado"
+            placeholder="Se calcula con las horas"
+            value={duracionEntreHoras(datos.horaInicio, datos.horaFin)}
+          />
         </label>
       </div>
       <button type="submit" className="primario">Registrar préstamo</button>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Laptop, Prestamo } from '../../types';
-import { formatearFecha, formatearHora } from '../../utils/fechas';
+import { duracionEntreFechas, formatearFecha, formatearHora } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 
 interface Props {
@@ -44,6 +44,7 @@ export function Historial({ prestamos, laptops }: Props) {
               <th>Motivo</th>
               <th>Inicio</th>
               <th>Fin</th>
+              <th>Duración</th>
               <th>Devuelta</th>
               <th>Observaciones</th>
             </tr>
@@ -61,6 +62,7 @@ export function Historial({ prestamos, laptops }: Props) {
                   <td>{p.motivo}</td>
                   <td>{formatearFecha(p.fechaPrestamo)}</td>
                   <td>{formatearHora(p.fechaLimite)}</td>
+                  <td>{duracionEntreFechas(p.fechaPrestamo, p.fechaLimite)}</td>
                   <td>
                     {p.fechaDevolucion ? (
                       <>

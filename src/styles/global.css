@@ -55,6 +55,7 @@ h2 { font-size: 1.1rem; margin-bottom: 12px; }
 label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--texto-suave); }
 input, select { font: inherit; padding: 8px 10px; border: 1px solid var(--borde); border-radius: 6px; color: var(--texto); background: #fff; }
 .buscador { min-width: 260px; }
+input.calculado { background: var(--fondo); color: var(--texto); font-weight: 600; }
 
 button { font: inherit; padding: 7px 12px; border-radius: 6px; border: 1px solid var(--borde); background: #fff; cursor: pointer; }
 button:hover { border-color: var(--primario); }

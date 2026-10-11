@@ -21,3 +21,23 @@ export function hoyALas(hora: string, hoy = new Date()): Date {
   fecha.setHours(h, m, 0, 0);
   return fecha;
 }
+
+/** Texto como "2 h 30 min" para los minutos dados. */
+export function formatearDuracion(minutos: number): string {
+  const h = Math.floor(minutos / 60);
+  const m = minutos % 60;
+  if (h === 0) return `${m} min`;
+  return m === 0 ? `${h} h` : `${h} h ${m} min`;
+}
+
+/** Duración entre dos horas "HH:MM" del mismo día, o '' si no es válida. */
+export function duracionEntreHoras(inicio: string, fin: string): string {
+  if (!inicio || !fin) return '';
+  const minutos = Math.round((hoyALas(fin).getTime() - hoyALas(inicio).getTime()) / 60000);
+  return minutos > 0 ? formatearDuracion(minutos) : '';
+}
+
+/** Duración entre dos fechas ISO. */
+export function duracionEntreFechas(inicio: string, fin: string): string {
+  return formatearDuracion(Math.round((new Date(fin).getTime() - new Date(inicio).getTime()) / 60000));
+}
