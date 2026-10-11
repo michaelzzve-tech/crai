@@ -127,3 +127,6 @@ td { border-bottom: 1px solid var(--borde); padding: 8px; vertical-align: top; }
 /* Informes */
 .informe .tarjeta { gap: 4px; }
 button:disabled { opacity: .6; cursor: default; }
+.desgloses { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px 24px; }
+.desglose h3 { font-size: .95rem; margin: 0 0 6px; }
+.numero { text-align: right; }

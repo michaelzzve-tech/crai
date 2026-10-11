@@ -1,7 +1,33 @@
 import { useEffect, useState } from 'react';
 import { descargarInformePdf } from '../../services/informePdf';
-import { filasInforme, generarInforme, periodoDelMes, type Informe, type Periodo } from '../../services/informeService';
+import { filasInforme, generarInforme, periodoDelMes, seccionesDesglose, type Desglose, type Informe, type Periodo } from '../../services/informeService';
 import { formatearDuracion } from '../../utils/fechas';
+
+function TablaDesglose({ desglose, columnaHoras }: { desglose: Desglose; columnaHoras: string }) {
+  return (
+    <div className="desglose">
+      <h3>{desglose.titulo}</h3>
+      {desglose.filas.length === 0 ? (
+        <p className="vacio">Sin registros.</p>
+      ) : (
+        <table>
+          <thead>
+            <tr><th></th><th className="numero">Cantidad</th><th className="numero">{columnaHoras}</th></tr>
+          </thead>
+          <tbody>
+            {desglose.filas.map((f) => (
+              <tr key={f.etiqueta}>
+                <td>{f.etiqueta}</td>
+                <td className="numero">{f.cantidad}</td>
+                <td className="numero">{formatearDuracion(f.minutos)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
 
 /** Totales de préstamos y reservas en un rango de fechas, con descarga en PDF. */
 export function Informes() {
@@ -68,6 +94,15 @@ export function Informes() {
           ))}
         </section>
       )}
+
+      {informe && rangoValido && seccionesDesglose(informe).map((s) => (
+        <section key={s.titulo} className="panel">
+          <h2>{s.titulo}</h2>
+          <div className="desgloses">
+            {s.desgloses.map((d) => <TablaDesglose key={d.titulo} desglose={d} columnaHoras={s.columnaHoras} />)}
+          </div>
+        </section>
+      ))}
     </main>
   );
 }
