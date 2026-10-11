@@ -77,7 +77,10 @@ td { border-bottom: 1px solid var(--borde); padding: 8px; vertical-align: top; }
 .devolucion > .secundario { flex-basis: 100%; }
 .secundario { color: var(--texto-suave); font-size: .82rem; }
 .texto-alerta { color: var(--alerta); }
-.fila-vencida { background: var(--alerta-fondo); }
+.fila-vencida td { background: var(--alerta-fondo); color: var(--alerta); font-weight: 600; }
+.fila-vencida td:first-child { box-shadow: inset 5px 0 0 var(--alerta); }
+.fila-por-vencer td { background: var(--aviso-fondo); }
+.fila-por-vencer td:first-child { box-shadow: inset 5px 0 0 var(--aviso); }
 .vacio { color: var(--texto-suave); margin: 0; }
 
 /* Etiquetas de estado */
@@ -86,9 +89,37 @@ td { border-bottom: 1px solid var(--borde); padding: 8px; vertical-align: top; }
 .badge-ocupado { background: #dbeafe; color: var(--primario); }
 .badge-mantenimiento { background: var(--aviso-fondo); color: var(--aviso); }
 .badge-vencido { background: var(--alerta); color: #fff; }
+.badge-por-vencer { background: var(--aviso); color: #fff; }
 
 /* Avisos */
 .aviso { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 8px; }
 .aviso button { border: none; background: transparent; font-size: 1.2rem; padding: 0 4px; }
 .aviso-exito { background: var(--exito-fondo); color: var(--exito); }
 .aviso-error { background: var(--alerta-fondo); color: var(--alerta); }
+
+/* Centro de notificaciones */
+.centro-notificaciones { position: relative; }
+.campana { position: relative; background: transparent; border: 1px solid rgba(255,255,255,.5); color: #fff; font-size: 1.1rem; padding: 4px 10px; }
+.campana.urgente { background: var(--alerta); border-color: #fff; animation: latido 1.2s ease-in-out infinite; }
+@keyframes latido { 50% { box-shadow: 0 0 0 6px rgba(255,255,255,.35); } }
+@media (prefers-reduced-motion: reduce) { .campana.urgente { animation: none; } }
+.contador { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: #fff; color: var(--alerta); font-size: .75rem; font-weight: 700; line-height: 20px; }
+.panel-notificaciones { position: absolute; right: 0; top: calc(100% + 8px); z-index: 20; width: min(360px, calc(100vw - 32px)); max-height: 70vh; overflow-y: auto; background: var(--superficie); color: var(--texto); border: 1px solid var(--borde); border-radius: 10px; padding: 14px; box-shadow: 0 10px 30px rgba(0,0,0,.18); text-align: left; }
+.panel-notificaciones ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.notificacion { width: 100%; text-align: left; display: grid; gap: 2px; border-left-width: 5px; }
+.notificacion span { color: var(--texto-suave); font-size: .85rem; }
+.notificacion-vencido { border-left-color: var(--alerta); background: var(--alerta-fondo); }
+.notificacion-vencido strong { color: var(--alerta); }
+.notificacion-por-vencer { border-left-color: var(--aviso); background: var(--aviso-fondo); }
+.notificacion.leida { background: var(--superficie); }
+.activar-avisos { width: 100%; margin-top: 12px; }
+
+/* Avisos destacados (sobre la página) */
+.avisos-destacados { position: fixed; bottom: 16px; right: 16px; z-index: 30; display: grid; gap: 10px; width: min(380px, calc(100vw - 32px)); }
+.destacado { display: flex; align-items: flex-start; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.25); color: #fff; }
+.destacado-vencido { background: var(--alerta); }
+.destacado-por-vencer { background: var(--aviso); }
+.destacado button { border: none; background: transparent; color: inherit; }
+.destacado-texto { flex: 1; text-align: left; display: grid; gap: 2px; padding: 12px 14px; }
+.destacado-texto strong { font-size: 1rem; }
+.destacado-cerrar { font-size: 1.3rem; padding: 8px 12px; }

@@ -1,12 +1,13 @@
 import type { EstadoRecurso } from '../../types';
 
-type Estado = EstadoRecurso | 'vencido' | 'activo';
+type Estado = EstadoRecurso | 'vencido' | 'por-vencer' | 'activo';
 
 const TEXTOS: Record<Estado, string> = {
   disponible: 'Disponible',
   ocupado: 'En uso',
   mantenimiento: 'Mantenimiento',
   vencido: 'Vencido',
+  'por-vencer': 'Por vencer',
   activo: 'A tiempo',
 };
 

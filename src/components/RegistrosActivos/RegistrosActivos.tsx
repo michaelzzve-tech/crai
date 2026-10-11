@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Modulo } from '../../config/modulos';
-import { estaVencido, finalizar } from '../../services/registroService';
+import { estaPorVencer, estaVencido, finalizar } from '../../services/registroService';
 import type { Registro } from '../../types';
 import { useAhora } from '../../hooks/useAhora';
 import { duracionEntreFechas, formatearHora } from '../../utils/fechas';
@@ -16,7 +16,7 @@ interface Props {
 /** Préstamos o reservas en curso, con el botón para devolver o liberar. */
 export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
   const [finalizando, setFinalizando] = useState<string | null>(null);
-  const ahora = useAhora();
+  const ahora = useAhora(15_000);
   const conFin = modulo.conHoraFin;
 
   const activos = registros.filter((r) => !r.finReal);
@@ -57,9 +57,10 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
           </thead>
           <tbody>
             {activos.map((r) => {
-              const vencido = estaVencido(r);
+              const vencido = estaVencido(r, ahora);
+              const porVencer = estaPorVencer(r, ahora);
               return (
-                <tr key={r.id} className={vencido ? 'fila-vencida' : undefined}>
+                <tr key={r.id} className={vencido ? 'fila-vencida' : porVencer ? 'fila-por-vencer' : undefined}>
                   <td><strong>{r.recursoId}</strong></td>
                   <td>
                     {r.nombre}
@@ -72,7 +73,7 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                     <>
                       <td>{formatearHora(r.fin)}</td>
                       <td>{duracionEntreFechas(r.inicio, r.fin)}</td>
-                      <td><EstadoBadge estado={vencido ? 'vencido' : 'activo'} /></td>
+                      <td><EstadoBadge estado={vencido ? 'vencido' : porVencer ? 'por-vencer' : 'activo'} /></td>
                     </>
                   ) : (
                     <td>{duracionEntreFechas(r.inicio, ahora)}</td>

@@ -3,6 +3,7 @@ import { Encabezado, type Pestana } from './components/Encabezado';
 import { ErrorPantalla } from './components/ErrorPantalla';
 import { Historial } from './components/Historial';
 import { Login } from './components/Login';
+import { AvisosDestacados, CentroNotificaciones } from './components/Notificaciones';
 import { RecursoList } from './components/RecursoList';
 import { RegistroForm } from './components/RegistroForm';
 import { RegistrosActivos } from './components/RegistrosActivos';
@@ -11,7 +12,9 @@ import type { EjecutarAccion } from './components/tipos';
 import { MODULOS, type Modulo } from './config/modulos';
 import { useBiblioteca } from './hooks/useBiblioteca';
 import { errorConfiguracion } from './data/supabaseClient';
+import { useNotificaciones } from './hooks/useNotificaciones';
 import { useSesion } from './hooks/useSesion';
+import type { Notificacion } from './services/notificacionService';
 
 interface Aviso {
   texto: string;
@@ -20,12 +23,24 @@ interface Aviso {
 
 export default function App() {
   const { requiereLogin, cargando, correo, cerrarSesion } = useSesion();
-  const [modulo, setModulo] = useState<Modulo>(MODULOS[0]);
-  const [pestana, setPestana] = useState<Pestana>('registro');
 
   if (errorConfiguracion) return <ErrorPantalla titulo="Falta configurar la base de datos" mensaje={errorConfiguracion} />;
   if (cargando) return <p className="cargando">Cargando…</p>;
   if (requiereLogin) return <Login />;
+  return <Principal correo={correo} cerrarSesion={cerrarSesion} />;
+}
+
+/** Pantalla tras iniciar sesión: encabezado, notificaciones y el módulo elegido. */
+function Principal({ correo, cerrarSesion }: { correo?: string; cerrarSesion?: () => void }) {
+  const [modulo, setModulo] = useState<Modulo>(MODULOS[0]);
+  const [pestana, setPestana] = useState<Pestana>('registro');
+  const { notificaciones, sinLeer, leidas, marcarLeidas, permiso, pedirPermiso } = useNotificaciones();
+
+  const abrirNotificacion = (n: Notificacion) => {
+    setModulo(n.modulo);
+    setPestana('registro');
+    marcarLeidas([n.clave]);
+  };
 
   return (
     <div className="app">
@@ -37,7 +52,18 @@ export default function App() {
         onCambiar={setPestana}
         correo={correo}
         onCerrarSesion={cerrarSesion}
+        notificaciones={
+          <CentroNotificaciones
+            notificaciones={notificaciones}
+            leidas={leidas}
+            onAbrir={abrirNotificacion}
+            onMarcarLeidas={marcarLeidas}
+            permiso={permiso}
+            onPedirPermiso={pedirPermiso}
+          />
+        }
       />
+      <AvisosDestacados notificaciones={sinLeer} onAbrir={abrirNotificacion} onCerrar={(n) => marcarLeidas([n.clave])} />
       {/* `key` hace que cada módulo empiece con su propio estado. */}
       <VistaModulo key={modulo.id} modulo={modulo} pestana={pestana} />
     </div>

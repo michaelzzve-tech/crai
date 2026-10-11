@@ -62,6 +62,12 @@ y pegue los mismos dos valores.
 - **En curso**: préstamos o reservas activos; desde ahí se registra la devolución de la
   laptop o la salida del cubículo. En las laptops, la hora de devolución
   se toma sola en el momento y se muestra el **tiempo transcurrido** desde la hora de inicio.
+- **Centro de notificaciones** (campana del encabezado): avisa cuando a una reserva de
+  cubículo le faltan 10 minutos o menos para su hora de fin, y cuando ya se venció. Los
+  avisos nuevos aparecen destacados en la esquina inferior (en rojo los vencidos) y la fila
+  se marca en amarillo (por vencer) o en rojo (vencida). Desde la campana se pueden activar
+  los avisos del sistema para verlos aunque la página esté en segundo plano. Los minutos se
+  cambian en `MINUTOS_AVISO` (`src/services/registroService.ts`).
 - **Hora de Caracas**: todas las horas se muestran y se registran en hora de Caracas,
   Venezuela, aunque la computadora tenga otra zona horaria.
 - **Laptops / Cubículos**: estado de cada uno y opción de enviarlo a mantenimiento.

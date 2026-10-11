@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { Modulo } from '../../config/modulos';
 
 export type Pestana = 'registro' | 'recursos' | 'historial';
@@ -10,10 +11,11 @@ interface Props {
   onCambiar: (pestana: Pestana) => void;
   correo?: string;
   onCerrarSesion?: () => void;
+  notificaciones?: ReactNode; // Campana del centro de notificaciones
 }
 
 /** Título, selector de módulo (laptops, cubículos…) y pestañas del módulo. */
-export function Encabezado({ modulos, modulo, onCambiarModulo, activa, onCambiar, correo, onCerrarSesion }: Props) {
+export function Encabezado({ modulos, modulo, onCambiarModulo, activa, onCambiar, correo, onCerrarSesion, notificaciones }: Props) {
   const pestanas: { id: Pestana; titulo: string }[] = [
     { id: 'registro', titulo: modulo.registros },
     { id: 'recursos', titulo: modulo.recursos },
@@ -24,12 +26,15 @@ export function Encabezado({ modulos, modulo, onCambiarModulo, activa, onCambiar
     <header className="encabezado">
       <div className="encabezado-fila">
         <h1>Biblioteca · Préstamos y reservas</h1>
-        {onCerrarSesion && (
-          <div className="sesion">
-            <span>{correo}</span>
-            <button className="pestana" onClick={onCerrarSesion}>Cerrar sesión</button>
-          </div>
-        )}
+        <div className="sesion">
+          {notificaciones}
+          {onCerrarSesion && (
+            <>
+              <span>{correo}</span>
+              <button className="pestana" onClick={onCerrarSesion}>Cerrar sesión</button>
+            </>
+          )}
+        </div>
       </div>
       <nav className="modulos" aria-label="Módulo">
         {modulos.map((m) => (
