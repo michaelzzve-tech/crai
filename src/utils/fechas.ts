@@ -22,6 +22,17 @@ export function horaActual(fecha = new Date()): string {
   return formatoHHMM.format(fecha);
 }
 
+/** Día en Caracas ("2026-10-11") de una fecha. */
+export function diaDe(fecha: string | Date = new Date()): string {
+  return formatoDia.format(new Date(fecha));
+}
+
+/** "11/10/2026" a partir de "2026-10-11". */
+export function formatearDia(dia: string): string {
+  const [a, m, d] = dia.split('-');
+  return `${d}/${m}/${a}`;
+}
+
 /** Fecha de hoy (en Caracas) a la hora de Caracas indicada ("HH:MM"). */
 export function hoyALas(hora: string, hoy = new Date()): Date {
   return new Date(`${formatoDia.format(hoy)}T${hora}:00${DESFASE_CARACAS}`);

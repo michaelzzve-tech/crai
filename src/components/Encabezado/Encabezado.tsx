@@ -7,6 +7,8 @@ interface Props {
   modulos: Modulo[];
   modulo: Modulo;
   onCambiarModulo: (modulo: Modulo) => void;
+  enInformes: boolean; // true si está abierta la sección Informes en vez de un módulo
+  onInformes: () => void;
   activa: Pestana;
   onCambiar: (pestana: Pestana) => void;
   correo?: string;
@@ -15,7 +17,7 @@ interface Props {
 }
 
 /** Título, selector de módulo (laptops, cubículos…) y pestañas del módulo. */
-export function Encabezado({ modulos, modulo, onCambiarModulo, activa, onCambiar, correo, onCerrarSesion, notificaciones }: Props) {
+export function Encabezado({ modulos, modulo, onCambiarModulo, enInformes, onInformes, activa, onCambiar, correo, onCerrarSesion, notificaciones }: Props) {
   const pestanas: { id: Pestana; titulo: string }[] = [
     { id: 'registro', titulo: modulo.registros },
     { id: 'recursos', titulo: modulo.recursos },
@@ -40,24 +42,29 @@ export function Encabezado({ modulos, modulo, onCambiarModulo, activa, onCambiar
         {modulos.map((m) => (
           <button
             key={m.id}
-            className={m.id === modulo.id ? 'modulo activo' : 'modulo'}
+            className={!enInformes && m.id === modulo.id ? 'modulo activo' : 'modulo'}
             onClick={() => onCambiarModulo(m)}
           >
             {m.recursos}
           </button>
         ))}
+        <button className={enInformes ? 'modulo activo' : 'modulo'} onClick={onInformes}>
+          Informes
+        </button>
       </nav>
-      <nav className="pestanas" aria-label="Sección">
-        {pestanas.map((p) => (
-          <button
-            key={p.id}
-            className={p.id === activa ? 'pestana activa' : 'pestana'}
-            onClick={() => onCambiar(p.id)}
-          >
-            {p.titulo}
-          </button>
-        ))}
-      </nav>
+      {!enInformes && (
+        <nav className="pestanas" aria-label="Sección">
+          {pestanas.map((p) => (
+            <button
+              key={p.id}
+              className={p.id === activa ? 'pestana activa' : 'pestana'}
+              onClick={() => onCambiar(p.id)}
+            >
+              {p.titulo}
+            </button>
+          ))}
+        </nav>
+      )}
     </header>
   );
 }
