@@ -20,7 +20,7 @@ export interface Registro {
   carrera: string;
   motivo: string;
   inicio: string; // Hora de inicio, ISO 8601
-  fin: string; // Hora de fin, ISO 8601
+  fin?: string; // Hora de fin prevista, ISO 8601 (solo módulos con hora de fin)
   finReal?: string; // Cuándo se devolvió o liberó; vacío mientras está activo
   observaciones?: string;
 }
@@ -34,5 +34,5 @@ export interface NuevoRegistro {
   recursoId: string;
   motivo: string;
   horaInicio: string; // "HH:MM"
-  horaFin: string; // "HH:MM"
+  horaFin: string; // "HH:MM"; vacío en módulos sin hora de fin
 }

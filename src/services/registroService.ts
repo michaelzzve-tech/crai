@@ -11,7 +11,7 @@ import { generarId } from '../utils/id';
  */
 
 export function estaVencido(registro: Registro, ahora = new Date()): boolean {
-  return !registro.finReal && new Date(registro.fin) < ahora;
+  return !registro.finReal && !!registro.fin && new Date(registro.fin) < ahora;
 }
 
 /** Crea los recursos del módulo (sus opciones del menú) que todavía no existan. */
@@ -43,8 +43,8 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
   }
 
   const inicio = hoyALas(datos.horaInicio);
-  const fin = hoyALas(datos.horaFin);
-  if (fin <= inicio) {
+  const fin = modulo.conHoraFin ? hoyALas(datos.horaFin) : undefined;
+  if (fin && fin <= inicio) {
     throw new Error('La hora de fin debe ser posterior a la hora de inicio.');
   }
 
@@ -57,14 +57,14 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
     carrera: datos.carrera,
     motivo: datos.motivo,
     inicio: inicio.toISOString(),
-    fin: fin.toISOString(),
+    fin: fin?.toISOString(),
   };
   await repositorio.guardarRegistro(modulo.tablaRegistros, registro);
   await repositorio.guardarRecurso(modulo.tablaRecursos, { ...recurso, estado: 'ocupado' });
   return registro;
 }
 
-/** Devuelve la laptop o libera el cubículo. */
+/** Devuelve la laptop o libera el cubículo; la hora de fin real es la del momento. */
 export async function finalizar(modulo: Modulo, registro: Registro, observaciones: string) {
   await repositorio.guardarRegistro(modulo.tablaRegistros, {
     ...registro,

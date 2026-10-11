@@ -73,7 +73,8 @@ th { text-align: left; color: var(--texto-suave); font-weight: 600; border-botto
 td { border-bottom: 1px solid var(--borde); padding: 8px; vertical-align: top; }
 .acciones { white-space: nowrap; text-align: right; }
 .acciones button + button { margin-left: 6px; }
-.devolucion { display: flex; gap: 6px; }
+.devolucion { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.devolucion > .secundario { flex-basis: 100%; }
 .secundario { color: var(--texto-suave); font-size: .82rem; }
 .texto-alerta { color: var(--alerta); }
 .fila-vencida { background: var(--alerta-fondo); }
