@@ -1,24 +1,29 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { Modulo } from '../config/modulos';
 import { repositorio } from '../data';
-import type { Laptop, Prestamo } from '../types';
+import { asegurarRecursos } from '../services/registroService';
+import type { Recurso, Registro } from '../types';
 
-/** Carga laptops y préstamos, y expone `recargar` para refrescar tras cada acción. */
-export function useBiblioteca() {
-  const [laptops, setLaptops] = useState<Laptop[]>([]);
-  const [prestamos, setPrestamos] = useState<Prestamo[]>([]);
+/** Carga los recursos y registros del módulo, y expone `recargar` para refrescar tras cada acción. */
+export function useBiblioteca(modulo: Modulo) {
+  const [recursos, setRecursos] = useState<Recurso[]>([]);
+  const [registros, setRegistros] = useState<Registro[]>([]);
+  const [error, setError] = useState('');
 
   const recargar = useCallback(async () => {
-    const [l, p] = await Promise.all([
-      repositorio.listarLaptops(),
-      repositorio.listarPrestamos(),
+    const [r, g] = await Promise.all([
+      repositorio.listarRecursos(modulo.tablaRecursos),
+      repositorio.listarRegistros(modulo.tablaRegistros),
     ]);
-    setLaptops(l.sort((a, b) => a.codigo.localeCompare(b.codigo)));
-    setPrestamos(p.sort((a, b) => b.fechaPrestamo.localeCompare(a.fechaPrestamo)));
-  }, []);
+    setRecursos(r.sort((a, b) => a.numero - b.numero));
+    setRegistros(g.sort((a, b) => b.inicio.localeCompare(a.inicio)));
+  }, [modulo]);
 
   useEffect(() => {
-    void recargar();
-  }, [recargar]);
+    asegurarRecursos(modulo)
+      .then(recargar)
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
+  }, [modulo, recargar]);
 
-  return { laptops, prestamos, recargar };
+  return { recursos, registros, recargar, error };
 }

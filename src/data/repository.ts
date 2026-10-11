@@ -1,15 +1,15 @@
-import type { Laptop, Prestamo } from '../types';
+import type { Recurso, Registro } from '../types';
 
 /**
- * Contrato de acceso a datos. La interfaz usa promesas para que se pueda
- * reemplazar el almacenamiento local por una API (REST, Firebase, etc.)
- * sin tocar los componentes ni los servicios.
+ * Contrato de acceso a datos. Cada método recibe el nombre de la tabla del
+ * módulo (por ejemplo "laptops" y "prestamos", o "cubiculos" y "reservas").
+ * La interfaz usa promesas para que se pueda reemplazar el almacenamiento
+ * (navegador, Supabase u otro) sin tocar los componentes ni los servicios.
  */
 export interface Repositorio {
-  listarLaptops(): Promise<Laptop[]>;
-  guardarLaptop(laptop: Laptop): Promise<void>;
-  eliminarLaptop(id: string): Promise<void>;
+  listarRecursos(tabla: string): Promise<Recurso[]>;
+  guardarRecurso(tabla: string, recurso: Recurso): Promise<void>;
 
-  listarPrestamos(): Promise<Prestamo[]>;
-  guardarPrestamo(prestamo: Prestamo): Promise<void>;
+  listarRegistros(tabla: string): Promise<Registro[]>;
+  guardarRegistro(tabla: string, registro: Registro): Promise<void>;
 }

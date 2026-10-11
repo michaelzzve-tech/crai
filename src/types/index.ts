@@ -1,37 +1,38 @@
-// Tipos compartidos por toda la aplicación.
+// Tipos compartidos por toda la aplicación. Sirven para todos los módulos
+// (laptops, cubículos…): un recurso numerado y sus préstamos o reservas.
 
-export type EstadoLaptop = 'disponible' | 'prestada' | 'mantenimiento';
+export type EstadoRecurso = 'disponible' | 'ocupado' | 'mantenimiento';
 
-export interface Laptop {
-  id: string;
-  codigo: string; // Etiqueta de inventario de la biblioteca, p. ej. "LAP-001"
-  marca: string;
-  modelo: string;
-  numeroSerie: string;
-  estado: EstadoLaptop;
+export interface Recurso {
+  id: string; // Lo que se muestra en los menús: "1", "2"… o un nombre como "POD"
+  numero: number; // Orden en las listas
+  estado: EstadoRecurso;
   notas?: string;
 }
 
-export interface Prestamo {
+/** Un préstamo de laptop o una reserva de cubículo. */
+export interface Registro {
   id: string;
-  laptopId: string;
-  estudianteNombre: string;
-  estudianteCarnet: string; // Número de carnet / ID universitario
-  estudianteCorreo?: string;
-  encargado: string; // Bibliotecario que entrega la laptop
-  fechaPrestamo: string; // ISO 8601
-  fechaLimite: string; // ISO 8601
-  fechaDevolucion?: string; // ISO 8601, vacío mientras está activo
-  observacionesDevolucion?: string;
+  recursoId: string;
+  nombre: string;
+  instituto: string;
+  condicion: string;
+  carrera: string;
+  motivo: string;
+  inicio: string; // Hora de inicio, ISO 8601
+  fin: string; // Hora de fin, ISO 8601
+  finReal?: string; // Cuándo se devolvió o liberó; vacío mientras está activo
+  observaciones?: string;
 }
 
-export type NuevaLaptop = Omit<Laptop, 'id' | 'estado'>;
-
-export interface NuevoPrestamo {
-  laptopId: string;
-  estudianteNombre: string;
-  estudianteCarnet: string;
-  estudianteCorreo?: string;
-  encargado: string;
-  horas: number; // Duración del préstamo
+/** Datos del formulario, en el mismo orden en que se muestran. */
+export interface NuevoRegistro {
+  nombre: string;
+  instituto: string;
+  condicion: string;
+  carrera: string;
+  recursoId: string;
+  motivo: string;
+  horaInicio: string; // "HH:MM"
+  horaFin: string; // "HH:MM"
 }

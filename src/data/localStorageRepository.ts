@@ -1,20 +1,23 @@
-import type { Laptop, Prestamo } from '../types';
+import type { Recurso, Registro } from '../types';
 import type { Repositorio } from './repository';
 
-const CLAVE_LAPTOPS = 'biblioteca.laptops';
-const CLAVE_PRESTAMOS = 'biblioteca.prestamos';
+const clave = (tabla: string) => `biblioteca.v3.${tabla}`;
 
-function leer<T>(clave: string): T[] {
+function leer<T>(tabla: string): T[] {
   try {
-    const texto = localStorage.getItem(clave);
+    const texto = localStorage.getItem(clave(tabla));
     return texto ? (JSON.parse(texto) as T[]) : [];
   } catch {
     return [];
   }
 }
 
-function escribir<T>(clave: string, datos: T[]): void {
-  localStorage.setItem(clave, JSON.stringify(datos));
+function escribir<T>(tabla: string, datos: T[]): void {
+  try {
+    localStorage.setItem(clave(tabla), JSON.stringify(datos));
+  } catch {
+    throw new Error('No se pudo guardar: el navegador no permite almacenamiento local.');
+  }
 }
 
 function upsert<T extends { id: string }>(lista: T[], item: T): T[] {
@@ -24,23 +27,19 @@ function upsert<T extends { id: string }>(lista: T[], item: T): T[] {
 
 /** Implementación que guarda todo en el navegador (localStorage). */
 export class LocalStorageRepositorio implements Repositorio {
-  async listarLaptops() {
-    return leer<Laptop>(CLAVE_LAPTOPS);
+  async listarRecursos(tabla: string) {
+    return leer<Recurso>(tabla);
   }
 
-  async guardarLaptop(laptop: Laptop) {
-    escribir(CLAVE_LAPTOPS, upsert(leer<Laptop>(CLAVE_LAPTOPS), laptop));
+  async guardarRecurso(tabla: string, recurso: Recurso) {
+    escribir(tabla, upsert(leer<Recurso>(tabla), recurso));
   }
 
-  async eliminarLaptop(id: string) {
-    escribir(CLAVE_LAPTOPS, leer<Laptop>(CLAVE_LAPTOPS).filter((l) => l.id !== id));
+  async listarRegistros(tabla: string) {
+    return leer<Registro>(tabla);
   }
 
-  async listarPrestamos() {
-    return leer<Prestamo>(CLAVE_PRESTAMOS);
-  }
-
-  async guardarPrestamo(prestamo: Prestamo) {
-    escribir(CLAVE_PRESTAMOS, upsert(leer<Prestamo>(CLAVE_PRESTAMOS), prestamo));
+  async guardarRegistro(tabla: string, registro: Registro) {
+    escribir(tabla, upsert(leer<Registro>(tabla), registro));
   }
 }
