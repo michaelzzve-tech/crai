@@ -1,5 +1,5 @@
 import { CUBICULOS, LAPTOPS } from '../config/modulos';
-import { CARRERA_POR_INSTITUTO, CONDICIONES, INSTITUTOS, MOTIVOS } from '../config/opciones';
+import { CARRERA_POR_INSTITUTO, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS } from '../config/opciones';
 import { repositorio } from '../data';
 import type { Registro } from '../types';
 import { diaDe } from '../utils/fechas';
@@ -82,6 +82,7 @@ const ORDEN_CARRERAS = INSTITUTOS.flatMap((i) => {
 function desglosar(registros: Registro[], minutos: (r: Registro) => number): Desglose[] {
   return [
     agrupar('Por instituto', registros, (r) => r.instituto, minutos, INSTITUTOS),
+    agrupar('Por género', registros, (r) => r.genero || 'Sin dato', minutos, GENEROS),
     agrupar('Por condición', registros, (r) => r.condicion, minutos, CONDICIONES),
     agrupar('Por carrera o año', registros, carreraOAnio, minutos, ORDEN_CARRERAS),
     agrupar('Por motivo de uso', registros, (r) => r.motivo, minutos, MOTIVOS),

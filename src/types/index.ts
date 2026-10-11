@@ -15,6 +15,7 @@ export interface Registro {
   id: string;
   recursoId: string;
   nombre: string;
+  genero?: string; // Vacío en registros anteriores a este campo
   instituto: string;
   condicion: string;
   carrera: string;
@@ -27,6 +28,7 @@ export interface Registro {
 /** Datos del formulario, en el mismo orden en que se muestran. */
 export interface NuevoRegistro {
   nombre: string;
+  genero: string;
   instituto: string;
   condicion: string;
   carrera: string;

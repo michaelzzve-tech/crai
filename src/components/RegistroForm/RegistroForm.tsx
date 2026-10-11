@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { CARRERA_POR_INSTITUTO, CONDICIONES, INSTITUTOS, MOTIVOS } from '../../config/opciones';
+import { CARRERA_POR_INSTITUTO, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS } from '../../config/opciones';
 import type { Modulo } from '../../config/modulos';
 import { registrar } from '../../services/registroService';
 import type { NuevoRegistro, Recurso } from '../../types';
@@ -8,6 +8,7 @@ import type { EjecutarAccion } from '../tipos';
 
 const vacio = (): NuevoRegistro => ({
   nombre: '',
+  genero: '',
   instituto: '',
   condicion: '',
   carrera: '',
@@ -96,6 +97,7 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
           Nombre
           <input id="registro-nombre" required value={datos.nombre} onChange={(e) => cambiar('nombre')(e.target.value)} />
         </label>
+        <Desplegable id="registro-genero" titulo="Género" valor={datos.genero} opciones={GENEROS} onCambiar={cambiar('genero')} />
         <Desplegable
           id="registro-instituto"
           titulo="Instituto"

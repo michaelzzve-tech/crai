@@ -18,6 +18,7 @@ interface FilaRegistro {
   id: string;
   recurso_id: string;
   nombre: string;
+  genero: string | null;
   instituto: string;
   condicion: string;
   carrera: string;
@@ -47,6 +48,7 @@ const aRegistro = (f: FilaRegistro): Registro => ({
   id: f.id,
   recursoId: f.recurso_id,
   nombre: f.nombre,
+  genero: f.genero ?? undefined,
   instituto: f.instituto,
   condicion: f.condicion,
   carrera: f.carrera,
@@ -60,6 +62,7 @@ const aFilaRegistro = (r: Registro): FilaRegistro => ({
   id: r.id,
   recurso_id: r.recursoId,
   nombre: r.nombre,
+  genero: r.genero ?? null,
   instituto: r.instituto,
   condicion: r.condicion,
   carrera: r.carrera,
