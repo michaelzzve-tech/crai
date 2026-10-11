@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Encabezado, type Pestana } from './components/Encabezado';
 import { Historial } from './components/Historial';
-import { LaptopForm } from './components/LaptopForm';
 import { LaptopList } from './components/LaptopList';
 import { Login } from './components/Login';
 import { PrestamoForm } from './components/PrestamoForm';
@@ -29,7 +28,7 @@ interface PropsBiblioteca {
 }
 
 function Biblioteca({ correo, onCerrarSesion }: PropsBiblioteca) {
-  const { laptops, prestamos, recargar } = useBiblioteca();
+  const { laptops, prestamos, recargar, error } = useBiblioteca();
   const [pestana, setPestana] = useState<Pestana>('prestamos');
   const [aviso, setAviso] = useState<Aviso | null>(null);
 
@@ -50,6 +49,7 @@ function Biblioteca({ correo, onCerrarSesion }: PropsBiblioteca) {
     <div className="app">
       <Encabezado activa={pestana} onCambiar={setPestana} correo={correo} onCerrarSesion={onCerrarSesion} />
       <main>
+        {error && <div className="aviso aviso-error" role="alert">No se pudieron cargar los datos. {error}</div>}
         {aviso && (
           <div className={`aviso aviso-${aviso.tipo}`} role="status">
             {aviso.texto}
@@ -65,10 +65,7 @@ function Biblioteca({ correo, onCerrarSesion }: PropsBiblioteca) {
           </>
         )}
         {pestana === 'laptops' && (
-          <>
-            <LaptopForm ejecutar={ejecutar} />
-            <LaptopList laptops={laptops} ejecutar={ejecutar} />
-          </>
+<LaptopList laptops={laptops} ejecutar={ejecutar} />
         )}
         {pestana === 'historial' && <Historial prestamos={prestamos} laptops={laptops} />}
       </main>

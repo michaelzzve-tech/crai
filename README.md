@@ -1,7 +1,7 @@
 # Préstamo de laptops · Biblioteca universitaria
 
 Aplicación web para llevar el registro de las laptops que la biblioteca presta a los estudiantes:
-inventario, préstamos activos (con alerta de vencidos), devoluciones con observaciones e historial.
+préstamos activos (con alerta de vencidos), devoluciones con observaciones, estado de las laptops e historial.
 
 ![Pantalla de préstamos](docs/captura.png)
 
@@ -46,19 +46,22 @@ y pegue los mismos dos valores.
 
 ## Funciones
 
-- **Inventario**: registrar laptops (código, marca, modelo, serie, notas), buscar, enviar a mantenimiento, eliminar.
-- **Préstamos**: prestar una laptop disponible a un estudiante (nombre, carnet, correo, bibliotecario, duración).
+- **Préstamos**: registrar un préstamo con estos campos, en este orden: nombre, instituto
+  (ITJO, IUJO, CFJO), condición (estudiante, docente, otro), carrera o año, laptop (1 a 25),
+  motivo de uso (estudio, tarea, entretenimiento), hora de inicio y hora de fin.
 - **Devoluciones**: registrar la devolución con observaciones (daños, faltantes).
+- **Laptops**: ver el estado de las 25 laptops y enviar alguna a mantenimiento.
 - **Historial**: todos los préstamos, con búsqueda y marca de devoluciones con retraso.
 - **Resumen**: totales de disponibles, prestadas, en mantenimiento y préstamos vencidos.
 
-Reglas incluidas: no se repiten códigos de inventario, solo se prestan laptops disponibles,
-un estudiante (carnet) no puede tener dos laptops a la vez, y no se elimina una laptop prestada.
+Reglas incluidas: solo se prestan laptops disponibles (las prestadas o en mantenimiento
+aparecen desactivadas en el menú) y la hora de fin debe ser posterior a la de inicio.
 
 ## Estructura (por componentes)
 
 ```
 src/
+├── config/opciones.ts Opciones de los menús desplegables y número de laptops
 ├── types/            Tipos de datos (Laptop, Prestamo…)
 ├── data/             Acceso a datos
 │   ├── repository.ts             Interfaz `Repositorio`
@@ -76,8 +79,7 @@ src/
 │   ├── Login/             Pantalla de inicio de sesión
 │   ├── Resumen/           Tarjetas con totales
 │   ├── EstadoBadge/       Etiqueta de color para estados
-│   ├── LaptopForm/        Formulario de nueva laptop
-│   ├── LaptopList/        Tabla de inventario
+│   ├── LaptopList/        Estado de las laptops
 │   ├── PrestamoForm/      Formulario de nuevo préstamo
 │   ├── PrestamosActivos/  Préstamos en curso y devolución
 │   └── Historial/         Historial de préstamos
@@ -89,9 +91,10 @@ src/
 
 | Quiero… | Archivo |
 |---|---|
-| Cambiar las duraciones de préstamo | `src/components/PrestamoForm/PrestamoForm.tsx` (`DURACIONES`) |
+| Cambiar las opciones de un menú (institutos, carreras, motivos…) | `src/config/opciones.ts` |
+| Cambiar la cantidad de laptops | `TOTAL_LAPTOPS` en `src/config/opciones.ts` |
 | Cambiar o agregar reglas | `src/services/prestamoService.ts` |
-| Agregar un campo a la laptop o al préstamo | `src/types/index.ts` y el formulario correspondiente |
+| Agregar un campo al préstamo | `src/types/index.ts`, `src/components/PrestamoForm/PrestamoForm.tsx` y la base de datos |
 | Cambiar colores | variables al inicio de `src/styles/global.css` |
 | Cambiar las tablas de la base de datos | `supabase/esquema.sql` y `src/data/supabaseRepository.ts` |
 | Usar otra base de datos | crear una clase que implemente `Repositorio` y usarla en `src/data/index.ts` |

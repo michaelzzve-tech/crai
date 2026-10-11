@@ -7,10 +7,7 @@ import type { Repositorio } from './repository';
 
 interface FilaLaptop {
   id: string;
-  codigo: string;
-  marca: string;
-  modelo: string;
-  numero_serie: string;
+  numero: number;
   estado: Laptop['estado'];
   notas: string | null;
 }
@@ -18,12 +15,13 @@ interface FilaLaptop {
 interface FilaPrestamo {
   id: string;
   laptop_id: string;
-  estudiante_nombre: string;
-  estudiante_carnet: string;
-  estudiante_correo: string | null;
-  encargado: string;
-  fecha_prestamo: string;
-  fecha_limite: string;
+  nombre: string;
+  instituto: string;
+  condicion: string;
+  carrera: string;
+  motivo: string;
+  hora_inicio: string;
+  hora_fin: string;
   fecha_devolucion: string | null;
   observaciones_devolucion: string | null;
 }
@@ -32,20 +30,14 @@ const iso = (fecha: string) => new Date(fecha).toISOString();
 
 const aLaptop = (f: FilaLaptop): Laptop => ({
   id: f.id,
-  codigo: f.codigo,
-  marca: f.marca,
-  modelo: f.modelo,
-  numeroSerie: f.numero_serie,
+  numero: f.numero,
   estado: f.estado,
   notas: f.notas ?? undefined,
 });
 
 const aFilaLaptop = (l: Laptop): FilaLaptop => ({
   id: l.id,
-  codigo: l.codigo,
-  marca: l.marca,
-  modelo: l.modelo,
-  numero_serie: l.numeroSerie,
+  numero: l.numero,
   estado: l.estado,
   notas: l.notas ?? null,
 });
@@ -53,12 +45,13 @@ const aFilaLaptop = (l: Laptop): FilaLaptop => ({
 const aPrestamo = (f: FilaPrestamo): Prestamo => ({
   id: f.id,
   laptopId: f.laptop_id,
-  estudianteNombre: f.estudiante_nombre,
-  estudianteCarnet: f.estudiante_carnet,
-  estudianteCorreo: f.estudiante_correo ?? undefined,
-  encargado: f.encargado,
-  fechaPrestamo: iso(f.fecha_prestamo),
-  fechaLimite: iso(f.fecha_limite),
+  nombre: f.nombre,
+  instituto: f.instituto,
+  condicion: f.condicion,
+  carrera: f.carrera,
+  motivo: f.motivo,
+  fechaPrestamo: iso(f.hora_inicio),
+  fechaLimite: iso(f.hora_fin),
   fechaDevolucion: f.fecha_devolucion ? iso(f.fecha_devolucion) : undefined,
   observacionesDevolucion: f.observaciones_devolucion ?? undefined,
 });
@@ -66,12 +59,13 @@ const aPrestamo = (f: FilaPrestamo): Prestamo => ({
 const aFilaPrestamo = (p: Prestamo): FilaPrestamo => ({
   id: p.id,
   laptop_id: p.laptopId,
-  estudiante_nombre: p.estudianteNombre,
-  estudiante_carnet: p.estudianteCarnet,
-  estudiante_correo: p.estudianteCorreo ?? null,
-  encargado: p.encargado,
-  fecha_prestamo: p.fechaPrestamo,
-  fecha_limite: p.fechaLimite,
+  nombre: p.nombre,
+  instituto: p.instituto,
+  condicion: p.condicion,
+  carrera: p.carrera,
+  motivo: p.motivo,
+  hora_inicio: p.fechaPrestamo,
+  hora_fin: p.fechaLimite,
   fecha_devolucion: p.fechaDevolucion ?? null,
   observaciones_devolucion: p.observacionesDevolucion ?? null,
 });
@@ -96,11 +90,6 @@ export class SupabaseRepositorio implements Repositorio {
 
   async guardarLaptop(laptop: Laptop) {
     const { error } = await this.db.from('laptops').upsert(aFilaLaptop(laptop));
-    revisar(error);
-  }
-
-  async eliminarLaptop(id: string) {
-    const { error } = await this.db.from('laptops').delete().eq('id', id);
     revisar(error);
   }
 

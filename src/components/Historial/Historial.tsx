@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Laptop, Prestamo } from '../../types';
-import { formatearFecha } from '../../utils/fechas';
+import { formatearFecha, formatearHora } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 
 interface Props {
@@ -10,11 +10,11 @@ interface Props {
 
 export function Historial({ prestamos, laptops }: Props) {
   const [filtro, setFiltro] = useState('');
-  const codigoDe = (id: string) => laptops.find((l) => l.id === id)?.codigo ?? '(eliminada)';
+  const numeroDe = (id: string) => String(laptops.find((l) => l.id === id)?.numero ?? id);
 
   const texto = filtro.toLowerCase();
   const visibles = prestamos.filter((p) =>
-    [codigoDe(p.laptopId), p.estudianteNombre, p.estudianteCarnet].some((v) =>
+    [numeroDe(p.laptopId), p.nombre, p.instituto, p.condicion, p.carrera, p.motivo].some((v) =>
       v.toLowerCase().includes(texto),
     ),
   );
@@ -25,7 +25,7 @@ export function Historial({ prestamos, laptops }: Props) {
         <h2>Historial de préstamos ({prestamos.length})</h2>
         <input
           className="buscador"
-          placeholder="Buscar por laptop, estudiante o carnet"
+          placeholder="Buscar por nombre, laptop, instituto, carrera…"
           value={filtro}
           onChange={(e) => setFiltro(e.target.value)}
         />
@@ -37,10 +37,13 @@ export function Historial({ prestamos, laptops }: Props) {
           <thead>
             <tr>
               <th>Laptop</th>
-              <th>Estudiante</th>
-              <th>Entregó</th>
-              <th>Prestada</th>
-              <th>Límite</th>
+              <th>Nombre</th>
+              <th>Instituto</th>
+              <th>Condición</th>
+              <th>Carrera o año</th>
+              <th>Motivo</th>
+              <th>Inicio</th>
+              <th>Fin</th>
               <th>Devuelta</th>
               <th>Observaciones</th>
             </tr>
@@ -50,18 +53,18 @@ export function Historial({ prestamos, laptops }: Props) {
               const tarde = p.fechaDevolucion && p.fechaDevolucion > p.fechaLimite;
               return (
                 <tr key={p.id}>
-                  <td><strong>{codigoDe(p.laptopId)}</strong></td>
-                  <td>
-                    {p.estudianteNombre}
-                    <div className="secundario">{p.estudianteCarnet}{p.estudianteCorreo && ` · ${p.estudianteCorreo}`}</div>
-                  </td>
-                  <td>{p.encargado}</td>
+                  <td><strong>{numeroDe(p.laptopId)}</strong></td>
+                  <td>{p.nombre}</td>
+                  <td>{p.instituto}</td>
+                  <td>{p.condicion}</td>
+                  <td>{p.carrera}</td>
+                  <td>{p.motivo}</td>
                   <td>{formatearFecha(p.fechaPrestamo)}</td>
-                  <td>{formatearFecha(p.fechaLimite)}</td>
+                  <td>{formatearHora(p.fechaLimite)}</td>
                   <td>
                     {p.fechaDevolucion ? (
                       <>
-                        {formatearFecha(p.fechaDevolucion)}
+                        {formatearHora(p.fechaDevolucion)}
                         {tarde && <div className="secundario texto-alerta">Con retraso</div>}
                       </>
                     ) : (

@@ -1,23 +1,25 @@
 import { useState, type FormEvent } from 'react';
+import { CARRERAS, CONDICIONES, INSTITUTOS, MOTIVOS } from '../../config/opciones';
 import { prestarLaptop } from '../../services/prestamoService';
 import type { Laptop, NuevoPrestamo } from '../../types';
+import { horaActual } from '../../utils/fechas';
 import type { EjecutarAccion } from '../tipos';
 
-// Opciones de duración en horas. Ajuste esta lista según las políticas de la biblioteca.
-const DURACIONES = [
-  { horas: 2, texto: '2 horas' },
-  { horas: 4, texto: '4 horas' },
-  { horas: 8, texto: 'Todo el día (8 horas)' },
-  { horas: 24, texto: '24 horas' },
-];
-
-const VACIO: NuevoPrestamo = {
+const vacio = (): NuevoPrestamo => ({
+  nombre: '',
+  instituto: '',
+  condicion: '',
+  carrera: '',
   laptopId: '',
-  estudianteNombre: '',
-  estudianteCarnet: '',
-  estudianteCorreo: '',
-  encargado: '',
-  horas: 2,
+  motivo: '',
+  horaInicio: horaActual(),
+  horaFin: '',
+});
+
+const TEXTO_ESTADO: Record<Laptop['estado'], string> = {
+  disponible: '',
+  prestada: ' (prestada)',
+  mantenimiento: ' (en mantenimiento)',
 };
 
 interface Props {
@@ -25,67 +27,72 @@ interface Props {
   ejecutar: EjecutarAccion;
 }
 
-export function PrestamoForm({ laptops, ejecutar }: Props) {
-  const [datos, setDatos] = useState<NuevoPrestamo>(VACIO);
-  const disponibles = laptops.filter((l) => l.estado === 'disponible');
+/** Menú desplegable con una opción vacía inicial. */
+function Desplegable({ id, titulo, valor, opciones, onCambiar }: {
+  id: string;
+  titulo: string;
+  valor: string;
+  opciones: string[];
+  onCambiar: (valor: string) => void;
+}) {
+  return (
+    <label htmlFor={id}>
+      {titulo}
+      <select id={id} required value={valor} onChange={(e) => onCambiar(e.target.value)}>
+        <option value="">Seleccione…</option>
+        {opciones.map((o) => (
+          <option key={o} value={o}>{o}</option>
+        ))}
+      </select>
+    </label>
+  );
+}
 
-  const cambiar = (campo: keyof NuevoPrestamo) => (e: { target: { value: string } }) =>
-    setDatos({ ...datos, [campo]: campo === 'horas' ? Number(e.target.value) : e.target.value });
+export function PrestamoForm({ laptops, ejecutar }: Props) {
+  const [datos, setDatos] = useState<NuevoPrestamo>(vacio);
+  const cambiar = (campo: keyof NuevoPrestamo) => (valor: string) =>
+    setDatos({ ...datos, [campo]: valor });
 
   async function enviar(e: FormEvent) {
     e.preventDefault();
-    const ok = await ejecutar(() => prestarLaptop(datos), `Préstamo registrado para ${datos.estudianteNombre}.`);
-    // Se conserva el encargado para agilizar el siguiente préstamo.
-    if (ok) setDatos({ ...VACIO, encargado: datos.encargado });
+    const numero = laptops.find((l) => l.id === datos.laptopId)?.numero;
+    const ok = await ejecutar(() => prestarLaptop(datos), `Laptop ${numero} prestada a ${datos.nombre}.`);
+    if (ok) setDatos(vacio());
   }
 
   return (
     <form className="formulario" onSubmit={enviar}>
       <h2>Nuevo préstamo</h2>
-      {disponibles.length === 0 ? (
-        <p className="vacio">No hay laptops disponibles en este momento.</p>
-      ) : (
-        <>
-          <div className="campos">
-            <label>
-              Laptop
-              <select required value={datos.laptopId} onChange={cambiar('laptopId')}>
-                <option value="">Seleccione…</option>
-                {disponibles.map((l) => (
-                  <option key={l.id} value={l.id}>
-                    {l.codigo} · {l.marca} {l.modelo}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Duración
-              <select value={datos.horas} onChange={cambiar('horas')}>
-                {DURACIONES.map((d) => (
-                  <option key={d.horas} value={d.horas}>{d.texto}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Nombre del estudiante
-              <input required value={datos.estudianteNombre} onChange={cambiar('estudianteNombre')} />
-            </label>
-            <label>
-              Carnet / ID universitario
-              <input required value={datos.estudianteCarnet} onChange={cambiar('estudianteCarnet')} />
-            </label>
-            <label>
-              Correo (opcional)
-              <input type="email" value={datos.estudianteCorreo} onChange={cambiar('estudianteCorreo')} />
-            </label>
-            <label>
-              Bibliotecario que entrega
-              <input required value={datos.encargado} onChange={cambiar('encargado')} />
-            </label>
-          </div>
-          <button type="submit" className="primario">Registrar préstamo</button>
-        </>
-      )}
+      <div className="campos">
+        <label htmlFor="prestamo-nombre">
+          Nombre
+          <input id="prestamo-nombre" required value={datos.nombre} onChange={(e) => cambiar('nombre')(e.target.value)} />
+        </label>
+        <Desplegable id="prestamo-instituto" titulo="Instituto" valor={datos.instituto} opciones={INSTITUTOS} onCambiar={cambiar('instituto')} />
+        <Desplegable id="prestamo-condicion" titulo="Condición" valor={datos.condicion} opciones={CONDICIONES} onCambiar={cambiar('condicion')} />
+        <Desplegable id="prestamo-carrera" titulo="Carrera o año" valor={datos.carrera} opciones={CARRERAS} onCambiar={cambiar('carrera')} />
+        <label htmlFor="prestamo-laptop">
+          Laptop
+          <select id="prestamo-laptop" required value={datos.laptopId} onChange={(e) => cambiar('laptopId')(e.target.value)}>
+            <option value="">Seleccione…</option>
+            {laptops.map((l) => (
+              <option key={l.id} value={l.id} disabled={l.estado !== 'disponible'}>
+                {l.numero}{TEXTO_ESTADO[l.estado]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <Desplegable id="prestamo-motivo" titulo="Motivo de uso" valor={datos.motivo} opciones={MOTIVOS} onCambiar={cambiar('motivo')} />
+        <label htmlFor="prestamo-inicio">
+          Hora de inicio
+          <input id="prestamo-inicio" type="time" required value={datos.horaInicio} onChange={(e) => cambiar('horaInicio')(e.target.value)} />
+        </label>
+        <label htmlFor="prestamo-fin">
+          Hora de fin
+          <input id="prestamo-fin" type="time" required value={datos.horaFin} onChange={(e) => cambiar('horaFin')(e.target.value)} />
+        </label>
+      </div>
+      <button type="submit" className="primario">Registrar préstamo</button>
     </form>
   );
 }

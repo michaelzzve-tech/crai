@@ -1,8 +1,8 @@
 import type { Laptop, Prestamo } from '../types';
 import type { Repositorio } from './repository';
 
-const CLAVE_LAPTOPS = 'biblioteca.laptops';
-const CLAVE_PRESTAMOS = 'biblioteca.prestamos';
+const CLAVE_LAPTOPS = 'biblioteca.v2.laptops';
+const CLAVE_PRESTAMOS = 'biblioteca.v2.prestamos';
 
 function leer<T>(clave: string): T[] {
   try {
@@ -30,10 +30,6 @@ export class LocalStorageRepositorio implements Repositorio {
 
   async guardarLaptop(laptop: Laptop) {
     escribir(CLAVE_LAPTOPS, upsert(leer<Laptop>(CLAVE_LAPTOPS), laptop));
-  }
-
-  async eliminarLaptop(id: string) {
-    escribir(CLAVE_LAPTOPS, leer<Laptop>(CLAVE_LAPTOPS).filter((l) => l.id !== id));
   }
 
   async listarPrestamos() {

@@ -2,7 +2,7 @@ export type Pestana = 'prestamos' | 'laptops' | 'historial';
 
 const PESTANAS: { id: Pestana; titulo: string }[] = [
   { id: 'prestamos', titulo: 'Préstamos' },
-  { id: 'laptops', titulo: 'Inventario de laptops' },
+  { id: 'laptops', titulo: 'Laptops' },
   { id: 'historial', titulo: 'Historial' },
 ];
 

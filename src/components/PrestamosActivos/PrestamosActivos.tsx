@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { devolverLaptop, estaVencido } from '../../services/prestamoService';
 import type { Laptop, Prestamo } from '../../types';
-import { formatearFecha } from '../../utils/fechas';
+import { formatearHora } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 import type { EjecutarAccion } from '../tipos';
 
@@ -16,12 +16,12 @@ export function PrestamosActivos({ prestamos, laptops, ejecutar }: Props) {
   const [observaciones, setObservaciones] = useState('');
 
   const activos = prestamos.filter((p) => !p.fechaDevolucion);
-  const codigoDe = (id: string) => laptops.find((l) => l.id === id)?.codigo ?? '(eliminada)';
+  const numeroDe = (id: string) => laptops.find((l) => l.id === id)?.numero ?? id;
 
   async function confirmarDevolucion(p: Prestamo) {
     const ok = await ejecutar(
       () => devolverLaptop(p, observaciones),
-      `Laptop ${codigoDe(p.laptopId)} devuelta.`,
+      `Laptop ${numeroDe(p.laptopId)} devuelta.`,
     );
     if (ok) {
       setDevolviendo(null);
@@ -39,9 +39,11 @@ export function PrestamosActivos({ prestamos, laptops, ejecutar }: Props) {
           <thead>
             <tr>
               <th>Laptop</th>
-              <th>Estudiante</th>
-              <th>Prestada</th>
-              <th>Devolver antes de</th>
+              <th>Nombre</th>
+              <th>Carrera o año</th>
+              <th>Motivo</th>
+              <th>Inicio</th>
+              <th>Fin</th>
               <th>Estado</th>
               <th></th>
             </tr>
@@ -51,13 +53,15 @@ export function PrestamosActivos({ prestamos, laptops, ejecutar }: Props) {
               const vencido = estaVencido(p);
               return (
                 <tr key={p.id} className={vencido ? 'fila-vencida' : undefined}>
-                  <td><strong>{codigoDe(p.laptopId)}</strong></td>
+                  <td><strong>{numeroDe(p.laptopId)}</strong></td>
                   <td>
-                    {p.estudianteNombre}
-                    <div className="secundario">{p.estudianteCarnet}</div>
+                    {p.nombre}
+                    <div className="secundario">{p.instituto} · {p.condicion}</div>
                   </td>
-                  <td>{formatearFecha(p.fechaPrestamo)}</td>
-                  <td>{formatearFecha(p.fechaLimite)}</td>
+                  <td>{p.carrera}</td>
+                  <td>{p.motivo}</td>
+                  <td>{formatearHora(p.fechaPrestamo)}</td>
+                  <td>{formatearHora(p.fechaLimite)}</td>
                   <td><EstadoBadge estado={vencido ? 'vencido' : 'activo'} /></td>
                   <td className="acciones">
                     {devolviendo === p.id ? (

@@ -3,11 +3,8 @@
 export type EstadoLaptop = 'disponible' | 'prestada' | 'mantenimiento';
 
 export interface Laptop {
-  id: string;
-  codigo: string; // Etiqueta de inventario de la biblioteca, p. ej. "LAP-001"
-  marca: string;
-  modelo: string;
-  numeroSerie: string;
+  id: string; // Igual al número como texto: "1", "2"…
+  numero: number;
   estado: EstadoLaptop;
   notas?: string;
 }
@@ -15,23 +12,25 @@ export interface Laptop {
 export interface Prestamo {
   id: string;
   laptopId: string;
-  estudianteNombre: string;
-  estudianteCarnet: string; // Número de carnet / ID universitario
-  estudianteCorreo?: string;
-  encargado: string; // Bibliotecario que entrega la laptop
-  fechaPrestamo: string; // ISO 8601
-  fechaLimite: string; // ISO 8601
+  nombre: string;
+  instituto: string;
+  condicion: string;
+  carrera: string;
+  motivo: string;
+  fechaPrestamo: string; // Hora de inicio, ISO 8601
+  fechaLimite: string; // Hora de fin, ISO 8601
   fechaDevolucion?: string; // ISO 8601, vacío mientras está activo
   observacionesDevolucion?: string;
 }
 
-export type NuevaLaptop = Omit<Laptop, 'id' | 'estado'>;
-
+/** Datos del formulario de préstamo, en el mismo orden en que se muestran. */
 export interface NuevoPrestamo {
+  nombre: string;
+  instituto: string;
+  condicion: string;
+  carrera: string;
   laptopId: string;
-  estudianteNombre: string;
-  estudianteCarnet: string;
-  estudianteCorreo?: string;
-  encargado: string;
-  horas: number; // Duración del préstamo
+  motivo: string;
+  horaInicio: string; // "HH:MM"
+  horaFin: string; // "HH:MM"
 }
