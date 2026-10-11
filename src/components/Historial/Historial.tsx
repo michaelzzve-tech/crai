@@ -52,7 +52,6 @@ export function Historial({ modulo, registros }: Props) {
               )}
               <th>{modulo.finalizado}</th>
               {!conFin && <th>Tiempo transcurrido</th>}
-              <th>Observaciones</th>
             </tr>
           </thead>
           <tbody>
@@ -84,7 +83,6 @@ export function Historial({ modulo, registros }: Props) {
                     )}
                   </td>
                   {!conFin && <td>{r.finReal ? duracionEntreFechas(r.inicio, r.finReal) : '—'}</td>}
-                  <td>{r.observaciones}</td>
                 </tr>
               );
             })}

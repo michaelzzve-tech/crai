@@ -60,7 +60,7 @@ y pegue los mismos dos valores.
   (estudio, tarea, entretenimiento) y hora de inicio. Los cubículos piden además hora de fin
   y muestran la duración (se calcula sola).
 - **En curso**: préstamos o reservas activos; desde ahí se registra la devolución de la
-  laptop o la salida del cubículo, con observaciones. En las laptops, la hora de devolución
+  laptop o la salida del cubículo. En las laptops, la hora de devolución
   se toma sola en el momento y se muestra el **tiempo transcurrido** desde la hora de inicio.
 - **Hora de Caracas**: todas las horas se muestran y se registran en hora de Caracas,
   Venezuela, aunque la computadora tenga otra zona horaria.

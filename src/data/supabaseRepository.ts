@@ -25,7 +25,6 @@ interface FilaRegistro {
   hora_inicio: string;
   hora_fin: string | null;
   fin_real: string | null;
-  observaciones: string | null;
 }
 
 const iso = (fecha: string) => new Date(fecha).toISOString();
@@ -55,7 +54,6 @@ const aRegistro = (f: FilaRegistro): Registro => ({
   inicio: iso(f.hora_inicio),
   fin: f.hora_fin ? iso(f.hora_fin) : undefined,
   finReal: f.fin_real ? iso(f.fin_real) : undefined,
-  observaciones: f.observaciones ?? undefined,
 });
 
 const aFilaRegistro = (r: Registro): FilaRegistro => ({
@@ -69,7 +67,6 @@ const aFilaRegistro = (r: Registro): FilaRegistro => ({
   hora_inicio: r.inicio,
   hora_fin: r.fin ?? null,
   fin_real: r.finReal ?? null,
-  observaciones: r.observaciones ?? null,
 });
 
 function revisar(error: { message: string } | null): void {

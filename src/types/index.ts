@@ -22,7 +22,6 @@ export interface Registro {
   inicio: string; // Hora de inicio, ISO 8601
   fin?: string; // Hora de fin prevista, ISO 8601 (solo módulos con hora de fin)
   finReal?: string; // Cuándo se devolvió o liberó; vacío mientras está activo
-  observaciones?: string;
 }
 
 /** Datos del formulario, en el mismo orden en que se muestran. */

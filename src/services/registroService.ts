@@ -65,11 +65,10 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
 }
 
 /** Devuelve la laptop o libera el cubículo; la hora de fin real es la del momento. */
-export async function finalizar(modulo: Modulo, registro: Registro, observaciones: string) {
+export async function finalizar(modulo: Modulo, registro: Registro) {
   await repositorio.guardarRegistro(modulo.tablaRegistros, {
     ...registro,
     finReal: new Date().toISOString(),
-    observaciones: observaciones.trim() || undefined,
   });
   const recursos = await repositorio.listarRecursos(modulo.tablaRecursos);
   const recurso = recursos.find((r) => r.id === registro.recursoId);

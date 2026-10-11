@@ -16,7 +16,6 @@ interface Props {
 /** Préstamos o reservas en curso, con el botón para devolver o liberar. */
 export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
   const [finalizando, setFinalizando] = useState<string | null>(null);
-  const [observaciones, setObservaciones] = useState('');
   const ahora = useAhora();
   const conFin = modulo.conHoraFin;
 
@@ -24,13 +23,10 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
 
   async function confirmar(registro: Registro) {
     const ok = await ejecutar(
-      () => finalizar(modulo, registro, observaciones),
+      () => finalizar(modulo, registro),
       modulo.mensajeFinalizado(registro.recursoId),
     );
-    if (ok) {
-      setFinalizando(null);
-      setObservaciones('');
-    }
+    if (ok) setFinalizando(null);
   }
 
   return (
@@ -90,17 +86,11 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                             {' · '}Tiempo transcurrido: <strong>{duracionEntreFechas(r.inicio, ahora)}</strong>
                           </span>
                         )}
-                        <input
-                          autoFocus
-                          placeholder="Observaciones (daños, faltantes…)"
-                          value={observaciones}
-                          onChange={(e) => setObservaciones(e.target.value)}
-                        />
-                        <button className="primario" onClick={() => confirmar(r)}>Confirmar</button>
+                        <button className="primario" autoFocus onClick={() => confirmar(r)}>Confirmar</button>
                         <button onClick={() => setFinalizando(null)}>Cancelar</button>
                       </div>
                     ) : (
-                      <button className="primario" onClick={() => { setFinalizando(r.id); setObservaciones(''); }}>
+                      <button className="primario" onClick={() => setFinalizando(r.id)}>
                         {modulo.finalizar}
                       </button>
                     )}
