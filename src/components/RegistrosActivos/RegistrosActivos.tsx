@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Modulo } from '../../config/modulos';
 import { estaVencido, finalizar } from '../../services/registroService';
-import type { Recurso, Registro } from '../../types';
+import type { Registro } from '../../types';
 import { duracionEntreFechas, formatearHora } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 import type { EjecutarAccion } from '../tipos';
@@ -9,22 +9,20 @@ import type { EjecutarAccion } from '../tipos';
 interface Props {
   modulo: Modulo;
   registros: Registro[];
-  recursos: Recurso[];
   ejecutar: EjecutarAccion;
 }
 
 /** Préstamos o reservas en curso, con el botón para devolver o liberar. */
-export function RegistrosActivos({ modulo, registros, recursos, ejecutar }: Props) {
+export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
   const [finalizando, setFinalizando] = useState<string | null>(null);
   const [observaciones, setObservaciones] = useState('');
 
   const activos = registros.filter((r) => !r.finReal);
-  const numeroDe = (id: string) => recursos.find((r) => r.id === id)?.numero ?? Number(id);
 
   async function confirmar(registro: Registro) {
     const ok = await ejecutar(
       () => finalizar(modulo, registro, observaciones),
-      modulo.mensajeFinalizado(numeroDe(registro.recursoId)),
+      modulo.mensajeFinalizado(registro.recursoId),
     );
     if (ok) {
       setFinalizando(null);
@@ -57,7 +55,7 @@ export function RegistrosActivos({ modulo, registros, recursos, ejecutar }: Prop
               const vencido = estaVencido(r);
               return (
                 <tr key={r.id} className={vencido ? 'fila-vencida' : undefined}>
-                  <td><strong>{numeroDe(r.recursoId)}</strong></td>
+                  <td><strong>{r.recursoId}</strong></td>
                   <td>
                     {r.nombre}
                     <div className="secundario">{r.instituto} · {r.condicion}</div>

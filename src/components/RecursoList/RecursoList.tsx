@@ -10,7 +10,7 @@ interface Props {
   ejecutar: EjecutarAccion;
 }
 
-/** Los recursos del módulo (laptops 1–25, cubículos 1–6…) con su estado. */
+/** Los recursos del módulo (laptops 1–25, cubículos 1–6 y POD…) con su estado. */
 export function RecursoList({ modulo, recursos, ejecutar }: Props) {
   return (
     <section className="panel">
@@ -26,7 +26,7 @@ export function RecursoList({ modulo, recursos, ejecutar }: Props) {
         <tbody>
           {recursos.map((r) => (
             <tr key={r.id}>
-              <td><strong>{r.numero}</strong></td>
+              <td><strong>{r.id}</strong></td>
               <td><EstadoBadge estado={r.estado} textoOcupado={modulo.ocupado} /></td>
               <td className="acciones">
                 {r.estado !== 'ocupado' && (
@@ -34,7 +34,7 @@ export function RecursoList({ modulo, recursos, ejecutar }: Props) {
                     onClick={() =>
                       ejecutar(
                         () => cambiarMantenimiento(modulo, r, r.estado !== 'mantenimiento'),
-                        `Estado de ${modulo.recurso.toLowerCase()} ${r.numero} actualizado.`,
+                        `Estado de ${modulo.recurso.toLowerCase()} ${r.id} actualizado.`,
                       )
                     }
                   >

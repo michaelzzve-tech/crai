@@ -3,7 +3,7 @@
 Aplicación web con dos módulos que funcionan igual:
 
 - **Laptops**: préstamo de las laptops 1 a 25.
-- **Cubículos**: reserva de los cubículos 1 a 6.
+- **Cubículos**: reserva de los cubículos 1 a 6 y el POD.
 
 Cada módulo tiene su formulario, la lista de préstamos o reservas en curso (con alerta de
 vencidos), el estado de cada laptop o cubículo y el historial.
@@ -53,7 +53,7 @@ y pegue los mismos dos valores.
 
 - **Formulario** (igual en los dos módulos), en este orden: nombre, instituto (ITJO, IUJO, CFJO),
   condición (estudiante, docente, otro), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
-  CFJO: un número escrito a mano), laptop (1 a 25) o cubículo (1 a 6), motivo de uso
+  CFJO: un número escrito a mano), laptop (1 a 25) o cubículo (1 a 6 o POD), motivo de uso
   (estudio, tarea, entretenimiento), hora de inicio, hora de fin y duración (se calcula sola).
 - **En curso**: préstamos o reservas activos; desde ahí se registra la devolución de la
   laptop o la salida del cubículo, con observaciones.
@@ -101,7 +101,7 @@ src/
 | Quiero… | Archivo |
 |---|---|
 | Cambiar las opciones de un menú (institutos, carreras, años, motivos…) | `src/config/opciones.ts` |
-| Cambiar la cantidad de laptops o cubículos | `total` en `src/config/modulos.ts` |
+| Cambiar las laptops o cubículos del menú (cantidad, o nombres como POD) | `opciones` en `src/config/modulos.ts` |
 | Agregar otro módulo (por ejemplo, salas) | una entrada en `src/config/modulos.ts` y sus tablas en `supabase/esquema.sql` |
 | Cambiar o agregar reglas | `src/services/registroService.ts` |
 | Agregar un campo al formulario | `src/types/index.ts`, `src/components/RegistroForm/RegistroForm.tsx` y la base de datos |

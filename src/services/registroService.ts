@@ -14,12 +14,12 @@ export function estaVencido(registro: Registro, ahora = new Date()): boolean {
   return !registro.finReal && new Date(registro.fin) < ahora;
 }
 
-/** Crea los recursos numerados del 1 al total del módulo que todavía no existan. */
+/** Crea los recursos del módulo (sus opciones del menú) que todavía no existan. */
 export async function asegurarRecursos(modulo: Modulo): Promise<void> {
-  const existentes = new Set((await repositorio.listarRecursos(modulo.tablaRecursos)).map((r) => r.numero));
-  for (let numero = 1; numero <= modulo.total; numero++) {
-    if (!existentes.has(numero)) {
-      await repositorio.guardarRecurso(modulo.tablaRecursos, { id: String(numero), numero, estado: 'disponible' });
+  const existentes = new Set((await repositorio.listarRecursos(modulo.tablaRecursos)).map((r) => r.id));
+  for (const [i, id] of modulo.opciones.entries()) {
+    if (!existentes.has(id)) {
+      await repositorio.guardarRecurso(modulo.tablaRecursos, { id, numero: i + 1, estado: 'disponible' });
     }
   }
 }
@@ -39,7 +39,7 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
   const recurso = recursos.find((r) => r.id === datos.recursoId);
   if (!recurso) throw new Error(`Seleccione un ${modulo.recurso.toLowerCase()}.`);
   if (recurso.estado !== 'disponible') {
-    throw new Error(`${modulo.recurso} ${recurso.numero} no está disponible.`);
+    throw new Error(`${modulo.recurso} ${recurso.id} no está disponible.`);
   }
 
   const inicio = hoyALas(datos.horaInicio);

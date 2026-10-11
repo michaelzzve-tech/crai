@@ -84,8 +84,7 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
 
   async function enviar(e: FormEvent) {
     e.preventDefault();
-    const numero = recursos.find((r) => r.id === datos.recursoId)?.numero ?? 0;
-    const ok = await ejecutar(() => registrar(modulo, datos), modulo.mensajeRegistrado(numero, datos.nombre));
+    const ok = await ejecutar(() => registrar(modulo, datos), modulo.mensajeRegistrado(datos.recursoId, datos.nombre));
     if (ok) setDatos(vacio());
   }
 
@@ -112,7 +111,7 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
             <option value="">Seleccione…</option>
             {recursos.map((r) => (
               <option key={r.id} value={r.id} disabled={r.estado !== 'disponible'}>
-                {r.numero}{textoEstado(r)}
+                {r.id}{textoEstado(r)}
               </option>
             ))}
           </select>

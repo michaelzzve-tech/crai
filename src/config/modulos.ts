@@ -2,11 +2,14 @@
 // (laptops, cubículos…) usando los mismos componentes y el mismo formulario.
 // Para agregar otro módulo, añada una entrada aquí y sus tablas en supabase/esquema.sql.
 
+/** ["1", "2", …, "n"] */
+const del1Al = (n: number) => Array.from({ length: n }, (_, i) => String(i + 1));
+
 export interface Modulo {
   id: string;
   recurso: string; // Nombre del campo del formulario: "Laptop"
   recursos: string; // Plural: "Laptops"
-  total: number; // Recursos numerados del 1 a este número
+  opciones: string[]; // Opciones del menú: "1", "2"… y nombres como "POD"
   tablaRecursos: string; // Tabla de la base de datos con los recursos
   tablaRegistros: string; // Tabla de la base de datos con los préstamos o reservas
   registros: string; // "Préstamos"
@@ -17,15 +20,15 @@ export interface Modulo {
   ocupado: string; // Estado del recurso mientras está en uso
   finalizar: string; // Botón para terminar un registro
   finalizado: string; // Columna del historial con la hora real de fin
-  mensajeRegistrado: (numero: number, nombre: string) => string;
-  mensajeFinalizado: (numero: number) => string;
+  mensajeRegistrado: (recurso: string, nombre: string) => string;
+  mensajeFinalizado: (recurso: string) => string;
 }
 
 export const LAPTOPS: Modulo = {
   id: 'laptops',
   recurso: 'Laptop',
   recursos: 'Laptops',
-  total: 25,
+  opciones: del1Al(25),
   tablaRecursos: 'laptops',
   tablaRegistros: 'prestamos',
   registros: 'Préstamos',
@@ -44,7 +47,7 @@ export const CUBICULOS: Modulo = {
   id: 'cubiculos',
   recurso: 'Cubículo',
   recursos: 'Cubículos',
-  total: 6,
+  opciones: [...del1Al(6), 'POD'],
   tablaRecursos: 'cubiculos',
   tablaRegistros: 'reservas',
   registros: 'Reservas',

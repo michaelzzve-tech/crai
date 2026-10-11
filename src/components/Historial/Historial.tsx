@@ -1,22 +1,20 @@
 import { useState } from 'react';
 import type { Modulo } from '../../config/modulos';
-import type { Recurso, Registro } from '../../types';
+import type { Registro } from '../../types';
 import { duracionEntreFechas, formatearFecha, formatearHora } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 
 interface Props {
   modulo: Modulo;
   registros: Registro[];
-  recursos: Recurso[];
 }
 
-export function Historial({ modulo, registros, recursos }: Props) {
+export function Historial({ modulo, registros }: Props) {
   const [filtro, setFiltro] = useState('');
-  const numeroDe = (id: string) => String(recursos.find((r) => r.id === id)?.numero ?? id);
 
   const texto = filtro.toLowerCase();
   const visibles = registros.filter((r) =>
-    [numeroDe(r.recursoId), r.nombre, r.instituto, r.condicion, r.carrera, r.motivo].some((v) =>
+    [r.recursoId, r.nombre, r.instituto, r.condicion, r.carrera, r.motivo].some((v) =>
       v.toLowerCase().includes(texto),
     ),
   );
@@ -56,7 +54,7 @@ export function Historial({ modulo, registros, recursos }: Props) {
               const tarde = r.finReal && r.finReal > r.fin;
               return (
                 <tr key={r.id}>
-                  <td><strong>{numeroDe(r.recursoId)}</strong></td>
+                  <td><strong>{r.recursoId}</strong></td>
                   <td>{r.nombre}</td>
                   <td>{r.instituto}</td>
                   <td>{r.condicion}</td>

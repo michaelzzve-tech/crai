@@ -9,7 +9,7 @@ drop table if exists laptops;
 drop table if exists reservas;
 drop table if exists cubiculos;
 
--- Recursos numerados: laptops del 1 al 25 y cubículos del 1 al 6.
+-- Recursos: laptops del 1 al 25, y cubículos del 1 al 6 más el POD.
 -- La app los crea sola la primera vez.
 create table laptops (
   id text primary key,

@@ -4,8 +4,8 @@
 export type EstadoRecurso = 'disponible' | 'ocupado' | 'mantenimiento';
 
 export interface Recurso {
-  id: string; // Igual al número como texto: "1", "2"…
-  numero: number;
+  id: string; // Lo que se muestra en los menús: "1", "2"… o un nombre como "POD"
+  numero: number; // Orden en las listas
   estado: EstadoRecurso;
   notas?: string;
 }
