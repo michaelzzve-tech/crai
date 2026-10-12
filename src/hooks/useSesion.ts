@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../data/supabaseClient';
 
 /**
- * Sesión del bibliotecario en Supabase. Sin base de datos configurada no
+ * Sesión del administrador en Supabase. Sin base de datos configurada no
  * hace falta iniciar sesión y `requiereLogin` es false.
  */
 export function useSesion() {

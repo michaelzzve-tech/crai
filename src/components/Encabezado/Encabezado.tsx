@@ -27,7 +27,7 @@ export function Encabezado({ modulos, modulo, onCambiarModulo, enInformes, onInf
   return (
     <header className="encabezado">
       <div className="encabezado-fila">
-        <h1>Biblioteca · Préstamos y reservas</h1>
+        <h1>Préstamos y reservas</h1>
         <div className="sesion">
           {notificaciones}
           {onCerrarSesion && (

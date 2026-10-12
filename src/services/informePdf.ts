@@ -35,7 +35,7 @@ export async function descargarInformePdf(informe: Informe): Promise<void> {
   doc.rect(0, 0, anchoPagina, 32, 'F');
   color([255, 255, 255]);
   fuente(18, true);
-  doc.text('Biblioteca · Informe de uso', margen, 16);
+  doc.text('Informe de uso', margen, 16);
   fuente(11);
   doc.text(`Período: ${formatearDia(desde)} al ${formatearDia(hasta)}`, margen, 25);
 
@@ -107,5 +107,5 @@ export async function descargarInformePdf(informe: Informe): Promise<void> {
   fuente(9);
   doc.text(`Generado el ${formatearFecha(new Date().toISOString())} (hora de Caracas).`, margen, y);
 
-  doc.save(`informe-biblioteca-${desde}-al-${hasta}.pdf`);
+  doc.save(`informe-crai-${desde}-al-${hasta}.pdf`);
 }
