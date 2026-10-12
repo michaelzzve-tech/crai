@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import logo from '../../assets/logo-crai.png';
 import type { Modulo } from '../../config/modulos';
 
 export type Pestana = 'registro' | 'recursos' | 'historial';
@@ -27,7 +28,10 @@ export function Encabezado({ modulos, modulo, onCambiarModulo, enInformes, onInf
   return (
     <header className="encabezado">
       <div className="encabezado-fila">
-        <h1>Préstamos y reservas</h1>
+        <div className="marca">
+          <img className="encabezado-logo" src={logo} alt="CRAI" />
+          <h1>Préstamos y reservas</h1>
+        </div>
         <div className="sesion">
           {notificaciones}
           {onCerrarSesion && (
