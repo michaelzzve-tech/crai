@@ -75,7 +75,8 @@ y pegue los mismos dos valores.
   cubículos y horas reservadas de cubículos, con el desglose de cada uno por instituto,
   género, condición, carrera o año y motivo de uso. El botón **Descargar PDF** guarda el informe.
 - **Respaldo**: en Informes, el botón **Descargar respaldo (Excel)** guarda un archivo con
-  todos los préstamos y todas las reservas (una hoja para cada uno).
+  los préstamos y las reservas (una hoja para cada uno): todos, los de un año o los de un mes
+  (se cuentan por la fecha de inicio, en hora de Caracas).
 - **Borrar todos los registros**: al final de Informes. Deja en 0 préstamos y reservas (y libera
   laptops y cubículos en uso). Pide la contraseña del usuario para confirmar (sin base de datos,
   escribir BORRAR) y ofrece descargar el respaldo antes. No se puede deshacer.

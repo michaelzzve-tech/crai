@@ -38,16 +38,39 @@ function columnas(modulo: Modulo): Columna[] {
   return [...comunes, ...finales, { titulo: 'Código interno', ancho: 26, valor: (r) => r.id }];
 }
 
+/** Período del respaldo: todo, un año completo o un mes de un año (mes 1–12). */
+export interface PeriodoRespaldo {
+  anio?: number;
+  mes?: number;
+}
+
+export const MESES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
+];
+
+/** "2026", "2026-10" o '' (todo), comparable con el inicio de diaDe(). */
+function prefijo({ anio, mes }: PeriodoRespaldo): string {
+  if (!anio) return '';
+  return mes ? `${anio}-${String(mes).padStart(2, '0')}` : String(anio);
+}
+
 /**
- * Descarga un Excel con todos los préstamos de laptops y todas las reservas de
- * cubículos (una hoja para cada uno). La librería se carga solo al pedirlo.
+ * Descarga un Excel con los préstamos de laptops y las reservas de cubículos
+ * (una hoja para cada uno) del período elegido; sin período, trae todo.
+ * Los registros cuentan por la fecha de inicio, en hora de Caracas.
+ * La librería se carga solo al pedirlo.
  */
-export async function descargarRespaldo(): Promise<number> {
-  const [{ default: ExcelJS }, prestamos, reservas] = await Promise.all([
+export async function descargarRespaldo(periodo: PeriodoRespaldo = {}): Promise<number> {
+  const [{ default: ExcelJS }, todosPrestamos, todasReservas] = await Promise.all([
     import('exceljs'),
     repositorio.listarRegistros(LAPTOPS.tablaRegistros),
     repositorio.listarRegistros(CUBICULOS.tablaRegistros),
   ]);
+  const filtro = prefijo(periodo);
+  const delPeriodo = (r: Registro) => diaDe(r.inicio).startsWith(filtro);
+  const prestamos = todosPrestamos.filter(delPeriodo);
+  const reservas = todasReservas.filter(delPeriodo);
 
   const libro = new ExcelJS.Workbook();
   libro.created = new Date();
@@ -65,7 +88,7 @@ export async function descargarRespaldo(): Promise<number> {
   const url = URL.createObjectURL(new Blob([datos], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
   const enlace = document.createElement('a');
   enlace.href = url;
-  enlace.download = `respaldo-crai-${diaDe()}.xlsx`;
+  enlace.download = `respaldo-crai-${filtro || `completo-${diaDe()}`}.xlsx`;
   enlace.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   return prestamos.length + reservas.length;
