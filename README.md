@@ -76,6 +76,9 @@ y pegue los mismos dos valores.
   género, condición, carrera o año y motivo de uso. El botón **Descargar PDF** guarda el informe.
 - **Respaldo**: en Informes, el botón **Descargar respaldo (Excel)** guarda un archivo con
   todos los préstamos y todas las reservas (una hoja para cada uno).
+- **Borrar todos los registros**: al final de Informes. Deja en 0 préstamos y reservas (y libera
+  laptops y cubículos en uso). Pide la contraseña del usuario para confirmar (sin base de datos,
+  escribir BORRAR) y ofrece descargar el respaldo antes. No se puede deshacer.
 - **Páginas de 30**: cada tabla muestra como máximo 30 registros; si hay más, aparecen flechas
   (« ‹ › ») para pasar de página. El número se cambia en `REGISTROS_POR_PAGINA`
   (`src/hooks/usePaginacion.ts`).

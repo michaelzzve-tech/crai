@@ -139,3 +139,11 @@ button:disabled { opacity: .6; cursor: default; }
 
 .login-logo { display: block; width: 100%; max-width: 280px; height: auto; margin: 0 auto 8px; }
 .panel > .secundario { margin: 0 0 12px; }
+
+/* Borrar todos los registros */
+.zona-peligro { border-color: var(--alerta); }
+.zona-peligro h2 { color: var(--alerta); }
+.confirmar-borrado { display: grid; gap: 10px; max-width: 420px; }
+.confirmar-borrado p { margin: 0; }
+.acciones-borrado { display: flex; gap: 8px; }
+button.boton-peligro { background: var(--alerta); border-color: var(--alerta); color: #fff; }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { descargarInformePdf } from '../../services/informePdf';
 import { filasInforme, generarInforme, periodoDelMes, seccionesDesglose, type Desglose, type Informe, type Periodo } from '../../services/informeService';
 import { formatearDuracion } from '../../utils/fechas';
+import { BorrarRegistros } from '../BorrarRegistros';
 import { Respaldo } from '../Respaldo';
 
 function TablaDesglose({ desglose, columnaHoras }: { desglose: Desglose; columnaHoras: string }) {
@@ -33,6 +34,7 @@ function TablaDesglose({ desglose, columnaHoras }: { desglose: Desglose; columna
 /** Totales de préstamos y reservas en un rango de fechas, con descarga en PDF. */
 export function Informes() {
   const [periodo, setPeriodo] = useState<Periodo>(() => periodoDelMes());
+  const [version, setVersion] = useState(0); // Sube tras borrar todo, para recalcular
   const [informe, setInforme] = useState<Informe | null>(null);
   const [error, setError] = useState('');
   const [descargando, setDescargando] = useState(false);
@@ -46,7 +48,7 @@ export function Informes() {
       .then((i) => { if (vigente) { setInforme(i); setError(''); } })
       .catch((e: unknown) => { if (vigente) setError(e instanceof Error ? e.message : String(e)); });
     return () => { vigente = false; };
-  }, [periodo, rangoValido]);
+  }, [periodo, rangoValido, version]);
 
   async function descargar() {
     if (!informe) return;
@@ -106,6 +108,8 @@ export function Informes() {
           </div>
         </section>
       ))}
+
+      <BorrarRegistros onBorrado={() => setVersion((v) => v + 1)} />
     </main>
   );
 }
