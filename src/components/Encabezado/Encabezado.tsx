@@ -48,8 +48,13 @@ export function Encabezado({ modulos, modulo, onCambiarModulo, enInformes, onInf
             {m.recursos}
           </button>
         ))}
-        <button className={enInformes ? 'modulo activo' : 'modulo'} onClick={onInformes}>
-          Informes
+        <button
+          className={enInformes ? 'boton-informes activo' : 'boton-informes'}
+          onClick={onInformes}
+          aria-label="Informes"
+          title="Informes"
+        >
+          <IconoGrafica />
         </button>
       </nav>
       {!enInformes && (
@@ -66,5 +71,17 @@ export function Encabezado({ modulos, modulo, onCambiarModulo, enInformes, onInf
         </nav>
       )}
     </header>
+  );
+}
+
+/** Gráfica de barras minimalista para el botón de Informes. */
+function IconoGrafica() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <path d="M3 21h18" />
+      <path d="M7 17v-5" />
+      <path d="M12 17V7" />
+      <path d="M17 17v-8" />
+    </svg>
   );
 }

@@ -70,7 +70,7 @@ y pegue los mismos dos valores.
   se marca en amarillo (por vencer) o en rojo (vencida). Desde la campana se pueden activar
   los avisos del sistema para verlos aunque la página esté en segundo plano. Los minutos se
   cambian en `MINUTOS_AVISO` (`src/services/registroService.ts`).
-- **Informes**: totales de un rango de fechas (por defecto, el mes actual): préstamos de
+- **Informes** (ícono de gráfica en el extremo derecho del encabezado): totales de un rango de fechas (por defecto, el mes actual): préstamos de
   laptops, horas de uso de laptops (de la hora de inicio a la devolución), reservas de
   cubículos y horas reservadas de cubículos, con el desglose de cada uno por instituto,
   género, condición, carrera o año y motivo de uso. El botón **Descargar PDF** guarda el informe.

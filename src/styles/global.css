@@ -42,6 +42,8 @@ h2 { font-size: 1.1rem; margin-bottom: 12px; }
 .modulos { display: flex; gap: 8px; flex-wrap: wrap; max-width: 1200px; margin: 0 auto 12px; }
 .modulo { background: transparent; color: var(--sobre-primario); border: none; border-bottom: 3px solid transparent; border-radius: 0; padding: 4px 2px; font-weight: 600; font-size: 1rem; }
 .modulo.activo { border-bottom-color: var(--sobre-primario); }
+.boton-informes { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; background: transparent; color: var(--sobre-primario); border: 1px solid rgba(255,255,255,.5); border-radius: 8px; padding: 4px 8px; }
+.boton-informes:hover, .boton-informes.activo { background: rgba(255,255,255,.18); border-color: #fff; }
 .pestana.activa { background: #fff; color: var(--primario); }
 
 /* Resumen */
