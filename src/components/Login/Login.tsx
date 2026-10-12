@@ -28,7 +28,7 @@ export function Login() {
     <div className="login">
       <form className="formulario" onSubmit={entrar}>
         <img className="login-logo" src={logo} alt="CRAI · Centro de Recursos de Aprendizaje e Investigación" />
-        <h2>Biblioteca · Préstamos y reservas</h2>
+        <h2>Préstamos y reservas</h2>
         <p className="secundario">Inicia sesión con tu cuenta de bibliotecario.</p>
         <div className="campos una-columna">
           <label>
