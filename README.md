@@ -70,10 +70,16 @@ y pegue los mismos dos valores.
   se marca en amarillo (por vencer) o en rojo (vencida). Desde la campana se pueden activar
   los avisos del sistema para verlos aunque la página esté en segundo plano. Los minutos se
   cambian en `MINUTOS_AVISO` (`src/services/registroService.ts`).
-- **Informes**: totales de un rango de fechas (por defecto, el mes actual): préstamos de
+- **Informes** (ícono de gráfica en el extremo derecho del encabezado): totales de un rango de fechas (por defecto, el mes actual): préstamos de
   laptops, horas de uso de laptops (de la hora de inicio a la devolución), reservas de
   cubículos y horas reservadas de cubículos, con el desglose de cada uno por instituto,
   género, condición, carrera o año y motivo de uso. El botón **Descargar PDF** guarda el informe.
+- **Respaldo**: en Informes, el botón **Descargar respaldo (Excel)** guarda un archivo con
+  los préstamos y las reservas (una hoja para cada uno): todos, los de un año o los de un mes
+  (se cuentan por la fecha de inicio, en hora de Caracas).
+- **Borrar todos los registros**: al final de Informes. Deja en 0 préstamos y reservas (y libera
+  laptops y cubículos en uso). Pide la contraseña del usuario para confirmar (sin base de datos,
+  escribir BORRAR) y ofrece descargar el respaldo antes. No se puede deshacer.
 - **Páginas de 30**: cada tabla muestra como máximo 30 registros; si hay más, aparecen flechas
   (« ‹ › ») para pasar de página. El número se cambia en `REGISTROS_POR_PAGINA`
   (`src/hooks/usePaginacion.ts`).
