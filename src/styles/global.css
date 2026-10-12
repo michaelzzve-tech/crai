@@ -138,3 +138,4 @@ button:disabled { opacity: .6; cursor: default; }
 .paginador span { padding: 0 8px; }
 
 .login-logo { display: block; width: 100%; max-width: 280px; height: auto; margin: 0 auto 8px; }
+.panel > .secundario { margin: 0 0 12px; }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { descargarInformePdf } from '../../services/informePdf';
 import { filasInforme, generarInforme, periodoDelMes, seccionesDesglose, type Desglose, type Informe, type Periodo } from '../../services/informeService';
 import { formatearDuracion } from '../../utils/fechas';
+import { Respaldo } from '../Respaldo';
 
 function TablaDesglose({ desglose, columnaHoras }: { desglose: Desglose; columnaHoras: string }) {
   return (
@@ -61,6 +62,8 @@ export function Informes() {
 
   return (
     <main>
+      <Respaldo />
+
       <section className="formulario">
         <h2>Informe de uso</h2>
         <div className="campos">
