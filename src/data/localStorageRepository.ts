@@ -43,6 +43,10 @@ export class LocalStorageRepositorio implements Repositorio {
     escribir(tabla, upsert(leer<Registro>(tabla), registro));
   }
 
+  async borrarRegistro(tabla: string, id: string) {
+    escribir(tabla, leer<Registro>(tabla).filter((r) => r.id !== id));
+  }
+
   async borrarRegistros(tabla: string) {
     escribir(tabla, []);
   }

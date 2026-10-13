@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import type { Modulo } from '../../config/modulos';
-import { estaPorVencer, estaVencido, finalizar } from '../../services/registroService';
+import { cancelarProgramado, estaPorVencer, estaProgramado, estaVencido, finalizar } from '../../services/registroService';
 import type { Registro } from '../../types';
 import { useAhora } from '../../hooks/useAhora';
 import { usePaginacion } from '../../hooks/usePaginacion';
-import { duracionEntreFechas, formatearHora } from '../../utils/fechas';
+import { diaDe, duracionEntreFechas, formatearDia, formatearHora } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 import { Paginador } from '../Paginador';
 import type { EjecutarAccion } from '../tipos';
@@ -25,12 +25,15 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
   const paginacion = usePaginacion(activos);
 
   async function confirmar(registro: Registro) {
-    const ok = await ejecutar(
-      () => finalizar(modulo, registro),
-      modulo.mensajeFinalizado(registro.recursoId),
-    );
+    const ok = estaProgramado(registro)
+      ? await ejecutar(() => cancelarProgramado(modulo, registro), `Reserva de ${modulo.recurso.toLowerCase()} ${registro.recursoId} cancelada.`)
+      : await ejecutar(() => finalizar(modulo, registro), modulo.mensajeFinalizado(registro.recursoId));
     if (ok) setFinalizando(null);
   }
+
+  /** Hora de inicio; si es otro día, también la fecha ("14/10/2026 · 2:00 p. m."). */
+  const inicioTexto = (iso: string) =>
+    diaDe(iso) === diaDe(ahora) ? formatearHora(iso) : `${formatearDia(diaDe(iso))} · ${formatearHora(iso)}`;
 
   return (
     <section className="panel">
@@ -62,6 +65,7 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
             {paginacion.items.map((r) => {
               const vencido = estaVencido(r, ahora);
               const porVencer = estaPorVencer(r, ahora);
+              const programado = estaProgramado(r, ahora);
               return (
                 <tr key={r.id} className={vencido ? 'fila-vencida' : porVencer ? 'fila-por-vencer' : undefined}>
                   <td><strong>{r.recursoId}</strong></td>
@@ -71,15 +75,15 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                   </td>
                   <td>
                     {r.carrera}
-                    {r.semestre && <div className="secundario">Semestre o nivel {r.semestre}</div>}
+                    {r.semestre && <div className="secundario">Semestre o nivel: {r.semestre}</div>}
                   </td>
                   <td>{r.motivo}</td>
-                  <td>{formatearHora(r.inicio)}</td>
+                  <td>{inicioTexto(r.inicio)}</td>
                   {conFin && r.fin ? (
                     <>
                       <td>{formatearHora(r.fin)}</td>
                       <td>{duracionEntreFechas(r.inicio, r.fin)}</td>
-                      <td><EstadoBadge estado={vencido ? 'vencido' : porVencer ? 'por-vencer' : 'activo'} /></td>
+                      <td><EstadoBadge estado={programado ? 'programado' : vencido ? 'vencido' : porVencer ? 'por-vencer' : 'activo'} /></td>
                     </>
                   ) : (
                     <td>{duracionEntreFechas(r.inicio, ahora)}</td>
@@ -93,12 +97,13 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                             {' · '}Tiempo transcurrido: <strong>{duracionEntreFechas(r.inicio, ahora)}</strong>
                           </span>
                         )}
-                        <button className="primario" autoFocus onClick={() => confirmar(r)}>Confirmar</button>
-                        <button onClick={() => setFinalizando(null)}>Cancelar</button>
+                        {programado && <span className="secundario">¿Cancelar esta reserva? Se borrará.</span>}
+                        <button className="primario" autoFocus onClick={() => confirmar(r)}>{programado ? 'Sí, cancelar' : 'Confirmar'}</button>
+                        <button onClick={() => setFinalizando(null)}>{programado ? 'No' : 'Cancelar'}</button>
                       </div>
                     ) : (
-                      <button className="primario" onClick={() => setFinalizando(r.id)}>
-                        {modulo.finalizar}
+                      <button className={programado ? undefined : 'primario'} onClick={() => setFinalizando(r.id)}>
+                        {programado ? 'Cancelar reserva' : modulo.finalizar}
                       </button>
                     )}
                   </td>

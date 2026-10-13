@@ -36,6 +36,7 @@ export interface NuevoRegistro {
   semestre: string;
   recursoId: string;
   motivo: string;
+  fecha: string; // Día de la reserva, "AAAA-MM-DD" (solo módulos con hora de fin; si no, hoy)
   horaInicio: string; // "HH:MM"
   horaFin: string; // "HH:MM"; vacío en módulos sin hora de fin
 }
