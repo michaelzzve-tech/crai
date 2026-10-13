@@ -27,6 +27,6 @@ export const CARRERA_POR_INSTITUTO: Record<string, CampoCarrera> = {
   CFJO: { tipo: 'menu', opciones: CARRERAS_CFJO },
 };
 
-export const MOTIVOS = ['Estudio', 'Tarea', 'Entretenimiento'];
+export const MOTIVOS = ['Estudio', 'Tarea', 'Entretenimiento', 'TGE', 'Didáctico'];
 
 // La cantidad de laptops y de cubículos está en src/config/modulos.ts.
