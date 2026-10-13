@@ -61,7 +61,7 @@ y pegue los mismos dos valores.
 - **Formulario**, en este orden: nombre, género (masculino, femenino), instituto (ITJO, IUJO, CFJO),
   condición (estudiante, docente, otro), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
   CFJO: secretariado administrativo, asistente administrativo o analista contable),
-  semestre o nivel (1 a 10),
+  semestre o nivel (1 a 10 o "No aplica"),
   laptop (1 a 25 y 50 a 80) o cubículo (1 a 6 o POD), motivo de uso
   (estudio, tarea, entretenimiento, TEG, didáctico) y hora de inicio. Los cubículos piden además hora de fin
   y muestran la duración (se calcula sola). El botón **Limpiar** vacía los campos y pone

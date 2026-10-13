@@ -71,7 +71,7 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                   </td>
                   <td>
                     {r.carrera}
-                    {r.semestre && <div className="secundario">Semestre o nivel {r.semestre}</div>}
+                    {r.semestre && <div className="secundario">Semestre o nivel: {r.semestre}</div>}
                   </td>
                   <td>{r.motivo}</td>
                   <td>{formatearHora(r.inicio)}</td>
