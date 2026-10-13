@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { CARRERA_POR_INSTITUTO, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, SEMESTRES } from '../../config/opciones';
 import type { Modulo } from '../../config/modulos';
+import { useAhora } from '../../hooks/useAhora';
 import { registrar } from '../../services/registroService';
 import type { NuevoRegistro, Recurso } from '../../types';
-import { duracionEntreHoras, horaActual } from '../../utils/fechas';
+import { diaALas, diaDe, duracionEntreHoras, horaActual } from '../../utils/fechas';
 import type { EjecutarAccion } from '../tipos';
 
 const vacio = (): NuevoRegistro => ({
@@ -15,6 +16,7 @@ const vacio = (): NuevoRegistro => ({
   semestre: '',
   recursoId: '',
   motivo: '',
+  fecha: diaDe(),
   horaInicio: horaActual(),
   horaFin: '',
 });
@@ -80,6 +82,13 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
   const cambiar = (campo: keyof NuevoRegistro) => (valor: string) =>
     setDatos({ ...datos, [campo]: valor });
 
+  const ahora = useAhora(30_000);
+  // Para más tarde u otro día se puede elegir un recurso que hoy está en uso;
+  // al registrar se revisa que no choque con otra reserva.
+  const programado = modulo.conHoraFin && !!datos.fecha && !!datos.horaInicio
+    && diaALas(datos.fecha, datos.horaInicio) > ahora;
+  const elegible = (r: Recurso) => r.estado === 'disponible' || (programado && r.estado === 'ocupado');
+
   const textoEstado = (r: Recurso) =>
     r.estado === 'ocupado' ? ` (${modulo.ocupado.toLowerCase()})`
       : r.estado === 'mantenimiento' ? ' (en mantenimiento)' : '';
@@ -114,13 +123,19 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
           <select id="registro-recurso" required value={datos.recursoId} onChange={(e) => cambiar('recursoId')(e.target.value)}>
             <option value="">Seleccione…</option>
             {recursos.map((r) => (
-              <option key={r.id} value={r.id} disabled={r.estado !== 'disponible'}>
+              <option key={r.id} value={r.id} disabled={!elegible(r)}>
                 {r.id}{textoEstado(r)}
               </option>
             ))}
           </select>
         </label>
         <Desplegable id="registro-motivo" titulo="Motivo de uso" valor={datos.motivo} opciones={MOTIVOS} onCambiar={cambiar('motivo')} />
+        {modulo.conHoraFin && (
+          <label htmlFor="registro-fecha">
+            Fecha de la reserva
+            <input id="registro-fecha" type="date" required min={diaDe()} value={datos.fecha} onChange={(e) => cambiar('fecha')(e.target.value)} />
+          </label>
+        )}
         <label htmlFor="registro-inicio">
           Hora de inicio
           <input id="registro-inicio" type="time" required value={datos.horaInicio} onChange={(e) => cambiar('horaInicio')(e.target.value)} />

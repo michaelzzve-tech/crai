@@ -1,6 +1,6 @@
 import type { EstadoRecurso } from '../../types';
 
-type Estado = EstadoRecurso | 'vencido' | 'por-vencer' | 'activo';
+type Estado = EstadoRecurso | 'vencido' | 'por-vencer' | 'activo' | 'programado';
 
 const TEXTOS: Record<Estado, string> = {
   disponible: 'Disponible',
@@ -9,6 +9,7 @@ const TEXTOS: Record<Estado, string> = {
   vencido: 'Vencido',
   'por-vencer': 'Por vencer',
   activo: 'A tiempo',
+  programado: 'Programada',
 };
 
 /** Etiqueta de color para un estado. `textoOcupado` cambia "En uso" por "Prestada", "Reservado"… */

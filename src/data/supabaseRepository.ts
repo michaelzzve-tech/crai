@@ -109,6 +109,11 @@ export class SupabaseRepositorio implements Repositorio {
     revisar(error);
   }
 
+  async borrarRegistro(tabla: string, id: string) {
+    const { error } = await this.db.from(tabla).delete().eq('id', id);
+    revisar(error);
+  }
+
   async borrarRegistros(tabla: string) {
     // Supabase exige un filtro para borrar; este incluye todas las filas.
     const { error } = await this.db.from(tabla).delete().not('id', 'is', null);

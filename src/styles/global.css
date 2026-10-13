@@ -96,6 +96,7 @@ td { border-bottom: 1px solid var(--borde); padding: 8px; vertical-align: top; }
 .badge-mantenimiento { background: var(--aviso-fondo); color: var(--aviso); }
 .badge-vencido { background: var(--alerta); color: #fff; }
 .badge-por-vencer { background: var(--aviso); color: #fff; }
+.badge-programado { background: #ede9fe; color: #6d28d9; }
 
 /* Avisos */
 .aviso { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-radius: 8px; }

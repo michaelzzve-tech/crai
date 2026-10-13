@@ -35,7 +35,12 @@ export function formatearDia(dia: string): string {
 
 /** Fecha de hoy (en Caracas) a la hora de Caracas indicada ("HH:MM"). */
 export function hoyALas(hora: string, hoy = new Date()): Date {
-  return new Date(`${formatoDia.format(hoy)}T${hora}:00${DESFASE_CARACAS}`);
+  return diaALas(formatoDia.format(hoy), hora);
+}
+
+/** El día indicado ("2026-10-14") a la hora de Caracas indicada ("HH:MM"). */
+export function diaALas(dia: string, hora: string): Date {
+  return new Date(`${dia}T${hora}:00${DESFASE_CARACAS}`);
 }
 
 /** Texto como "2 h 30 min" para los minutos dados. */

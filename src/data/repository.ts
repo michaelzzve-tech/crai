@@ -12,6 +12,8 @@ export interface Repositorio {
 
   listarRegistros(tabla: string): Promise<Registro[]>;
   guardarRegistro(tabla: string, registro: Registro): Promise<void>;
+  /** Borra un registro (por ejemplo, una reserva programada que se cancela). */
+  borrarRegistro(tabla: string, id: string): Promise<void>;
   /** Borra todos los registros de la tabla. No se puede deshacer. */
   borrarRegistros(tabla: string): Promise<void>;
 }

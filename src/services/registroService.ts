@@ -1,7 +1,7 @@
 import type { Modulo } from '../config/modulos';
 import { repositorio } from '../data';
 import type { NuevoRegistro, Recurso, Registro } from '../types';
-import { hoyALas } from '../utils/fechas';
+import { diaALas, diaDe, formatearDia, formatearHora } from '../utils/fechas';
 import { generarId } from '../utils/id';
 
 /**
@@ -28,6 +28,36 @@ export function estaPorVencer(registro: Registro, ahora = new Date()): boolean {
   return restante > 0 && restante <= MINUTOS_AVISO * 60_000;
 }
 
+/** Reserva hecha para más tarde (otra hora u otro día) que todavía no empieza. */
+export function estaProgramado(registro: Registro, ahora = new Date()): boolean {
+  return !registro.finReal && new Date(registro.inicio) > ahora;
+}
+
+/** Hora de fin de un registro para comparar choques; sin hora de fin, sigue en uso. */
+const finPara = (r: Registro) => (r.fin ? new Date(r.fin) : new Date(8.64e15));
+
+/**
+ * Marca como en uso los recursos cuyas reservas programadas ya empezaron.
+ * Se llama al cargar el módulo y cada minuto.
+ */
+export async function activarProgramados(modulo: Modulo, ahora = new Date()): Promise<void> {
+  const [recursos, registros] = await Promise.all([
+    repositorio.listarRecursos(modulo.tablaRecursos),
+    repositorio.listarRegistros(modulo.tablaRegistros),
+  ]);
+  let cambio = false;
+  for (const r of registros) {
+    if (r.finReal || new Date(r.inicio) > ahora || finPara(r) <= ahora) continue;
+    const recurso = recursos.find((x) => x.id === r.recursoId);
+    if (recurso?.estado === 'disponible') {
+      recurso.estado = 'ocupado';
+      await repositorio.guardarRecurso(modulo.tablaRecursos, recurso);
+      cambio = true;
+    }
+  }
+  if (cambio) avisarCambio();
+}
+
 /** Crea los recursos del módulo (sus opciones del menú) que todavía no existan. */
 export async function asegurarRecursos(modulo: Modulo): Promise<void> {
   const existentes = new Set((await repositorio.listarRecursos(modulo.tablaRecursos)).map((r) => r.id));
@@ -52,14 +82,28 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
   const recursos = await repositorio.listarRecursos(modulo.tablaRecursos);
   const recurso = recursos.find((r) => r.id === datos.recursoId);
   if (!recurso) throw new Error(`Seleccione un ${modulo.recurso.toLowerCase()}.`);
-  if (recurso.estado !== 'disponible') {
-    throw new Error(`${modulo.recurso} ${recurso.id} no está disponible.`);
-  }
 
-  const inicio = hoyALas(datos.horaInicio);
-  const fin = modulo.conHoraFin ? hoyALas(datos.horaFin) : undefined;
+  const dia = modulo.conHoraFin && datos.fecha ? datos.fecha : diaDe();
+  if (dia < diaDe()) throw new Error('La fecha de la reserva no puede ser anterior a hoy.');
+  const inicio = diaALas(dia, datos.horaInicio);
+  const fin = modulo.conHoraFin ? diaALas(dia, datos.horaFin) : undefined;
   if (fin && fin <= inicio) {
     throw new Error('La hora de fin debe ser posterior a la hora de inicio.');
+  }
+
+  // Una reserva para más tarde no ocupa el recurso todavía: se marca en uso al llegar su hora.
+  const programado = inicio > new Date();
+  if (recurso.estado === 'mantenimiento' || (!programado && recurso.estado !== 'disponible')) {
+    throw new Error(`${modulo.recurso} ${recurso.id} no está disponible.`);
+  }
+  const choque = (await repositorio.listarRegistros(modulo.tablaRegistros)).find(
+    (r) => r.recursoId === recurso.id && !r.finReal && new Date(r.inicio) < (fin ?? new Date(8.64e15)) && inicio < finPara(r),
+  );
+  if (choque) {
+    throw new Error(
+      `${modulo.recurso} ${recurso.id} ya está reservado de ${formatearHora(choque.inicio)} a ${formatearHora(choque.fin)}`
+        + ` el ${formatearDia(diaDe(choque.inicio))}.`,
+    );
   }
 
   const registro: Registro = {
@@ -76,9 +120,16 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
     fin: fin?.toISOString(),
   };
   await repositorio.guardarRegistro(modulo.tablaRegistros, registro);
-  await repositorio.guardarRecurso(modulo.tablaRecursos, { ...recurso, estado: 'ocupado' });
+  if (!programado) await repositorio.guardarRecurso(modulo.tablaRecursos, { ...recurso, estado: 'ocupado' });
   avisarCambio();
   return registro;
+}
+
+/** Cancela una reserva programada que todavía no empieza: se borra y el recurso no cambia. */
+export async function cancelarProgramado(modulo: Modulo, registro: Registro) {
+  if (!estaProgramado(registro)) throw new Error('La reserva ya empezó; registre la salida.');
+  await repositorio.borrarRegistro(modulo.tablaRegistros, registro.id);
+  avisarCambio();
 }
 
 /** Devuelve la laptop o libera el cubículo; la hora de fin real es la del momento. */
