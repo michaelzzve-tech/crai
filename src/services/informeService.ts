@@ -1,5 +1,5 @@
 import { CUBICULOS, LAPTOPS } from '../config/modulos';
-import { CARRERA_POR_INSTITUTO, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, SEMESTRES } from '../config/opciones';
+import { CARRERA_POR_INSTITUTO, CANTIDAD_USUARIOS, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, SEMESTRES } from '../config/opciones';
 import { repositorio } from '../data';
 import type { Registro } from '../types';
 import { diaDe } from '../utils/fechas';
@@ -17,6 +17,7 @@ export interface Informe {
   minutosLaptops: number; // Desde la hora de inicio hasta la devolución
   reservas: number; // Reservas de cubículos que empezaron en el período
   minutosCubiculos: number; // Tiempo reservado: de la hora de inicio a la hora de fin
+  usuariosCubiculos: number; // Suma de "Cantidad de usuarios" de esas reservas
   desgloseLaptops: Desglose[];
   desgloseCubiculos: Desglose[];
 }
@@ -109,7 +110,11 @@ export async function generarInforme(periodo: Periodo): Promise<Informe> {
     reservas: r.length,
     minutosCubiculos: sumar(r, reservaCubiculo),
     desgloseLaptops: desglosar(p, usoLaptop),
-    desgloseCubiculos: desglosar(r, reservaCubiculo),
+    usuariosCubiculos: r.reduce((t, x) => t + (x.usuarios ?? 0), 0),
+    desgloseCubiculos: [
+      ...desglosar(r, reservaCubiculo),
+      agrupar('Por cantidad de usuarios', r, (x) => (x.usuarios ? String(x.usuarios) : 'Sin dato'), reservaCubiculo, CANTIDAD_USUARIOS),
+    ],
   };
 }
 
@@ -123,6 +128,8 @@ export function filasInforme(informe: Informe, formatearHoras: (minutos: number)
     { titulo: 'Reservas de cubículos', valor: String(informe.reservas) },
     { titulo: 'Horas totales de reserva de cubículos', valor: formatearHoras(informe.minutosCubiculos),
       nota: 'De la hora de inicio a la hora de fin de cada reserva' },
+    { titulo: 'Usuarios en cubículos', valor: String(informe.usuariosCubiculos),
+      nota: 'Suma de la cantidad de usuarios de cada reserva' },
   ];
 }
 

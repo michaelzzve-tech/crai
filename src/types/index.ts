@@ -20,6 +20,7 @@ export interface Registro {
   condicion: string;
   carrera: string;
   semestre?: string; // Vacío en registros anteriores a este campo
+  usuarios?: number; // Cantidad de usuarios (solo reservas de cubículos)
   motivo: string;
   inicio: string; // Hora de inicio, ISO 8601
   fin?: string; // Hora de fin prevista, ISO 8601 (solo módulos con hora de fin)
@@ -34,6 +35,7 @@ export interface NuevoRegistro {
   condicion: string;
   carrera: string;
   semestre: string;
+  usuarios: string; // Vacío en módulos sin cantidad de usuarios
   recursoId: string;
   motivo: string;
   fecha: string; // Día de la reserva, "AAAA-MM-DD" (solo módulos con hora de fin; si no, hoy)

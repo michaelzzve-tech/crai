@@ -59,7 +59,7 @@ export async function descargarInformePdf(informe: Informe): Promise<void> {
       doc.text(fila.nota, x + 5, top + 20);
     }
   });
-  y += 2 * 28 + 6;
+  y += Math.ceil(filasInforme(informe, formatearDuracion).length / columnas) * 28 + 6;
 
   // Desglose
   const xCantidad = margen + ancho * 0.68;

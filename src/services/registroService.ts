@@ -118,6 +118,7 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
     condicion: datos.condicion,
     carrera: datos.carrera,
     semestre: datos.semestre,
+    usuarios: modulo.conUsuarios && datos.usuarios ? Number(datos.usuarios) : undefined,
     motivo: datos.motivo,
     inicio: inicio.toISOString(),
     fin: fin?.toISOString(),

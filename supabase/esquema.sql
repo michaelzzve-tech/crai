@@ -31,6 +31,7 @@ create table prestamos (
   condicion text not null,
   carrera text not null,
   semestre text,
+  usuarios integer, -- cantidad de usuarios (solo reservas de cubículos)
   motivo text not null,
   hora_inicio timestamptz not null,
   hora_fin timestamptz, -- vacío en préstamos de laptops (se usa fin_real)
