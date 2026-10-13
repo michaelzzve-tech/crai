@@ -22,6 +22,7 @@ interface FilaRegistro {
   instituto: string;
   condicion: string;
   carrera: string;
+  semestre: string | null;
   motivo: string;
   hora_inicio: string;
   hora_fin: string | null;
@@ -52,6 +53,7 @@ const aRegistro = (f: FilaRegistro): Registro => ({
   instituto: f.instituto,
   condicion: f.condicion,
   carrera: f.carrera,
+  semestre: f.semestre ?? undefined,
   motivo: f.motivo,
   inicio: iso(f.hora_inicio),
   fin: f.hora_fin ? iso(f.hora_fin) : undefined,
@@ -66,6 +68,7 @@ const aFilaRegistro = (r: Registro): FilaRegistro => ({
   instituto: r.instituto,
   condicion: r.condicion,
   carrera: r.carrera,
+  semestre: r.semestre ?? null,
   motivo: r.motivo,
   hora_inicio: r.inicio,
   hora_fin: r.fin ?? null,

@@ -30,6 +30,7 @@ create table prestamos (
   instituto text not null,
   condicion text not null,
   carrera text not null,
+  semestre text,
   motivo text not null,
   hora_inicio timestamptz not null,
   hora_fin timestamptz, -- vacío en préstamos de laptops (se usa fin_real)

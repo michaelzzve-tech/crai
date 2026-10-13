@@ -41,6 +41,8 @@ Sin Supabase, cada persona que la abre tiene sus propios datos, guardados en su 
    `alter table prestamos alter column hora_fin drop not null;`
    Y para el campo Género (tampoco borra datos):
    `alter table prestamos add column if not exists genero text; alter table reservas add column if not exists genero text;`
+   Y para el campo Semestre o nivel (tampoco borra datos):
+   `alter table prestamos add column if not exists semestre text; alter table reservas add column if not exists semestre text;`
 3. En **Authentication → Users → Add user → Create new user**, cree una cuenta (correo y
    contraseña) para cada bibliotecario. Marque "Auto Confirm User".
 4. En **Authentication → Sign In / Providers**, desactive **Allow new users to sign up**
@@ -59,6 +61,7 @@ y pegue los mismos dos valores.
 - **Formulario**, en este orden: nombre, género (masculino, femenino), instituto (ITJO, IUJO, CFJO),
   condición (estudiante, docente, otro), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
   CFJO: secretariado administrativo, asistente administrativo o analista contable),
+  semestre o nivel (1 a 10),
   laptop (1 a 25 y 50 a 80) o cubículo (1 a 6 o POD), motivo de uso
   (estudio, tarea, entretenimiento) y hora de inicio. Los cubículos piden además hora de fin
   y muestran la duración (se calcula sola).

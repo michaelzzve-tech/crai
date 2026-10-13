@@ -70,6 +70,7 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
     instituto: datos.instituto,
     condicion: datos.condicion,
     carrera: datos.carrera,
+    semestre: datos.semestre,
     motivo: datos.motivo,
     inicio: inicio.toISOString(),
     fin: fin?.toISOString(),
