@@ -11,6 +11,8 @@ export const CARRERAS = ['Administración', 'Contaduría', 'Informática', 'Elec
 
 export const ANIOS = ['1', '2', '3', '4', '5', '6'];
 
+export const CARRERAS_CFJO = ['Secretariado administrativo', 'Asistente administrativo', 'Analista contable'];
+
 /**
  * Qué muestra el campo "Carrera o año" según el instituto elegido:
  * un menú con opciones, o un campo libre para escribir un número.
@@ -20,7 +22,7 @@ export type CampoCarrera = { tipo: 'menu'; opciones: string[] } | { tipo: 'numer
 export const CARRERA_POR_INSTITUTO: Record<string, CampoCarrera> = {
   ITJO: { tipo: 'menu', opciones: ANIOS },
   IUJO: { tipo: 'menu', opciones: CARRERAS },
-  CFJO: { tipo: 'numero' },
+  CFJO: { tipo: 'menu', opciones: CARRERAS_CFJO },
 };
 
 export const MOTIVOS = ['Estudio', 'Tarea', 'Entretenimiento'];
