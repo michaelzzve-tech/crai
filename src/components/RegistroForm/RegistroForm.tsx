@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { CARRERA_POR_INSTITUTO, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS } from '../../config/opciones';
+import { CARRERA_POR_INSTITUTO, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, SEMESTRES } from '../../config/opciones';
 import type { Modulo } from '../../config/modulos';
 import { registrar } from '../../services/registroService';
 import type { NuevoRegistro, Recurso } from '../../types';
@@ -12,6 +12,7 @@ const vacio = (): NuevoRegistro => ({
   instituto: '',
   condicion: '',
   carrera: '',
+  semestre: '',
   recursoId: '',
   motivo: '',
   horaInicio: horaActual(),
@@ -107,6 +108,7 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
         />
         <Desplegable id="registro-condicion" titulo="Condición" valor={datos.condicion} opciones={CONDICIONES} onCambiar={cambiar('condicion')} />
         <CampoCarreraOAnio instituto={datos.instituto} valor={datos.carrera} onCambiar={cambiar('carrera')} />
+        <Desplegable id="registro-semestre" titulo="Semestre o nivel" valor={datos.semestre} opciones={SEMESTRES} onCambiar={cambiar('semestre')} />
         <label htmlFor="registro-recurso">
           {modulo.recurso}
           <select id="registro-recurso" required value={datos.recursoId} onChange={(e) => cambiar('recursoId')(e.target.value)}>
@@ -143,7 +145,11 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
           </>
         )}
       </div>
-      <button type="submit" className="primario">{modulo.registrar}</button>
+      <div className="botones-formulario">
+        <button type="submit" className="primario">{modulo.registrar}</button>
+        {/* Vacía los campos y vuelve a poner la hora de inicio en la hora actual. */}
+        <button type="button" onClick={() => setDatos(vacio())}>Limpiar</button>
+      </div>
     </form>
   );
 }

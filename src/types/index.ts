@@ -19,6 +19,7 @@ export interface Registro {
   instituto: string;
   condicion: string;
   carrera: string;
+  semestre?: string; // Vacío en registros anteriores a este campo
   motivo: string;
   inicio: string; // Hora de inicio, ISO 8601
   fin?: string; // Hora de fin prevista, ISO 8601 (solo módulos con hora de fin)
@@ -32,6 +33,7 @@ export interface NuevoRegistro {
   instituto: string;
   condicion: string;
   carrera: string;
+  semestre: string;
   recursoId: string;
   motivo: string;
   horaInicio: string; // "HH:MM"

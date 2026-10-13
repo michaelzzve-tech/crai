@@ -69,7 +69,10 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                     {r.nombre}
                     <div className="secundario">{[r.genero, r.instituto, r.condicion].filter(Boolean).join(' · ')}</div>
                   </td>
-                  <td>{r.carrera}</td>
+                  <td>
+                    {r.carrera}
+                    {r.semestre && <div className="secundario">Semestre o nivel {r.semestre}</div>}
+                  </td>
                   <td>{r.motivo}</td>
                   <td>{formatearHora(r.inicio)}</td>
                   {conFin && r.fin ? (

@@ -11,6 +11,8 @@ export const CARRERAS = ['Administración', 'Contaduría', 'Informática', 'Elec
 
 export const ANIOS = ['1', '2', '3', '4', '5', '6'];
 
+export const SEMESTRES = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+
 export const CARRERAS_CFJO = ['Secretariado administrativo', 'Asistente administrativo', 'Analista contable'];
 
 /**
@@ -25,6 +27,6 @@ export const CARRERA_POR_INSTITUTO: Record<string, CampoCarrera> = {
   CFJO: { tipo: 'menu', opciones: CARRERAS_CFJO },
 };
 
-export const MOTIVOS = ['Estudio', 'Tarea', 'Entretenimiento'];
+export const MOTIVOS = ['Estudio', 'Tarea', 'Entretenimiento', 'TGE', 'Didáctico'];
 
 // La cantidad de laptops y de cubículos está en src/config/modulos.ts.

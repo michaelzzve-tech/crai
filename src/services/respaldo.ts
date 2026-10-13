@@ -21,6 +21,7 @@ function columnas(modulo: Modulo): Columna[] {
     { titulo: 'Instituto', ancho: 10, valor: (r) => r.instituto },
     { titulo: 'Condición', ancho: 12, valor: (r) => r.condicion },
     { titulo: 'Carrera o año', ancho: 16, valor: (r) => r.carrera },
+    { titulo: 'Semestre o nivel', ancho: 16, valor: (r) => r.semestre ?? '' },
     { titulo: 'Motivo de uso', ancho: 16, valor: (r) => r.motivo },
     { titulo: 'Fecha', ancho: 12, valor: (r) => fecha(r.inicio) },
     { titulo: 'Hora de inicio', ancho: 14, valor: (r) => hora(r.inicio) },

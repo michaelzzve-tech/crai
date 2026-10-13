@@ -151,4 +151,5 @@ button:disabled { opacity: .6; cursor: default; }
 .confirmar-borrado { display: grid; gap: 10px; max-width: 420px; }
 .confirmar-borrado p { margin: 0; }
 .acciones-borrado { display: flex; gap: 8px; }
+.botones-formulario { display: flex; gap: 8px; flex-wrap: wrap; }
 button.boton-peligro { background: var(--alerta); border-color: var(--alerta); color: #fff; }
