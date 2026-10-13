@@ -2,8 +2,11 @@
 // (laptops, cubículos…) usando los mismos componentes y el mismo formulario.
 // Para agregar otro módulo, añada una entrada aquí y sus tablas en supabase/esquema.sql.
 
+/** ["desde", …, "hasta"] */
+const rango = (desde: number, hasta: number) =>
+  Array.from({ length: hasta - desde + 1 }, (_, i) => String(desde + i));
 /** ["1", "2", …, "n"] */
-const del1Al = (n: number) => Array.from({ length: n }, (_, i) => String(i + 1));
+const del1Al = (n: number) => rango(1, n);
 
 export interface Modulo {
   id: string;
@@ -32,7 +35,7 @@ export const LAPTOPS: Modulo = {
   id: 'laptops',
   recurso: 'Laptop',
   recursos: 'Laptops',
-  opciones: del1Al(25),
+  opciones: [...del1Al(25), ...rango(50, 80)],
   conHoraFin: false,
   tablaRecursos: 'laptops',
   tablaRegistros: 'prestamos',
