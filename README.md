@@ -58,7 +58,8 @@ y pegue los mismos dos valores.
 
 - **Formulario**, en este orden: nombre, género (masculino, femenino), instituto (ITJO, IUJO, CFJO),
   condición (estudiante, docente, otro), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
-  CFJO: un número escrito a mano), laptop (1 a 25) o cubículo (1 a 6 o POD), motivo de uso
+  CFJO: secretariado administrativo, asistente administrativo o analista contable),
+  laptop (1 a 25) o cubículo (1 a 6 o POD), motivo de uso
   (estudio, tarea, entretenimiento) y hora de inicio. Los cubículos piden además hora de fin
   y muestran la duración (se calcula sola).
 - **En curso**: préstamos o reservas activos; desde ahí se registra la devolución de la

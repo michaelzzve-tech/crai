@@ -43,7 +43,7 @@ function enPeriodo(registros: Registro[], { desde, hasta }: Periodo): Registro[]
   });
 }
 
-/** "ITJO · Año 3", "IUJO · Informática", "CFJO · 2". */
+/** "ITJO · Año 3", "IUJO · Informática", "CFJO · Analista contable". */
 function carreraOAnio(r: Registro): string {
   const campo = CARRERA_POR_INSTITUTO[r.instituto];
   const valor = campo?.tipo === 'menu' && campo.opciones.every((o) => /^\d+$/.test(o)) ? `Año ${r.carrera}` : r.carrera;
