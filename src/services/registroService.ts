@@ -1,4 +1,4 @@
-import type { Modulo } from '../config/modulos';
+import { nombreRecurso, type Modulo } from '../config/modulos';
 import { repositorio } from '../data';
 import type { NuevoRegistro, Recurso, Registro } from '../types';
 import { diaALas, diaDe, formatearDia, formatearHora } from '../utils/fechas';
@@ -60,10 +60,13 @@ export async function activarProgramados(modulo: Modulo, ahora = new Date()): Pr
 
 /** Crea los recursos del módulo (sus opciones del menú) que todavía no existan. */
 export async function asegurarRecursos(modulo: Modulo): Promise<void> {
-  const existentes = new Set((await repositorio.listarRecursos(modulo.tablaRecursos)).map((r) => r.id));
-  for (const [i, id] of modulo.opciones.entries()) {
+  const recursos = await repositorio.listarRecursos(modulo.tablaRecursos);
+  const existentes = new Set(recursos.map((r) => r.id));
+  // "numero" no se puede repetir; los nuevos van después del mayor ya guardado.
+  let siguiente = Math.max(0, ...recursos.map((r) => r.numero)) + 1;
+  for (const id of modulo.opciones) {
     if (!existentes.has(id)) {
-      await repositorio.guardarRecurso(modulo.tablaRecursos, { id, numero: i + 1, estado: 'disponible' });
+      await repositorio.guardarRecurso(modulo.tablaRecursos, { id, numero: siguiente++, estado: 'disponible' });
     }
   }
 }
@@ -94,14 +97,14 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
   // Una reserva para más tarde no ocupa el recurso todavía: se marca en uso al llegar su hora.
   const programado = inicio > new Date();
   if (recurso.estado === 'mantenimiento' || (!programado && recurso.estado !== 'disponible')) {
-    throw new Error(`${modulo.recurso} ${recurso.id} no está disponible.`);
+    throw new Error(`${modulo.recurso} ${nombreRecurso(recurso.id)} no está disponible.`);
   }
   const choque = (await repositorio.listarRegistros(modulo.tablaRegistros)).find(
     (r) => r.recursoId === recurso.id && !r.finReal && new Date(r.inicio) < (fin ?? new Date(8.64e15)) && inicio < finPara(r),
   );
   if (choque) {
     throw new Error(
-      `${modulo.recurso} ${recurso.id} ya está reservado de ${formatearHora(choque.inicio)} a ${formatearHora(choque.fin)}`
+      `${modulo.recurso} ${nombreRecurso(recurso.id)} ya está reservado de ${formatearHora(choque.inicio)} a ${formatearHora(choque.fin)}`
         + ` el ${formatearDia(diaDe(choque.inicio))}.`,
     );
   }

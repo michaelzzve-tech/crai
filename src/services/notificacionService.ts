@@ -1,4 +1,4 @@
-import type { Modulo } from '../config/modulos';
+import { nombreRecurso, type Modulo } from '../config/modulos';
 import type { Registro } from '../types';
 import { estaPorVencer, estaVencido } from './registroService';
 
@@ -29,7 +29,7 @@ export function calcularNotificaciones(modulo: Modulo, registros: Registro[], ah
 
 /** Título y detalle para mostrar una notificación. */
 export function textoNotificacion(n: Notificacion): { titulo: string; detalle: string } {
-  const nombre = `${n.modulo.recurso} ${n.registro.recursoId}`;
+  const nombre = `${n.modulo.recurso} ${nombreRecurso(n.registro.recursoId)}`;
   if (n.tipo === 'vencido') {
     return {
       titulo: `${nombre}: reserva vencida`,

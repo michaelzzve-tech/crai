@@ -1,4 +1,4 @@
-import { CUBICULOS, LAPTOPS, type Modulo } from '../config/modulos';
+import { CUBICULOS, LAPTOPS, nombreRecurso, type Modulo } from '../config/modulos';
 import { repositorio } from '../data';
 import type { Registro } from '../types';
 import { diaDe, duracionEntreFechas, formatearDia, formatearHora } from '../utils/fechas';
@@ -15,7 +15,7 @@ const hora = (iso?: string) => (iso ? formatearHora(iso) : '');
 /** Columnas de cada hoja, en el orden del formulario. */
 function columnas(modulo: Modulo): Columna[] {
   const comunes: Columna[] = [
-    { titulo: modulo.recurso, ancho: 10, valor: (r) => r.recursoId },
+    { titulo: modulo.recurso, ancho: 10, valor: (r) => nombreRecurso(r.recursoId) },
     { titulo: 'Nombre', ancho: 28, valor: (r) => r.nombre },
     { titulo: 'Género', ancho: 12, valor: (r) => r.genero ?? '' },
     { titulo: 'Instituto', ancho: 10, valor: (r) => r.instituto },

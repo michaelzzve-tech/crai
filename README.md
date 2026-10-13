@@ -2,8 +2,8 @@
 
 Aplicación web con dos módulos que funcionan igual:
 
-- **Laptops**: préstamo de las laptops 1 a 25 y 50 a 80.
-- **Cubículos**: reserva de los cubículos 1 a 6 y el POD.
+- **Laptops**: préstamo de las laptops 1 a 25 y 55 a 80.
+- **Cubículos**: reserva de los cubículos 1 a 6 y el Podcast.
 
 Cada módulo tiene su formulario, la lista de préstamos o reservas en curso (con alerta de
 vencidos), el estado de cada laptop o cubículo y el historial.
@@ -62,7 +62,7 @@ y pegue los mismos dos valores.
   condición (estudiante, docente, otro), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
   CFJO: secretariado administrativo, asistente administrativo o analista contable),
   semestre o nivel (1 a 10 o "No aplica"),
-  laptop (1 a 25 y 50 a 80) o cubículo (1 a 6 o POD), motivo de uso
+  laptop (1 a 25 y 55 a 80) o cubículo (1 a 6 o Podcast), motivo de uso
   (estudio, tarea, entretenimiento, TEG, didáctico) y hora de inicio. Los cubículos piden además hora de fin
   y muestran la duración (se calcula sola), y tienen **Fecha de la reserva** (un calendario; por
   defecto hoy). Una reserva para más tarde u otro día sale como "Programada" en la lista de en curso,
@@ -137,7 +137,7 @@ src/
 | Quiero… | Archivo |
 |---|---|
 | Cambiar las opciones de un menú (institutos, carreras, años, motivos…) | `src/config/opciones.ts` |
-| Cambiar las laptops o cubículos del menú (cantidad, o nombres como POD) | `opciones` en `src/config/modulos.ts` |
+| Cambiar las laptops o cubículos del menú (cantidad, o nombres como Podcast) | `opciones` y `NOMBRES_RECURSOS` en `src/config/modulos.ts` |
 | Agregar otro módulo (por ejemplo, salas) | una entrada en `src/config/modulos.ts` y sus tablas en `supabase/esquema.sql` |
 | Cambiar o agregar reglas | `src/services/registroService.ts` |
 | Agregar un campo al formulario | `src/types/index.ts`, `src/components/RegistroForm/RegistroForm.tsx` y la base de datos |

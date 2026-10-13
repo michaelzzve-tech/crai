@@ -16,7 +16,10 @@ export function useBiblioteca(modulo: Modulo) {
       repositorio.listarRecursos(modulo.tablaRecursos),
       repositorio.listarRegistros(modulo.tablaRegistros),
     ]);
-    setRecursos(r.sort((a, b) => a.numero - b.numero));
+    // Solo los del menú actual, en su orden. Los que se quitaron (por ejemplo, laptops
+    // 50 a 54) siguen guardados para no perder sus préstamos, pero no se muestran.
+    const orden = (x: Recurso) => modulo.opciones.indexOf(x.id);
+    setRecursos(r.filter((x) => orden(x) >= 0).sort((a, b) => orden(a) - orden(b)));
     setRegistros(g.sort((a, b) => b.inicio.localeCompare(a.inicio)));
   }, [modulo]);
 

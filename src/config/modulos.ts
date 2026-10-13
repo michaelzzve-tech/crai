@@ -2,6 +2,17 @@
 // (laptops, cubículos…) usando los mismos componentes y el mismo formulario.
 // Para agregar otro módulo, añada una entrada aquí y sus tablas en supabase/esquema.sql.
 
+/**
+ * Nombre que se muestra para un recurso cuyo código guardado es otro. El código
+ * no se cambia para no perder los préstamos y reservas ya guardados con él.
+ */
+const NOMBRES_RECURSOS: Record<string, string> = {
+  POD: 'Podcast',
+};
+
+/** "Podcast" para "POD"; los demás se muestran igual que su código ("1", "2"…). */
+export const nombreRecurso = (id: string) => NOMBRES_RECURSOS[id] ?? id;
+
 /** ["desde", …, "hasta"] */
 const rango = (desde: number, hasta: number) =>
   Array.from({ length: hasta - desde + 1 }, (_, i) => String(desde + i));
@@ -12,7 +23,7 @@ export interface Modulo {
   id: string;
   recurso: string; // Nombre del campo del formulario: "Laptop"
   recursos: string; // Plural: "Laptops"
-  opciones: string[]; // Opciones del menú: "1", "2"… y nombres como "POD"
+  opciones: string[]; // Opciones del menú: "1", "2"… y códigos como "POD" (ver NOMBRES_RECURSOS)
   // true: el formulario pide hora de fin y muestra la duración (y hay vencidos).
   // false: solo hora de inicio; la hora de fin se toma sola al devolver y se
   // muestra el tiempo transcurrido.
@@ -35,7 +46,7 @@ export const LAPTOPS: Modulo = {
   id: 'laptops',
   recurso: 'Laptop',
   recursos: 'Laptops',
-  opciones: [...del1Al(25), ...rango(50, 80)],
+  opciones: [...del1Al(25), ...rango(55, 80)],
   conHoraFin: false,
   tablaRecursos: 'laptops',
   tablaRegistros: 'prestamos',

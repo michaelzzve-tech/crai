@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Modulo } from '../../config/modulos';
+import { nombreRecurso, type Modulo } from '../../config/modulos';
 import { cancelarProgramado, estaPorVencer, estaProgramado, estaVencido, finalizar } from '../../services/registroService';
 import type { Registro } from '../../types';
 import { useAhora } from '../../hooks/useAhora';
@@ -26,8 +26,8 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
 
   async function confirmar(registro: Registro) {
     const ok = estaProgramado(registro)
-      ? await ejecutar(() => cancelarProgramado(modulo, registro), `Reserva de ${modulo.recurso.toLowerCase()} ${registro.recursoId} cancelada.`)
-      : await ejecutar(() => finalizar(modulo, registro), modulo.mensajeFinalizado(registro.recursoId));
+      ? await ejecutar(() => cancelarProgramado(modulo, registro), `Reserva de ${modulo.recurso.toLowerCase()} ${nombreRecurso(registro.recursoId)} cancelada.`)
+      : await ejecutar(() => finalizar(modulo, registro), modulo.mensajeFinalizado(nombreRecurso(registro.recursoId)));
     if (ok) setFinalizando(null);
   }
 
@@ -68,7 +68,7 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
               const programado = estaProgramado(r, ahora);
               return (
                 <tr key={r.id} className={vencido ? 'fila-vencida' : porVencer ? 'fila-por-vencer' : undefined}>
-                  <td><strong>{r.recursoId}</strong></td>
+                  <td><strong>{nombreRecurso(r.recursoId)}</strong></td>
                   <td>
                     {r.nombre}
                     <div className="secundario">{[r.genero, r.instituto, r.condicion].filter(Boolean).join(' · ')}</div>
