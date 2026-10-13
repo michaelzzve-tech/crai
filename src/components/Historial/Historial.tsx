@@ -47,6 +47,7 @@ export function Historial({ modulo, registros }: Props) {
               <th>Condición</th>
               <th>Carrera o año</th>
               <th>Semestre o nivel</th>
+              {modulo.conUsuarios && <th>Usuarios</th>}
               <th>Motivo</th>
               <th>Inicio</th>
               {conFin && (
@@ -71,6 +72,7 @@ export function Historial({ modulo, registros }: Props) {
                   <td>{r.condicion}</td>
                   <td>{r.carrera}</td>
                   <td>{r.semestre ?? '—'}</td>
+                  {modulo.conUsuarios && <td>{r.usuarios ?? '—'}</td>}
                   <td>{r.motivo}</td>
                   <td>{formatearFecha(r.inicio)}</td>
                   {conFin && (

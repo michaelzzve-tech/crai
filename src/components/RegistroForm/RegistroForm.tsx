@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { CARRERA_POR_INSTITUTO, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, SEMESTRES } from '../../config/opciones';
+import { CARRERA_POR_INSTITUTO, CANTIDAD_USUARIOS, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, SEMESTRES } from '../../config/opciones';
 import { nombreRecurso, type Modulo } from '../../config/modulos';
 import { useAhora } from '../../hooks/useAhora';
 import { registrar } from '../../services/registroService';
@@ -14,6 +14,7 @@ const vacio = (): NuevoRegistro => ({
   condicion: '',
   carrera: '',
   semestre: '',
+  usuarios: '',
   recursoId: '',
   motivo: '',
   fecha: diaDe(),
@@ -129,6 +130,9 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
             ))}
           </select>
         </label>
+        {modulo.conUsuarios && (
+          <Desplegable id="registro-usuarios" titulo="Cantidad de usuarios" valor={datos.usuarios} opciones={CANTIDAD_USUARIOS} onCambiar={cambiar('usuarios')} />
+        )}
         <Desplegable id="registro-motivo" titulo="Motivo de uso" valor={datos.motivo} opciones={MOTIVOS} onCambiar={cambiar('motivo')} />
         {modulo.conHoraFin && (
           <label htmlFor="registro-fecha">

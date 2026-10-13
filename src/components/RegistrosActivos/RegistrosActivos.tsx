@@ -71,7 +71,9 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                   <td><strong>{nombreRecurso(r.recursoId)}</strong></td>
                   <td>
                     {r.nombre}
-                    <div className="secundario">{[r.genero, r.instituto, r.condicion].filter(Boolean).join(' · ')}</div>
+                    <div className="secundario">
+                      {[r.genero, r.instituto, r.condicion, r.usuarios && `${r.usuarios} ${r.usuarios === 1 ? 'usuario' : 'usuarios'}`].filter(Boolean).join(' · ')}
+                    </div>
                   </td>
                   <td>
                     {r.carrera}
