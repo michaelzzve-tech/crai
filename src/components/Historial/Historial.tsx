@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Modulo } from '../../config/modulos';
+import { nombreRecurso, type Modulo } from '../../config/modulos';
 import type { Registro } from '../../types';
 import { duracionEntreFechas, formatearFecha, formatearHora } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
@@ -17,7 +17,7 @@ export function Historial({ modulo, registros }: Props) {
 
   const texto = filtro.toLowerCase();
   const visibles = registros.filter((r) =>
-    [r.recursoId, r.nombre, r.genero ?? '', r.instituto, r.condicion, r.carrera, r.semestre ?? '', r.motivo].some((v) =>
+    [nombreRecurso(r.recursoId), r.nombre, r.genero ?? '', r.instituto, r.condicion, r.carrera, r.semestre ?? '', r.motivo].some((v) =>
       v.toLowerCase().includes(texto),
     ),
   );
@@ -64,7 +64,7 @@ export function Historial({ modulo, registros }: Props) {
               const tarde = r.finReal && r.fin && r.finReal > r.fin;
               return (
                 <tr key={r.id}>
-                  <td><strong>{r.recursoId}</strong></td>
+                  <td><strong>{nombreRecurso(r.recursoId)}</strong></td>
                   <td>{r.nombre}</td>
                   <td>{r.genero ?? '—'}</td>
                   <td>{r.instituto}</td>

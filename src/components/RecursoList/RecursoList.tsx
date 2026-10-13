@@ -1,4 +1,4 @@
-import type { Modulo } from '../../config/modulos';
+import { nombreRecurso, type Modulo } from '../../config/modulos';
 import { cambiarMantenimiento } from '../../services/registroService';
 import type { Recurso } from '../../types';
 import { EstadoBadge } from '../EstadoBadge';
@@ -12,7 +12,7 @@ interface Props {
   ejecutar: EjecutarAccion;
 }
 
-/** Los recursos del módulo (laptops 1–25 y 50–80, cubículos 1–6 y POD…) con su estado. */
+/** Los recursos del módulo (laptops 1–25 y 55–80, cubículos 1–6 y Podcast…) con su estado. */
 export function RecursoList({ modulo, recursos, ejecutar }: Props) {
   const paginacion = usePaginacion(recursos);
   return (
@@ -29,7 +29,7 @@ export function RecursoList({ modulo, recursos, ejecutar }: Props) {
         <tbody>
           {paginacion.items.map((r) => (
             <tr key={r.id}>
-              <td><strong>{r.id}</strong></td>
+              <td><strong>{nombreRecurso(r.id)}</strong></td>
               <td><EstadoBadge estado={r.estado} textoOcupado={modulo.ocupado} /></td>
               <td className="acciones">
                 {r.estado !== 'ocupado' && (
@@ -37,7 +37,7 @@ export function RecursoList({ modulo, recursos, ejecutar }: Props) {
                     onClick={() =>
                       ejecutar(
                         () => cambiarMantenimiento(modulo, r, r.estado !== 'mantenimiento'),
-                        `Estado de ${modulo.recurso.toLowerCase()} ${r.id} actualizado.`,
+                        `Estado de ${modulo.recurso.toLowerCase()} ${nombreRecurso(r.id)} actualizado.`,
                       )
                     }
                   >

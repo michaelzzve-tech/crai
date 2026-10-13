@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { CARRERA_POR_INSTITUTO, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, SEMESTRES } from '../../config/opciones';
-import type { Modulo } from '../../config/modulos';
+import { nombreRecurso, type Modulo } from '../../config/modulos';
 import { useAhora } from '../../hooks/useAhora';
 import { registrar } from '../../services/registroService';
 import type { NuevoRegistro, Recurso } from '../../types';
@@ -95,7 +95,7 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
 
   async function enviar(e: FormEvent) {
     e.preventDefault();
-    const ok = await ejecutar(() => registrar(modulo, datos), modulo.mensajeRegistrado(datos.recursoId, datos.nombre));
+    const ok = await ejecutar(() => registrar(modulo, datos), modulo.mensajeRegistrado(nombreRecurso(datos.recursoId), datos.nombre));
     if (ok) setDatos(vacio());
   }
 
@@ -124,7 +124,7 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
             <option value="">Seleccione…</option>
             {recursos.map((r) => (
               <option key={r.id} value={r.id} disabled={!elegible(r)}>
-                {r.id}{textoEstado(r)}
+                {nombreRecurso(r.id)}{textoEstado(r)}
               </option>
             ))}
           </select>
