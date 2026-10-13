@@ -145,7 +145,11 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
           </>
         )}
       </div>
-      <button type="submit" className="primario">{modulo.registrar}</button>
+      <div className="botones-formulario">
+        <button type="submit" className="primario">{modulo.registrar}</button>
+        {/* Vacía los campos y vuelve a poner la hora de inicio en la hora actual. */}
+        <button type="button" onClick={() => setDatos(vacio())}>Limpiar</button>
+      </div>
     </form>
   );
 }

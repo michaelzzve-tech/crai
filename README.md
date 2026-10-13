@@ -64,7 +64,8 @@ y pegue los mismos dos valores.
   semestre o nivel (1 a 10),
   laptop (1 a 25 y 50 a 80) o cubículo (1 a 6 o POD), motivo de uso
   (estudio, tarea, entretenimiento, TGE, didáctico) y hora de inicio. Los cubículos piden además hora de fin
-  y muestran la duración (se calcula sola).
+  y muestran la duración (se calcula sola). El botón **Limpiar** vacía los campos y pone
+  la hora de inicio en la hora actual.
 - **En curso**: préstamos o reservas activos; desde ahí se registra la devolución de la
   laptop o la salida del cubículo. En las laptops, la hora de devolución
   se toma sola en el momento y se muestra el **tiempo transcurrido** desde la hora de inicio.
