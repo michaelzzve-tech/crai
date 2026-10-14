@@ -81,6 +81,25 @@ export async function cambiarMantenimiento(modulo: Modulo, recurso: Recurso, enM
   });
 }
 
+/**
+ * Falla si el recurso ya tiene otro registro sin terminar que se cruce con ese horario.
+ * Sin hora de fin (laptops), se cuenta que el préstamo ocupa la laptop hasta el final de su día.
+ * `excluirId` deja fuera el registro que se está editando.
+ */
+async function revisarChoque(modulo: Modulo, recursoId: string, inicio: Date, fin?: Date, excluirId?: string) {
+  const finEstimado = (r: Registro) => (r.fin ? new Date(r.fin) : diaALas(diaDe(r.inicio), '23:59'));
+  const hasta = fin ?? diaALas(diaDe(inicio), '23:59');
+  const choque = (await repositorio.listarRegistros(modulo.tablaRegistros)).find(
+    (r) => r.recursoId === recursoId && r.id !== excluirId && !r.finReal && new Date(r.inicio) < hasta && inicio < finEstimado(r),
+  );
+  if (choque) {
+    const nombre = `${modulo.recurso} ${nombreRecurso(recursoId)}`;
+    throw new Error(choque.fin
+      ? `${nombre} ya está reservado de ${formatearHora(choque.inicio)} a ${formatearHora(choque.fin)} el ${formatearDia(diaDe(choque.inicio))}.`
+      : `${nombre} ya tiene un préstamo el ${formatearDia(diaDe(choque.inicio))} desde las ${formatearHora(choque.inicio)}.`);
+  }
+}
+
 export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<Registro> {
   const recursos = await repositorio.listarRecursos(modulo.tablaRecursos);
   const recurso = recursos.find((r) => r.id === datos.recursoId);
@@ -104,17 +123,7 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
     throw new Error('La cantidad de usuarios debe ser un número entero mayor que 0.');
   }
 
-  // Sin hora de fin (laptops), se cuenta que el préstamo ocupa la laptop hasta el final de su día.
-  const finEstimado = (r: Registro) => (r.fin ? new Date(r.fin) : diaALas(diaDe(r.inicio), '23:59'));
-  const choque = (await repositorio.listarRegistros(modulo.tablaRegistros)).find(
-    (r) => r.recursoId === recurso.id && !r.finReal && new Date(r.inicio) < (fin ?? diaALas(dia, '23:59')) && inicio < finEstimado(r),
-  );
-  if (choque) {
-    const nombre = `${modulo.recurso} ${nombreRecurso(recurso.id)}`;
-    throw new Error(choque.fin
-      ? `${nombre} ya está reservado de ${formatearHora(choque.inicio)} a ${formatearHora(choque.fin)} el ${formatearDia(diaDe(choque.inicio))}.`
-      : `${nombre} ya tiene un préstamo el ${formatearDia(diaDe(choque.inicio))} desde las ${formatearHora(choque.inicio)}.`);
-  }
+  await revisarChoque(modulo, recurso.id, inicio, fin);
 
   const registro: Registro = {
     id: generarId(),
@@ -134,6 +143,43 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
   if (!programado) await repositorio.guardarRecurso(modulo.tablaRecursos, { ...recurso, estado: 'ocupado' });
   avisarCambio();
   return registro;
+}
+
+export interface NuevoHorario {
+  fecha: string; // "AAAA-MM-DD"
+  horaInicio: string; // "HH:MM"
+  horaFin: string; // "HH:MM"
+}
+
+/**
+ * Cambia la fecha y el horario de una reserva sin terminar. Si pasa a ser para más
+ * tarde, el cubículo se libera mientras tanto; si ya empezó, se marca en uso.
+ */
+export async function editarHorario(modulo: Modulo, registro: Registro, horario: NuevoHorario) {
+  const { fecha, horaInicio, horaFin } = horario;
+  if (fecha < diaDe() && fecha !== diaDe(registro.inicio)) {
+    throw new Error('La fecha de la reserva no puede ser anterior a hoy.');
+  }
+  const inicio = diaALas(fecha, horaInicio);
+  const fin = diaALas(fecha, horaFin);
+  if (fin <= inicio) throw new Error('La hora de fin debe ser posterior a la hora de inicio.');
+  await revisarChoque(modulo, registro.recursoId, inicio, fin, registro.id);
+
+  await repositorio.guardarRegistro(modulo.tablaRegistros, { ...registro, inicio: inicio.toISOString(), fin: fin.toISOString() });
+
+  // En uso si alguno de sus registros sin terminar ya empezó.
+  const ahora = new Date();
+  const [recursos, registros] = await Promise.all([
+    repositorio.listarRecursos(modulo.tablaRecursos),
+    repositorio.listarRegistros(modulo.tablaRegistros),
+  ]);
+  const recurso = recursos.find((r) => r.id === registro.recursoId);
+  if (recurso && recurso.estado !== 'mantenimiento') {
+    const enUso = registros.some((r) => r.recursoId === recurso.id && !r.finReal && new Date(r.inicio) <= ahora);
+    const estado = enUso ? 'ocupado' : 'disponible';
+    if (recurso.estado !== estado) await repositorio.guardarRecurso(modulo.tablaRecursos, { ...recurso, estado });
+  }
+  avisarCambio();
 }
 
 /** Cancela una reserva programada que todavía no empieza: se borra y el recurso no cambia. */
