@@ -20,6 +20,8 @@ export interface Informe {
   usuariosCubiculos: number; // Suma de "Cantidad de usuarios" de esas reservas
   desgloseLaptops: Desglose[];
   desgloseCubiculos: Desglose[];
+  detallePrestamos: Registro[]; // Cada préstamo del período, del más antiguo al más reciente
+  detalleReservas: Registro[]; // Cada reserva del período, igual
 }
 
 /** Una tabla del informe: cantidad y horas agrupadas por un dato (instituto, condición…). */
@@ -97,8 +99,9 @@ export async function generarInforme(periodo: Periodo): Promise<Informe> {
     repositorio.listarRegistros(LAPTOPS.tablaRegistros),
     repositorio.listarRegistros(CUBICULOS.tablaRegistros),
   ]);
-  const p = enPeriodo(prestamos, periodo);
-  const r = enPeriodo(reservas, periodo);
+  const porInicio = (a: Registro, b: Registro) => a.inicio.localeCompare(b.inicio);
+  const p = enPeriodo(prestamos, periodo).sort(porInicio);
+  const r = enPeriodo(reservas, periodo).sort(porInicio);
   const usoLaptop = (x: Registro) => (x.finReal ? minutosEntre(x.inicio, x.finReal) : 0);
   const reservaCubiculo = (x: Registro) => (x.fin ? minutosEntre(x.inicio, x.fin) : 0);
   const sumar = (lista: Registro[], minutos: (x: Registro) => number) => lista.reduce((t, x) => t + minutos(x), 0);
@@ -115,6 +118,8 @@ export async function generarInforme(periodo: Periodo): Promise<Informe> {
       ...desglosar(r, reservaCubiculo),
       agrupar('Por cantidad de usuarios', r, (x) => (x.usuarios ? String(x.usuarios) : 'Sin dato'), reservaCubiculo),
     ],
+    detallePrestamos: p,
+    detalleReservas: r,
   };
 }
 
