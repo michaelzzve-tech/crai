@@ -2,7 +2,7 @@
 
 Aplicación web con dos módulos que funcionan igual:
 
-- **Laptops**: préstamo de las laptops 1 a 25 y 55 a 80.
+- **Laptops**: préstamo de las laptops 1 a 25 y 59 a 80.
 - **Cubículos**: reserva de los cubículos 1 a 6 y el Podcast.
 
 Cada módulo tiene su formulario, la lista de préstamos o reservas en curso (con alerta de
@@ -63,13 +63,13 @@ y pegue los mismos dos valores.
 - **Formulario**, en este orden: nombre, género (masculino, femenino), instituto (ITJO, IUJO, CFJO),
   condición (estudiante, docente, otro), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
   CFJO: secretariado administrativo, asistente administrativo o analista contable),
-  semestre o nivel (1 a 10 o "No aplica"), cantidad de usuarios (solo cubículos, 1 a 8),
-  laptop (1 a 25 y 55 a 80) o cubículo (1 a 6 o Podcast), motivo de uso
-  (estudio, tarea, entretenimiento, TEG, didáctico) y hora de inicio. Los cubículos piden además hora de fin
-  y muestran la duración (se calcula sola), y tienen **Fecha de la reserva** (un calendario; por
-  defecto hoy). Una reserva para más tarde u otro día sale como "Programada" en la lista de en curso,
-  no ocupa el cubículo hasta su hora de inicio y se puede cancelar; si choca con otra reserva del
-  mismo cubículo, no se guarda. El botón **Limpiar** vacía los campos y pone
+  semestre o nivel (1 a 10 o "No aplica"), cantidad de usuarios (solo cubículos; se escribe el número),
+  laptop (1 a 25 y 59 a 80) o cubículo (1 a 6 o Podcast), motivo de uso
+  (estudio, tarea, entretenimiento, TEG, didáctico), **fecha de la reserva** (un calendario; por
+  defecto hoy) y hora de inicio. Los cubículos piden además hora de fin y muestran la duración
+  (se calcula sola). Una reserva para más tarde u otro día sale como "Programada" en la lista de en curso,
+  no ocupa la laptop o el cubículo hasta su hora de inicio y se puede cancelar; si choca con otra reserva
+  del mismo recurso, no se guarda (una laptop sin devolver cuenta como ocupada hasta el final de su día). El botón **Limpiar** vacía los campos y pone
   la hora de inicio en la hora actual.
 - **En curso**: préstamos o reservas activos; desde ahí se registra la devolución de la
   laptop o la salida del cubículo. En las laptops, la hora de devolución
@@ -83,10 +83,12 @@ y pegue los mismos dos valores.
 - **Informes** (ícono de gráfica en el extremo derecho del encabezado): totales de un rango de fechas (por defecto, el mes actual): préstamos de
   laptops, horas de uso de laptops (de la hora de inicio a la devolución), reservas de
   cubículos y horas reservadas de cubículos, con el desglose de cada uno por instituto,
-  género, condición, carrera o año y motivo de uso. El botón **Descargar PDF** guarda el informe.
+  género, condición, carrera o año y motivo de uso. El botón **Descargar PDF** guarda el informe; al final trae
+  el **detalle** de cada préstamo y cada reserva del período (una fila por registro, con su fecha y horas).
 - **Respaldo**: en Informes, el botón **Descargar respaldo (Excel)** guarda un archivo con
-  los préstamos y las reservas (una hoja para cada uno): todos, los de un año o los de un mes
-  (se cuentan por la fecha de inicio, en hora de Caracas).
+  los préstamos y las reservas (una hoja para cada uno, una fila por registro con su fecha): todos, los de un año
+  o los de un mes (se cuentan por la fecha de inicio, en hora de Caracas). Si la devolución o salida fue otro día,
+  su columna muestra también la fecha.
 - **Borrar todos los registros**: al final de Informes. Deja en 0 préstamos y reservas (y libera
   laptops y cubículos en uso). Pide la contraseña del usuario para confirmar (sin base de datos,
   escribir BORRAR) y ofrece descargar el respaldo antes. No se puede deshacer.

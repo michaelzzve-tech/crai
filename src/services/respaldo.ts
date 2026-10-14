@@ -3,7 +3,7 @@ import { repositorio } from '../data';
 import type { Registro } from '../types';
 import { diaDe, duracionEntreFechas, formatearDia, formatearHora } from '../utils/fechas';
 
-interface Columna {
+export interface Columna {
   titulo: string;
   ancho: number;
   valor: (r: Registro) => string;
@@ -11,9 +11,12 @@ interface Columna {
 
 const fecha = (iso?: string) => (iso ? formatearDia(diaDe(iso)) : '');
 const hora = (iso?: string) => (iso ? formatearHora(iso) : '');
+/** Hora de devolución o salida; si fue otro día que el inicio, también la fecha. */
+const horaFinal = (r: Registro) =>
+  !r.finReal ? '' : diaDe(r.finReal) === diaDe(r.inicio) ? hora(r.finReal) : `${fecha(r.finReal)} ${hora(r.finReal)}`;
 
-/** Columnas de cada hoja, en el orden del formulario. */
-function columnas(modulo: Modulo): Columna[] {
+/** Datos de cada registro, en el orden del formulario (en el Excel y en el detalle del PDF). */
+export function columnasDetalle(modulo: Modulo): Columna[] {
   const comunes: Columna[] = [
     { titulo: modulo.recurso, ancho: 10, valor: (r) => nombreRecurso(r.recursoId) },
     { titulo: 'Nombre', ancho: 28, valor: (r) => r.nombre },
@@ -31,14 +34,18 @@ function columnas(modulo: Modulo): Columna[] {
     ? [
         { titulo: 'Hora de fin', ancho: 12, valor: (r) => hora(r.fin) },
         { titulo: 'Duración', ancho: 14, valor: (r) => (r.fin ? duracionEntreFechas(r.inicio, r.fin) : '') },
-        { titulo: 'Hora de salida', ancho: 14, valor: (r) => hora(r.finReal) },
+        { titulo: 'Hora de salida', ancho: 14, valor: horaFinal },
       ]
     : [
-        { titulo: 'Hora de devolución', ancho: 18, valor: (r) => hora(r.finReal) },
+        { titulo: 'Hora de devolución', ancho: 18, valor: horaFinal },
         { titulo: 'Tiempo transcurrido', ancho: 18, valor: (r) => (r.finReal ? duracionEntreFechas(r.inicio, r.finReal) : 'Sin devolver') },
       ];
-  return [...comunes, ...finales, { titulo: 'Código interno', ancho: 26, valor: (r) => r.id }];
+  return [...comunes, ...finales];
 }
+
+/** Columnas de cada hoja del Excel: el detalle y el código interno. */
+const columnas = (modulo: Modulo): Columna[] =>
+  [...columnasDetalle(modulo), { titulo: 'Código interno', ancho: 26, valor: (r) => r.id }];
 
 /** Período del respaldo: todo, un año completo o un mes de un año (mes 1–12). */
 export interface PeriodoRespaldo {

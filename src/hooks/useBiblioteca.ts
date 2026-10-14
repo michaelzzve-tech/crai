@@ -17,7 +17,7 @@ export function useBiblioteca(modulo: Modulo) {
       repositorio.listarRegistros(modulo.tablaRegistros),
     ]);
     // Solo los del menú actual, en su orden. Los que se quitaron (por ejemplo, laptops
-    // 50 a 54) siguen guardados para no perder sus préstamos, pero no se muestran.
+    // 50 a 58) siguen guardados para no perder sus préstamos, pero no se muestran.
     const orden = (x: Recurso) => modulo.opciones.indexOf(x.id);
     setRecursos(r.filter((x) => orden(x) >= 0).sort((a, b) => orden(a) - orden(b)));
     setRegistros(g.sort((a, b) => b.inicio.localeCompare(a.inicio)));
@@ -31,7 +31,6 @@ export function useBiblioteca(modulo: Modulo) {
 
   // Las reservas programadas ocupan su recurso al llegar su hora: se revisa cada minuto.
   useEffect(() => {
-    if (!modulo.conHoraFin) return;
     const id = setInterval(() => { recargar().catch(() => {}); }, 60_000);
     return () => clearInterval(id);
   }, [modulo, recargar]);

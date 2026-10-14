@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { CARRERA_POR_INSTITUTO, CANTIDAD_USUARIOS, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, SEMESTRES } from '../../config/opciones';
+import { CARRERA_POR_INSTITUTO, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, SEMESTRES } from '../../config/opciones';
 import { nombreRecurso, type Modulo } from '../../config/modulos';
 import { useAhora } from '../../hooks/useAhora';
 import { registrar } from '../../services/registroService';
@@ -86,7 +86,7 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
   const ahora = useAhora(30_000);
   // Para más tarde u otro día se puede elegir un recurso que hoy está en uso;
   // al registrar se revisa que no choque con otra reserva.
-  const programado = modulo.conHoraFin && !!datos.fecha && !!datos.horaInicio
+  const programado = !!datos.fecha && !!datos.horaInicio
     && diaALas(datos.fecha, datos.horaInicio) > ahora;
   const elegible = (r: Recurso) => r.estado === 'disponible' || (programado && r.estado === 'ocupado');
 
@@ -96,7 +96,12 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
 
   async function enviar(e: FormEvent) {
     e.preventDefault();
-    const ok = await ejecutar(() => registrar(modulo, datos), modulo.mensajeRegistrado(nombreRecurso(datos.recursoId), datos.nombre));
+    const recurso = nombreRecurso(datos.recursoId);
+    // Una laptop para más tarde no se presta todavía: se avisa que quedó reservada.
+    const mensaje = programado && !modulo.conHoraFin
+      ? `${modulo.recurso} ${recurso} reservada para ${datos.nombre}.`
+      : modulo.mensajeRegistrado(recurso, datos.nombre);
+    const ok = await ejecutar(() => registrar(modulo, datos), mensaje);
     if (ok) setDatos(vacio());
   }
 
@@ -131,15 +136,25 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
           </select>
         </label>
         {modulo.conUsuarios && (
-          <Desplegable id="registro-usuarios" titulo="Cantidad de usuarios" valor={datos.usuarios} opciones={CANTIDAD_USUARIOS} onCambiar={cambiar('usuarios')} />
-        )}
-        <Desplegable id="registro-motivo" titulo="Motivo de uso" valor={datos.motivo} opciones={MOTIVOS} onCambiar={cambiar('motivo')} />
-        {modulo.conHoraFin && (
-          <label htmlFor="registro-fecha">
-            Fecha de la reserva
-            <input id="registro-fecha" type="date" required min={diaDe()} value={datos.fecha} onChange={(e) => cambiar('fecha')(e.target.value)} />
+          <label htmlFor="registro-usuarios">
+            Cantidad de usuarios
+            <input
+              id="registro-usuarios"
+              type="number"
+              min={1}
+              step={1}
+              required
+              placeholder="Escriba un número"
+              value={datos.usuarios}
+              onChange={(e) => cambiar('usuarios')(e.target.value)}
+            />
           </label>
         )}
+        <Desplegable id="registro-motivo" titulo="Motivo de uso" valor={datos.motivo} opciones={MOTIVOS} onCambiar={cambiar('motivo')} />
+        <label htmlFor="registro-fecha">
+          Fecha de la reserva
+          <input id="registro-fecha" type="date" required min={diaDe()} value={datos.fecha} onChange={(e) => cambiar('fecha')(e.target.value)} />
+        </label>
         <label htmlFor="registro-inicio">
           Hora de inicio
           <input id="registro-inicio" type="time" required value={datos.horaInicio} onChange={(e) => cambiar('horaInicio')(e.target.value)} />

@@ -28,7 +28,7 @@ export interface Modulo {
   // false: solo hora de inicio; la hora de fin se toma sola al devolver y se
   // muestra el tiempo transcurrido.
   conHoraFin: boolean;
-  conUsuarios: boolean; // true: el formulario pide "Cantidad de usuarios" (CANTIDAD_USUARIOS)
+  conUsuarios: boolean; // true: el formulario pide "Cantidad de usuarios" (un número que se escribe)
   tablaRecursos: string; // Tabla de la base de datos con los recursos
   tablaRegistros: string; // Tabla de la base de datos con los préstamos o reservas
   registros: string; // "Préstamos"
@@ -47,7 +47,7 @@ export const LAPTOPS: Modulo = {
   id: 'laptops',
   recurso: 'Laptop',
   recursos: 'Laptops',
-  opciones: [...del1Al(25), ...rango(55, 80)],
+  opciones: [...del1Al(25), ...rango(59, 80)],
   conHoraFin: false,
   conUsuarios: false,
   tablaRecursos: 'laptops',
