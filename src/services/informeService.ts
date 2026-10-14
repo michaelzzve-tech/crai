@@ -1,5 +1,5 @@
 import { CUBICULOS, LAPTOPS } from '../config/modulos';
-import { CARRERA_POR_INSTITUTO, CANTIDAD_USUARIOS, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, SEMESTRES } from '../config/opciones';
+import { CARRERA_POR_INSTITUTO, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, SEMESTRES } from '../config/opciones';
 import { repositorio } from '../data';
 import type { Registro } from '../types';
 import { diaDe } from '../utils/fechas';
@@ -113,7 +113,7 @@ export async function generarInforme(periodo: Periodo): Promise<Informe> {
     usuariosCubiculos: r.reduce((t, x) => t + (x.usuarios ?? 0), 0),
     desgloseCubiculos: [
       ...desglosar(r, reservaCubiculo),
-      agrupar('Por cantidad de usuarios', r, (x) => (x.usuarios ? String(x.usuarios) : 'Sin dato'), reservaCubiculo, CANTIDAD_USUARIOS),
+      agrupar('Por cantidad de usuarios', r, (x) => (x.usuarios ? String(x.usuarios) : 'Sin dato'), reservaCubiculo),
     ],
   };
 }

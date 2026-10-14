@@ -12,7 +12,7 @@ interface Props {
   ejecutar: EjecutarAccion;
 }
 
-/** Los recursos del módulo (laptops 1–25 y 55–80, cubículos 1–6 y Podcast…) con su estado. */
+/** Los recursos del módulo (laptops 1–25 y 59–80, cubículos 1–6 y Podcast…) con su estado. */
 export function RecursoList({ modulo, recursos, ejecutar }: Props) {
   const paginacion = usePaginacion(recursos);
   return (

@@ -86,7 +86,7 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
   const recurso = recursos.find((r) => r.id === datos.recursoId);
   if (!recurso) throw new Error(`Seleccione un ${modulo.recurso.toLowerCase()}.`);
 
-  const dia = modulo.conHoraFin && datos.fecha ? datos.fecha : diaDe();
+  const dia = datos.fecha || diaDe();
   if (dia < diaDe()) throw new Error('La fecha de la reserva no puede ser anterior a hoy.');
   const inicio = diaALas(dia, datos.horaInicio);
   const fin = modulo.conHoraFin ? diaALas(dia, datos.horaFin) : undefined;
@@ -99,14 +99,21 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
   if (recurso.estado === 'mantenimiento' || (!programado && recurso.estado !== 'disponible')) {
     throw new Error(`${modulo.recurso} ${nombreRecurso(recurso.id)} no está disponible.`);
   }
+  const usuarios = modulo.conUsuarios ? Number(datos.usuarios) : undefined;
+  if (usuarios !== undefined && (!Number.isInteger(usuarios) || usuarios < 1)) {
+    throw new Error('La cantidad de usuarios debe ser un número entero mayor que 0.');
+  }
+
+  // Sin hora de fin (laptops), se cuenta que el préstamo ocupa la laptop hasta el final de su día.
+  const finEstimado = (r: Registro) => (r.fin ? new Date(r.fin) : diaALas(diaDe(r.inicio), '23:59'));
   const choque = (await repositorio.listarRegistros(modulo.tablaRegistros)).find(
-    (r) => r.recursoId === recurso.id && !r.finReal && new Date(r.inicio) < (fin ?? new Date(8.64e15)) && inicio < finPara(r),
+    (r) => r.recursoId === recurso.id && !r.finReal && new Date(r.inicio) < (fin ?? diaALas(dia, '23:59')) && inicio < finEstimado(r),
   );
   if (choque) {
-    throw new Error(
-      `${modulo.recurso} ${nombreRecurso(recurso.id)} ya está reservado de ${formatearHora(choque.inicio)} a ${formatearHora(choque.fin)}`
-        + ` el ${formatearDia(diaDe(choque.inicio))}.`,
-    );
+    const nombre = `${modulo.recurso} ${nombreRecurso(recurso.id)}`;
+    throw new Error(choque.fin
+      ? `${nombre} ya está reservado de ${formatearHora(choque.inicio)} a ${formatearHora(choque.fin)} el ${formatearDia(diaDe(choque.inicio))}.`
+      : `${nombre} ya tiene un préstamo el ${formatearDia(diaDe(choque.inicio))} desde las ${formatearHora(choque.inicio)}.`);
   }
 
   const registro: Registro = {
@@ -118,7 +125,7 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
     condicion: datos.condicion,
     carrera: datos.carrera,
     semestre: datos.semestre,
-    usuarios: modulo.conUsuarios && datos.usuarios ? Number(datos.usuarios) : undefined,
+    usuarios,
     motivo: datos.motivo,
     inicio: inicio.toISOString(),
     fin: fin?.toISOString(),

@@ -27,9 +27,6 @@ export const CARRERA_POR_INSTITUTO: Record<string, CampoCarrera> = {
   CFJO: { tipo: 'menu', opciones: CARRERAS_CFJO },
 };
 
-/** Personas que usarán el cubículo. */
-export const CANTIDAD_USUARIOS = ['1', '2', '3', '4', '5', '6', '7', '8'];
-
 export const MOTIVOS = ['Estudio', 'Tarea', 'Entretenimiento', 'TEG', 'Didáctico'];
 
 // La cantidad de laptops y de cubículos está en src/config/modulos.ts.

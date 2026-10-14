@@ -88,12 +88,12 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                       <td><EstadoBadge estado={programado ? 'programado' : vencido ? 'vencido' : porVencer ? 'por-vencer' : 'activo'} /></td>
                     </>
                   ) : (
-                    <td>{duracionEntreFechas(r.inicio, ahora)}</td>
+                    <td>{programado ? <EstadoBadge estado="programado" /> : duracionEntreFechas(r.inicio, ahora)}</td>
                   )}
                   <td className="acciones">
                     {finalizando === r.id ? (
                       <div className="devolucion">
-                        {!conFin && (
+                        {!conFin && !programado && (
                           <span className="secundario">
                             Hora de devolución: <strong>{formatearHora(ahora.toISOString())}</strong>
                             {' · '}Tiempo transcurrido: <strong>{duracionEntreFechas(r.inicio, ahora)}</strong>
