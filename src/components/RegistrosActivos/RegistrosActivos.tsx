@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { nombreRecurso, type Modulo } from '../../config/modulos';
-import { cancelarProgramado, estaPorVencer, estaProgramado, estaVencido, finalizar } from '../../services/registroService';
+import { cancelarProgramado, editarHorario, estaPorVencer, estaProgramado, estaVencido, finalizar, type NuevoHorario } from '../../services/registroService';
 import type { Registro } from '../../types';
 import { useAhora } from '../../hooks/useAhora';
 import { usePaginacion } from '../../hooks/usePaginacion';
-import { diaDe, duracionEntreFechas, formatearDia, formatearHora } from '../../utils/fechas';
+import { diaDe, duracionEntreFechas, duracionEntreHoras, formatearDia, formatearHora, horaActual } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 import { Paginador } from '../Paginador';
 import type { EjecutarAccion } from '../tipos';
@@ -15,9 +15,57 @@ interface Props {
   ejecutar: EjecutarAccion;
 }
 
+function IconoLapiz() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
+
+/** Campos para cambiar la fecha y el horario de una reserva, con Guardar y Cancelar. */
+function EditorHorario({ registro, onGuardar, onCancelar }: {
+  registro: Registro;
+  onGuardar: (horario: NuevoHorario) => void;
+  onCancelar: () => void;
+}) {
+  const [horario, setHorario] = useState<NuevoHorario>({
+    fecha: diaDe(registro.inicio),
+    horaInicio: horaActual(new Date(registro.inicio)),
+    horaFin: registro.fin ? horaActual(new Date(registro.fin)) : '',
+  });
+  const cambiar = (campo: keyof NuevoHorario) => (e: { target: { value: string } }) =>
+    setHorario({ ...horario, [campo]: e.target.value });
+  // No se puede mover a un día pasado, salvo dejarla en el día que ya tenía.
+  const minimo = [diaDe(), diaDe(registro.inicio)].sort()[0];
+  return (
+    <form className="editor-horario" onSubmit={(e) => { e.preventDefault(); onGuardar(horario); }}>
+      <label>
+        Fecha
+        <input type="date" required min={minimo} value={horario.fecha} onChange={cambiar('fecha')} aria-label="Fecha de la reserva" />
+      </label>
+      <label>
+        Inicio
+        <input type="time" required value={horario.horaInicio} onChange={cambiar('horaInicio')} aria-label="Hora de inicio" />
+      </label>
+      <label>
+        Fin
+        <input type="time" required value={horario.horaFin} onChange={cambiar('horaFin')} aria-label="Hora de fin" />
+      </label>
+      <span className="secundario">{duracionEntreHoras(horario.horaInicio, horario.horaFin) || 'La hora de fin debe ser posterior a la de inicio'}</span>
+      <div className="botones-editor">
+        <button type="submit" className="primario">Guardar</button>
+        <button type="button" onClick={onCancelar}>Cancelar</button>
+      </div>
+    </form>
+  );
+}
+
 /** Préstamos o reservas en curso, con el botón para devolver o liberar. */
 export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
   const [finalizando, setFinalizando] = useState<string | null>(null);
+  const [editando, setEditando] = useState<string | null>(null);
   const ahora = useAhora(15_000);
   const conFin = modulo.conHoraFin;
 
@@ -29,6 +77,14 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
       ? await ejecutar(() => cancelarProgramado(modulo, registro), `Reserva de ${modulo.recurso.toLowerCase()} ${nombreRecurso(registro.recursoId)} cancelada.`)
       : await ejecutar(() => finalizar(modulo, registro), modulo.mensajeFinalizado(nombreRecurso(registro.recursoId)));
     if (ok) setFinalizando(null);
+  }
+
+  async function guardarHorario(registro: Registro, horario: NuevoHorario) {
+    const ok = await ejecutar(
+      () => editarHorario(modulo, registro, horario),
+      `Reserva de ${modulo.recurso.toLowerCase()} ${nombreRecurso(registro.recursoId)} actualizada.`,
+    );
+    if (ok) setEditando(null);
   }
 
   /** Hora de inicio; si es otro día, también la fecha ("14/10/2026 · 2:00 p. m."). */
@@ -91,7 +147,9 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                     <td>{programado ? <EstadoBadge estado="programado" /> : duracionEntreFechas(r.inicio, ahora)}</td>
                   )}
                   <td className="acciones">
-                    {finalizando === r.id ? (
+                    {editando === r.id ? (
+                      <EditorHorario registro={r} onGuardar={(h) => guardarHorario(r, h)} onCancelar={() => setEditando(null)} />
+                    ) : finalizando === r.id ? (
                       <div className="devolucion">
                         {!conFin && !programado && (
                           <span className="secundario">
@@ -104,9 +162,22 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                         <button onClick={() => setFinalizando(null)}>{programado ? 'No' : 'Cancelar'}</button>
                       </div>
                     ) : (
-                      <button className={programado ? undefined : 'primario'} onClick={() => setFinalizando(r.id)}>
-                        {programado ? 'Cancelar reserva' : modulo.finalizar}
-                      </button>
+                      <>
+                        {/* Solo las reservas con hora de fin (cubículos) cambian de fecha y horario. */}
+                        {conFin && (
+                          <button
+                            className="boton-icono"
+                            aria-label="Editar fecha y horario"
+                            title="Editar fecha y horario"
+                            onClick={() => { setFinalizando(null); setEditando(r.id); }}
+                          >
+                            <IconoLapiz />
+                          </button>
+                        )}
+                        <button className={programado ? undefined : 'primario'} onClick={() => { setEditando(null); setFinalizando(r.id); }}>
+                          {programado ? 'Cancelar reserva' : modulo.finalizar}
+                        </button>
+                      </>
                     )}
                   </td>
                 </tr>

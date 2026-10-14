@@ -81,6 +81,11 @@ td { border-bottom: 1px solid var(--borde); padding: 8px; vertical-align: top; }
 .acciones button + button { margin-left: 6px; }
 .devolucion { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .devolucion > .secundario { flex-basis: 100%; }
+.boton-icono { display: inline-flex; align-items: center; justify-content: center; padding: 6px 8px; vertical-align: middle; }
+.editor-horario { min-width: 400px; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: flex-end; gap: 6px; white-space: normal; }
+.editor-horario label { display: flex; flex-direction: column; gap: 2px; font-size: 0.8rem; text-align: left; }
+.editor-horario > .secundario { flex-basis: 100%; text-align: right; }
+.botones-editor { display: flex; gap: 6px; }
 .secundario { color: var(--texto-suave); font-size: .82rem; }
 .texto-alerta { color: var(--alerta); }
 .fila-vencida td { background: var(--alerta-fondo); color: var(--alerta); font-weight: 600; }
