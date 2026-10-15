@@ -72,8 +72,8 @@ y pegue los mismos dos valores.
   del mismo recurso, no se guarda (una laptop sin devolver cuenta como ocupada hasta el final de su día). El botón **Limpiar** vacía los campos y pone
   la hora de inicio en la hora actual.
 - **En curso**: préstamos o reservas activos; desde ahí se registra la devolución de la
-  laptop o la salida del cubículo. En los cubículos, el botón del **lápiz** cambia la fecha y el
-  horario de una reserva (se revisa que no choque con otra; si queda para más tarde, el cubículo
+  laptop o la salida del cubículo. En los cubículos, el botón del **lápiz** cambia la fecha, el
+  horario y la cantidad de usuarios de una reserva (se revisa que no choque con otra; si queda para más tarde, el cubículo
   se libera mientras tanto). En las laptops, la hora de devolución
   se toma sola en el momento y se muestra el **tiempo transcurrido** desde la hora de inicio.
 - **Centro de notificaciones** (campana del encabezado): avisa cuando a una reserva de

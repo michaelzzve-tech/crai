@@ -24,9 +24,10 @@ function IconoLapiz() {
   );
 }
 
-/** Campos para cambiar la fecha y el horario de una reserva, con Guardar y Cancelar. */
-function EditorHorario({ registro, onGuardar, onCancelar }: {
+/** Campos para cambiar la fecha, el horario y la cantidad de usuarios de una reserva, con Guardar y Cancelar. */
+function EditorHorario({ registro, conUsuarios, onGuardar, onCancelar }: {
   registro: Registro;
+  conUsuarios: boolean;
   onGuardar: (horario: NuevoHorario) => void;
   onCancelar: () => void;
 }) {
@@ -34,6 +35,7 @@ function EditorHorario({ registro, onGuardar, onCancelar }: {
     fecha: diaDe(registro.inicio),
     horaInicio: horaActual(new Date(registro.inicio)),
     horaFin: registro.fin ? horaActual(new Date(registro.fin)) : '',
+    usuarios: registro.usuarios ? String(registro.usuarios) : '',
   });
   const cambiar = (campo: keyof NuevoHorario) => (e: { target: { value: string } }) =>
     setHorario({ ...horario, [campo]: e.target.value });
@@ -53,6 +55,21 @@ function EditorHorario({ registro, onGuardar, onCancelar }: {
         Fin
         <input type="time" required value={horario.horaFin} onChange={cambiar('horaFin')} aria-label="Hora de fin" />
       </label>
+      {conUsuarios && (
+        <label>
+          Usuarios
+          <input
+            type="number"
+            className="campo-usuarios"
+            min={1}
+            step={1}
+            required
+            value={horario.usuarios}
+            onChange={cambiar('usuarios')}
+            aria-label="Cantidad de usuarios"
+          />
+        </label>
+      )}
       <span className="secundario">{duracionEntreHoras(horario.horaInicio, horario.horaFin) || 'La hora de fin debe ser posterior a la de inicio'}</span>
       <div className="botones-editor">
         <button type="submit" className="primario">Guardar</button>
@@ -148,7 +165,7 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                   )}
                   <td className="acciones">
                     {editando === r.id ? (
-                      <EditorHorario registro={r} onGuardar={(h) => guardarHorario(r, h)} onCancelar={() => setEditando(null)} />
+                      <EditorHorario registro={r} conUsuarios={modulo.conUsuarios} onGuardar={(h) => guardarHorario(r, h)} onCancelar={() => setEditando(null)} />
                     ) : finalizando === r.id ? (
                       <div className="devolucion">
                         {!conFin && !programado && (
@@ -167,8 +184,8 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                         {conFin && (
                           <button
                             className="boton-icono"
-                            aria-label="Editar fecha y horario"
-                            title="Editar fecha y horario"
+                            aria-label="Editar reserva"
+                            title="Editar fecha, horario y usuarios"
                             onClick={() => { setFinalizando(null); setEditando(r.id); }}
                           >
                             <IconoLapiz />
