@@ -149,14 +149,19 @@ export interface NuevoHorario {
   fecha: string; // "AAAA-MM-DD"
   horaInicio: string; // "HH:MM"
   horaFin: string; // "HH:MM"
+  usuarios?: string; // Solo en módulos con "Cantidad de usuarios"
 }
 
 /**
- * Cambia la fecha y el horario de una reserva sin terminar. Si pasa a ser para más
+ * Cambia la fecha, el horario y (si el módulo la pide) la cantidad de usuarios de una reserva sin terminar. Si pasa a ser para más
  * tarde, el cubículo se libera mientras tanto; si ya empezó, se marca en uso.
  */
 export async function editarHorario(modulo: Modulo, registro: Registro, horario: NuevoHorario) {
   const { fecha, horaInicio, horaFin } = horario;
+  const usuarios = modulo.conUsuarios ? Number(horario.usuarios) : registro.usuarios;
+  if (modulo.conUsuarios && (!Number.isInteger(usuarios) || (usuarios ?? 0) < 1)) {
+    throw new Error('La cantidad de usuarios debe ser un número entero mayor que 0.');
+  }
   if (fecha < diaDe() && fecha !== diaDe(registro.inicio)) {
     throw new Error('La fecha de la reserva no puede ser anterior a hoy.');
   }
@@ -165,7 +170,7 @@ export async function editarHorario(modulo: Modulo, registro: Registro, horario:
   if (fin <= inicio) throw new Error('La hora de fin debe ser posterior a la hora de inicio.');
   await revisarChoque(modulo, registro.recursoId, inicio, fin, registro.id);
 
-  await repositorio.guardarRegistro(modulo.tablaRegistros, { ...registro, inicio: inicio.toISOString(), fin: fin.toISOString() });
+  await repositorio.guardarRegistro(modulo.tablaRegistros, { ...registro, inicio: inicio.toISOString(), fin: fin.toISOString(), usuarios });
 
   // En uso si alguno de sus registros sin terminar ya empezó.
   const ahora = new Date();
