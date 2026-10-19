@@ -103,7 +103,7 @@ function VistaModulo({ modulo, pestana }: { modulo: Modulo; pestana: Pestana }) 
           <button onClick={() => setAviso(null)} aria-label="Cerrar">×</button>
         </div>
       )}
-      {pestana === 'registro' && <ActividadDiaria />}
+      {pestana === 'registro' && <ActividadDiaria modulo={modulo} />}
       <Resumen modulo={modulo} recursos={recursos} registros={registros} />
 
       {pestana === 'registro' && (

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { CUBICULOS, LAPTOPS } from '../../config/modulos';
+import { CUBICULOS, LAPTOPS, type Modulo } from '../../config/modulos';
 import { repositorio } from '../../data';
 import { EVENTO_CAMBIO } from '../../services/registroService';
 import { diaDe } from '../../utils/fechas';
@@ -13,7 +13,8 @@ const SERIES = [
   { clave: 'reservas', nombre: 'Reservas de cubículos', modulo: CUBICULOS, clase: 'serie-cubiculos' },
 ] as const;
 
-type Clave = (typeof SERIES)[number]['clave'];
+type Serie = (typeof SERIES)[number];
+type Clave = Serie['clave'];
 type Conteo = Record<Clave, number[]>; // Cantidad por hora del día (0 a 23)
 
 const horaDe = (iso: string) =>
@@ -23,12 +24,12 @@ const horaDe = (iso: string) =>
 const hora12 = (h: number) => `${h % 12 || 12} ${h % 24 < 12 ? 'a. m.' : 'p. m.'}`;
 const etiquetaHora = (h: number) => hora12(h).replace(' ', ':00 ');
 
-/** Préstamos y reservas de hoy (hora de Caracas), agrupados por la hora en que empiezan. */
-async function contarHoy(): Promise<Conteo> {
+/** Registros de hoy (hora de Caracas) de cada serie, agrupados por la hora en que empiezan. */
+async function contarHoy(series: readonly Serie[]): Promise<Conteo> {
   const hoy = diaDe();
   const conteo = { prestamos: Array(24).fill(0), reservas: Array(24).fill(0) } as Conteo;
   await Promise.all(
-    SERIES.map(async (s) => {
+    series.map(async (s) => {
       const registros = await repositorio.listarRegistros(s.modulo.tablaRegistros);
       for (const r of registros) if (diaDe(r.inicio) === hoy) conteo[s.clave][horaDe(r.inicio)] += 1;
     }),
@@ -36,15 +37,16 @@ async function contarHoy(): Promise<Conteo> {
   return conteo;
 }
 
-/** Gráfica de barras con la actividad de hoy, hora por hora, de ambos módulos. */
-export function ActividadDiaria() {
+/** Gráfica de barras con la actividad de hoy, hora por hora, solo del módulo abierto. */
+export function ActividadDiaria({ modulo }: { modulo: Modulo }) {
+  const series = SERIES.filter((s) => s.modulo.id === modulo.id);
   const [conteo, setConteo] = useState<Conteo | null>(null);
   const [horaActual, setHoraActual] = useState(0);
   const [activa, setActiva] = useState<number | null>(null);
 
-  const recargar = useCallback(() => { 
-    contarHoy().then((c) => { setConteo(c); setHoraActual(horaDe(new Date().toISOString())); }).catch(() => {});
-  }, []);
+  const recargar = useCallback(() => {
+    contarHoy(SERIES.filter((s) => s.modulo.id === modulo.id)).then((c) => { setConteo(c); setHoraActual(horaDe(new Date().toISOString())); }).catch(() => {});
+  }, [modulo]);
 
   useEffect(() => {
     recargar();
@@ -58,12 +60,12 @@ export function ActividadDiaria() {
 
   if (!conteo) return null;
 
-  const conDatos = [...Array(24).keys()].filter((h) => conteo.prestamos[h] + conteo.reservas[h] > 0);
+  const conDatos = [...Array(24).keys()].filter((h) => series.some((s) => conteo[s.clave][h] > 0));
   const desde = Math.min(PRIMERA_HORA, ...conDatos);
   const hasta = Math.max(ULTIMA_HORA, ...conDatos);
   const horas = [...Array(hasta - desde + 1).keys()].map((i) => desde + i);
   const total = (c: Clave) => conteo[c].reduce((a, b) => a + b, 0);
-  const maximo = Math.max(1, ...horas.flatMap((h) => SERIES.map((s) => conteo[s.clave][h])));
+  const maximo = Math.max(1, ...horas.flatMap((h) => series.map((s) => conteo[s.clave][h])));
   // Escala con números enteros "redondos": 1, 2, 5, 10, 20…
   const paso = [1, 2, 5, 10, 20, 50, 100].find((p) => maximo / p <= 4) ?? 100;
   const tope = Math.ceil(maximo / paso) * paso;
@@ -73,7 +75,7 @@ export function ActividadDiaria() {
   const ancho = 720, alto = 160, izq = 28, arriba = 8, abajo = 22;
   const alturaGrafica = alto - arriba - abajo;
   const columna = (ancho - izq) / horas.length;
-  const barra = Math.min(14, (columna - 10) / 2);
+  const barra = Math.min(18, (columna - 10) / series.length);
   const y = (v: number) => arriba + alturaGrafica - (v / tope) * alturaGrafica;
 
   return (
@@ -81,7 +83,7 @@ export function ActividadDiaria() {
       <div className="panel-encabezado">
         <h2>Actividad de hoy</h2>
         <ul className="actividad-leyenda">
-          {SERIES.map((s) => (
+          {series.map((s) => (
             <li key={s.clave}>
               <span className={`actividad-muestra ${s.clase}`} aria-hidden="true" />
               {s.nombre}: <strong>{total(s.clave)}</strong>
@@ -90,7 +92,7 @@ export function ActividadDiaria() {
         </ul>
       </div>
       <div className="actividad-grafica" onMouseLeave={() => setActiva(null)}>
-        <svg viewBox={`0 0 ${ancho} ${alto}`} role="img" aria-label={`Préstamos y reservas por hora: ${horas.map((h) => `${etiquetaHora(h)} ${conteo.prestamos[h]} y ${conteo.reservas[h]}`).join(', ')}`}>
+        <svg viewBox={`0 0 ${ancho} ${alto}`} role="img" aria-label={`${series.map((s) => s.nombre).join(' y ')} por hora: ${horas.map((h) => `${etiquetaHora(h)} ${series.map((s) => conteo[s.clave][h]).join(' y ')}`).join(', ')}`}>
           {marcas.map((m) => (
             <g key={m}>
               <line x1={izq} x2={ancho} y1={y(m)} y2={y(m)} className={m === 0 ? 'actividad-base' : 'actividad-guia'} />
@@ -103,10 +105,10 @@ export function ActividadDiaria() {
             return (
               <g key={h}>
                 {activa === h && <rect x={x0} y={arriba} width={columna} height={alturaGrafica} className="actividad-resalte" />}
-                {SERIES.map((s, j) => {
+                {series.map((s, j) => {
                   const v = conteo[s.clave][h];
                   if (v === 0) return null;
-                  const x = centro - barra - 1 + j * (barra + 2); // 2 de separación entre barras
+                  const x = centro - (series.length * (barra + 2) - 2) / 2 + j * (barra + 2); // 2 de separación entre barras
                   const alturaBarra = y(0) - y(v);
                   const r = Math.min(4, barra / 2, alturaBarra);
                   // Extremo superior redondeado, base recta sobre el eje.
@@ -129,7 +131,7 @@ export function ActividadDiaria() {
             style={{ left: `${((izq + (horas.indexOf(activa) + 0.5) * columna) / ancho) * 100}%` }}
           >
             <strong>{etiquetaHora(activa)} a {etiquetaHora(activa + 1)}</strong>
-            {SERIES.map((s) => (
+            {series.map((s) => (
               <span key={s.clave}>
                 <span className={`actividad-muestra ${s.clase}`} aria-hidden="true" />
                 {s.nombre}: {conteo[s.clave][activa]}
