@@ -4,8 +4,8 @@
   --texto: #1f2933;
   --texto-suave: #616e7c;
   --borde: #d9e2ec;
-  --primario: #1d4ed8;
-  --primario-hover: #1e40af;
+  --primario: #1db9ce;
+  --primario-hover: #179aac;
   --exito: #15803d;
   --exito-fondo: #dcfce7;
   --alerta: #b91c1c;
@@ -99,7 +99,7 @@ td { border-bottom: 1px solid var(--borde); padding: 8px; vertical-align: top; }
 /* Etiquetas de estado */
 .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .78rem; font-weight: 600; }
 .badge-disponible, .badge-activo, .badge-devuelto { background: var(--exito-fondo); color: var(--exito); }
-.badge-ocupado { background: #dbeafe; color: var(--primario); }
+.badge-ocupado { background: #d6f3f7; color: #0e7482; }
 .badge-mantenimiento { background: var(--aviso-fondo); color: var(--aviso); }
 .badge-vencido { background: var(--alerta); color: #fff; }
 .badge-por-vencer { background: var(--aviso); color: #fff; }
