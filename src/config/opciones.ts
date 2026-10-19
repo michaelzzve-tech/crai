@@ -12,6 +12,10 @@ export const CARRERAS = ['Administración', 'Contaduría', 'Informática', 'Elec
 export const ANIOS = ['1', '2', '3', '4', '5', '6'];
 
 export const SEMESTRES = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'No aplica'];
+/** Secciones de ITJO: con ese instituto, "Semestre, nivel o sección" muestra estas letras. */
+export const SECCIONES_ITJO = ['A', 'B', 'C', 'D', 'E'];
+/** Opciones de "Semestre, nivel o sección" según el instituto elegido. */
+export const semestresDe = (instituto: string) => (instituto === 'ITJO' ? SECCIONES_ITJO : SEMESTRES);
 
 export const CARRERAS_CFJO = ['Secretariado administrativo', 'Asistente administrativo', 'Analista contable'];
 

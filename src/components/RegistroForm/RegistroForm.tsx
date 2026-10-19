@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { CARRERA_POR_INSTITUTO, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, SEMESTRES } from '../../config/opciones';
+import { CARRERA_POR_INSTITUTO, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, semestresDe } from '../../config/opciones';
 import { nombreRecurso, type Modulo } from '../../config/modulos';
 import { useAhora } from '../../hooks/useAhora';
 import { registrar } from '../../services/registroService';
@@ -119,11 +119,17 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
           titulo="Instituto"
           valor={datos.instituto}
           opciones={INSTITUTOS}
-          onCambiar={(instituto) => setDatos({ ...datos, instituto, carrera: '' })}
+          onCambiar={(instituto) => setDatos({ ...datos, instituto, carrera: '', semestre: '' })}
         />
         <Desplegable id="registro-condicion" titulo="Condición" valor={datos.condicion} opciones={CONDICIONES} onCambiar={cambiar('condicion')} />
         <CampoCarreraOAnio instituto={datos.instituto} valor={datos.carrera} onCambiar={cambiar('carrera')} />
-        <Desplegable id="registro-semestre" titulo="Semestre o nivel" valor={datos.semestre} opciones={SEMESTRES} onCambiar={cambiar('semestre')} />
+        <Desplegable
+          id="registro-semestre"
+          titulo="Semestre, nivel o sección"
+          valor={datos.semestre}
+          opciones={semestresDe(datos.instituto)}
+          onCambiar={cambiar('semestre')}
+        />
         <label htmlFor="registro-recurso">
           {modulo.recurso}
           <select id="registro-recurso" required value={datos.recursoId} onChange={(e) => cambiar('recursoId')(e.target.value)}>

@@ -1,5 +1,5 @@
 import { CUBICULOS, LAPTOPS } from '../config/modulos';
-import { CARRERA_POR_INSTITUTO, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, SEMESTRES } from '../config/opciones';
+import { CARRERA_POR_INSTITUTO, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, SECCIONES_ITJO, SEMESTRES } from '../config/opciones';
 import { repositorio } from '../data';
 import type { Registro } from '../types';
 import { diaDe } from '../utils/fechas';
@@ -88,7 +88,7 @@ function desglosar(registros: Registro[], minutos: (r: Registro) => number): Des
     agrupar('Por género', registros, (r) => r.genero || 'Sin dato', minutos, GENEROS),
     agrupar('Por condición', registros, (r) => r.condicion, minutos, CONDICIONES),
     agrupar('Por carrera o año', registros, carreraOAnio, minutos, ORDEN_CARRERAS),
-    agrupar('Por semestre o nivel', registros, (r) => r.semestre || 'Sin dato', minutos, SEMESTRES),
+    agrupar('Por semestre, nivel o sección', registros, (r) => r.semestre || 'Sin dato', minutos, [...SEMESTRES, ...SECCIONES_ITJO]),
     agrupar('Por motivo de uso', registros, (r) => r.motivo, minutos, MOTIVOS),
   ];
 }

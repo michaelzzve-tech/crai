@@ -24,7 +24,7 @@ export function columnasDetalle(modulo: Modulo): Columna[] {
     { titulo: 'Instituto', ancho: 10, valor: (r) => r.instituto },
     { titulo: 'Condición', ancho: 12, valor: (r) => r.condicion },
     { titulo: 'Carrera o año', ancho: 16, valor: (r) => r.carrera },
-    { titulo: 'Semestre o nivel', ancho: 16, valor: (r) => r.semestre ?? '' },
+    { titulo: 'Semestre, nivel o sección', ancho: 16, valor: (r) => r.semestre ?? '' },
     ...(modulo.conUsuarios ? [{ titulo: 'Cantidad de usuarios', ancho: 12, valor: (r: Registro) => (r.usuarios ? String(r.usuarios) : '') }] : []),
     { titulo: 'Motivo de uso', ancho: 16, valor: (r) => r.motivo },
     { titulo: 'Fecha', ancho: 12, valor: (r) => fecha(r.inicio) },
