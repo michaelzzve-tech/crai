@@ -65,6 +65,21 @@ h2 { font-size: 1.1rem; margin-bottom: 12px; }
 .campos .ancho { grid-column: 1 / -1; }
 label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--texto-suave); }
 input, select { font: inherit; padding: 8px 10px; border: 1px solid var(--borde); border-radius: 6px; color: var(--texto); background: #fff; }
+/* Resaltado de campos y menús en el color principal (no el azul del navegador). */
+:root { accent-color: var(--primario); }
+::selection { background: var(--primario); color: #fff; }
+input:focus, select:focus { outline: 2px solid var(--primario); outline-offset: 0; border-color: var(--primario); }
+option:checked { background: var(--primario); color: #fff; }
+/* En Chrome y Edge recientes, la lista abierta del menú también usa el color principal al pasar el mouse. */
+@supports (appearance: base-select) {
+  select, ::picker(select) { appearance: base-select; }
+  ::picker(select) { border: 1px solid var(--borde); border-radius: 6px; padding: 4px 0; box-shadow: 0 6px 18px rgba(0, 0, 0, .12); }
+  select option { padding: 6px 10px; }
+  select option::checkmark { display: none; }
+  select option:hover, select option:focus-visible { background: var(--primario); color: #fff; outline: none; }
+  select option:checked { background: #d6f3f7; color: var(--texto); }
+  select option:disabled { color: var(--texto-suave); background: transparent; }
+}
 .buscador { min-width: 260px; }
 input.calculado { background: var(--fondo); color: var(--texto); font-weight: 600; }
 
@@ -98,7 +113,8 @@ td { border-bottom: 1px solid var(--borde); padding: 8px; vertical-align: top; }
 
 /* Etiquetas de estado */
 .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .78rem; font-weight: 600; }
-.badge-disponible, .badge-activo, .badge-devuelto { background: var(--exito-fondo); color: var(--exito); }
+.badge-activo, .badge-devuelto { background: var(--exito-fondo); color: var(--exito); }
+.badge-disponible { background: #171714; color: #fff; }
 .badge-ocupado { background: #d6f3f7; color: #0e7482; }
 .badge-mantenimiento { background: var(--aviso-fondo); color: var(--aviso); }
 .badge-vencido { background: var(--alerta); color: #fff; }
