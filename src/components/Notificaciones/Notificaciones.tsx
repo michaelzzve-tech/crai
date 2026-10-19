@@ -25,7 +25,7 @@ export function CentroNotificaciones({ notificaciones, leidas, onAbrir, onMarcar
         aria-expanded={abierto}
         onClick={() => setAbierto(!abierto)}
       >
-        <span aria-hidden="true">🔔</span>
+        <IconoCampana />
         {sinLeer > 0 && <span className="contador">{sinLeer}</span>}
       </button>
       {abierto && (
@@ -91,5 +91,15 @@ export function AvisosDestacados({ notificaciones, onAbrir, onCerrar }: {
         );
       })}
     </div>
+  );
+}
+
+/** Campana plana y minimalista; toma el color del botón (ver .campana en global.css). */
+function IconoCampana() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 2.5a1.5 1.5 0 0 0-1.5 1.5v.6A6 6 0 0 0 6 10.5v4.1l-1.6 2.3a.9.9 0 0 0 .7 1.4h13.8a.9.9 0 0 0 .7-1.4L18 14.6v-4.1a6 6 0 0 0-4.5-5.9V4A1.5 1.5 0 0 0 12 2.5Z" />
+      <path d="M9.5 19.8h5a2.5 2.5 0 0 1-5 0Z" />
+    </svg>
   );
 }

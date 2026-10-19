@@ -113,7 +113,7 @@ td { border-bottom: 1px solid var(--borde); padding: 8px; vertical-align: top; }
 
 /* Centro de notificaciones */
 .centro-notificaciones { position: relative; }
-.campana { position: relative; background: transparent; border: 1px solid var(--borde); color: var(--texto); font-size: 1.1rem; padding: 4px 10px; }
+.campana { position: relative; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--borde); color: var(--alerta); padding: 4px 8px; }
 .campana.urgente { background: var(--alerta); border-color: var(--alerta); color: #fff; animation: latido 1.2s ease-in-out infinite; }
 @keyframes latido { 50% { box-shadow: 0 0 0 6px rgba(185,28,28,.25); } }
 @media (prefers-reduced-motion: reduce) { .campana.urgente { animation: none; } }
