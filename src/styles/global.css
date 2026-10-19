@@ -195,3 +195,10 @@ button.boton-peligro { background: var(--alerta); border-color: var(--alerta); c
 .actividad-ahora { fill: var(--texto); font-weight: 700; }
 .actividad-resalte { fill: var(--fondo); }
 .actividad-detalle { position: absolute; top: 0; transform: translateX(-50%); pointer-events: none; background: var(--superficie); border: 1px solid var(--borde); border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.12); padding: 8px 10px; font-size: .85rem; display: grid; gap: 2px; white-space: nowrap; color: var(--texto); }
+
+/* Sugerencias del campo Nombre */
+.campo-nombre { position: relative; }
+.sugerencias { position: absolute; top: 100%; left: 0; right: 0; z-index: 10; margin: 4px 0 0; padding: 4px; list-style: none; background: var(--superficie); border: 1px solid var(--borde); border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,.12); }
+.sugerencias li { display: grid; gap: 1px; padding: 6px 8px; border-radius: 6px; cursor: pointer; color: var(--texto); }
+.sugerencias li span { color: var(--texto-suave); font-size: .8rem; }
+.sugerencias li.marcada { background: #d6f3f7; }

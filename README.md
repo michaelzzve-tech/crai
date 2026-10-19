@@ -60,6 +60,12 @@ y pegue los mismos dos valores.
 
 ## Funciones
 
+- **Sugerencias de nombre**: al escribir en Nombre aparecen hasta 3 nombres ya registrados (en laptops o
+  cubículos) que coinciden, los más recientes primero, sin importar mayúsculas ni acentos. Al elegir uno
+  (con el mouse o con las flechas y Enter) se rellenan género, instituto, condición, carrera, semestre,
+  motivo y, en cubículos, la cantidad de usuarios con los datos de su último registro. La laptop o el
+  cubículo, la fecha y las horas se eligen cada vez. Si un dato no existe en el módulo (por ejemplo DTI
+  en cubículos), queda vacío para elegirlo.
 - **Formulario**, en este orden: nombre, género (masculino, femenino), instituto (ITJO, IUJO, CFJO u Otro),
   condición (estudiante, docente, otro; en laptops también DTI, que deja carrera y semestre en "No aplica"), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
   CFJO: secretariado administrativo, asistente administrativo o analista contable;

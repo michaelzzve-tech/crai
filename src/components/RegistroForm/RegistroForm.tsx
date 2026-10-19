@@ -3,9 +3,10 @@ import { CARRERA_POR_INSTITUTO, CONDICIONES_SIN_CARRERA, type CampoCarrera, GENE
 import { nombreRecurso, type Modulo } from '../../config/modulos';
 import { useAhora } from '../../hooks/useAhora';
 import { registrar } from '../../services/registroService';
-import type { NuevoRegistro, Recurso } from '../../types';
+import type { NuevoRegistro, Recurso, Registro } from '../../types';
 import { diaALas, diaDe, duracionEntreHoras, horaActual } from '../../utils/fechas';
 import type { EjecutarAccion } from '../tipos';
+import { CampoNombre } from './CampoNombre';
 
 const vacio = (): NuevoRegistro => ({
   nombre: '',
@@ -86,6 +87,31 @@ function CampoCarreraOAnio({ instituto, sinCarrera, valor, onCambiar }: {
   );
 }
 
+/**
+ * Datos personales del último registro de una persona, para rellenar el formulario.
+ * Lo que no exista en este módulo (por ejemplo, DTI en cubículos) queda vacío para elegirlo.
+ */
+function datosDe(r: Registro, modulo: Modulo): Partial<NuevoRegistro> {
+  const valido = (valor: string | undefined, opciones: string[]) => (valor && opciones.includes(valor) ? valor : '');
+  const instituto = valido(r.instituto, INSTITUTOS);
+  const condicion = valido(r.condicion, modulo.condiciones);
+  const sinCarrera = CONDICIONES_SIN_CARRERA.includes(condicion);
+  const campo = CARRERA_POR_INSTITUTO[instituto];
+  const carrera = sinCarrera ? NO_APLICA
+    : campo?.tipo === 'menu' ? valido(r.carrera, campo.opciones) || carreraInicial(instituto)
+    : campo && /^\d+$/.test(r.carrera) ? r.carrera : '';
+  return {
+    nombre: r.nombre,
+    genero: valido(r.genero, GENEROS),
+    instituto,
+    condicion,
+    carrera,
+    semestre: sinCarrera ? NO_APLICA : valido(r.semestre, semestresDe(instituto)),
+    motivo: valido(r.motivo, modulo.motivos),
+    ...(modulo.conUsuarios && r.usuarios ? { usuarios: String(r.usuarios) } : {}),
+  };
+}
+
 /** Formulario de préstamo o reserva; el campo del recurso cambia según el módulo. */
 export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
   const [datos, setDatos] = useState<NuevoRegistro>(vacio);
@@ -125,10 +151,7 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
     <form className="formulario" onSubmit={enviar}>
       <h2>{modulo.nuevo}</h2>
       <div className="campos">
-        <label htmlFor="registro-nombre">
-          Nombre
-          <input id="registro-nombre" required value={datos.nombre} onChange={(e) => cambiar('nombre')(e.target.value)} />
-        </label>
+        <CampoNombre valor={datos.nombre} onCambiar={cambiar('nombre')} onElegir={(r) => setDatos({ ...datos, ...datosDe(r, modulo) })} />
         <Desplegable id="registro-genero" titulo="Género" valor={datos.genero} opciones={GENEROS} onCambiar={cambiar('genero')} />
         <Desplegable
           id="registro-instituto"
