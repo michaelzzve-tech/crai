@@ -99,8 +99,8 @@ y pegue los mismos dos valores.
   (`src/hooks/usePaginacion.ts`).
 - **Hora de Caracas**: todas las horas se muestran y se registran en hora de Caracas,
   Venezuela, aunque la computadora tenga otra zona horaria.
-- **Laptops / Cubículos**: estado de cada uno y opción de enviarlo a mantenimiento.
-- **Historial**: todos los registros, con búsqueda y marca de los que terminaron con retraso.
+- **Equipos / Espacios** (pestaña de laptops / cubículos): estado de cada uno y opción de enviarlo a mantenimiento.
+- **Historial** (ícono de reloj): todos los registros, con búsqueda y marca de los que terminaron con retraso.
 - **Resumen**: disponibles, en uso, en mantenimiento y (en cubículos) reservas vencidas.
 
 Reglas incluidas: solo se usan laptops o cubículos disponibles (los ocupados o en

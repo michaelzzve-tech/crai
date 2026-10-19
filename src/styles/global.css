@@ -4,12 +4,12 @@
   --texto: #1f2933;
   --texto-suave: #616e7c;
   --borde: #d9e2ec;
-  --primario: #1d4ed8;
-  --primario-hover: #1e40af;
+  --primario: #1db9ce;
+  --primario-hover: #179aac;
   --exito: #15803d;
   --exito-fondo: #dcfce7;
-  --alerta: #b91c1c;
-  --alerta-fondo: #fee2e2;
+  --alerta: #e94e1b;
+  --alerta-fondo: #fde6dd;
   --aviso: #a16207;
   --aviso-fondo: #fef9c3;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -40,6 +40,7 @@ h2 { font-size: 1.1rem; margin-bottom: 12px; }
 .cargando { text-align: center; color: var(--texto-suave); padding: 48px 16px; }
 .campos.una-columna { grid-template-columns: 1fr; margin-bottom: 0; }
 .pestanas { display: flex; gap: 8px; flex-wrap: wrap; max-width: 1200px; margin: 0 auto; }
+.pestana-icono { align-self: stretch; display: inline-flex; align-items: center; justify-content: center; }
 .pestana { background: transparent; color: var(--texto); border: 1px solid var(--borde); }
 .modulos { display: flex; gap: 8px; flex-wrap: wrap; max-width: 1200px; margin: 0 auto 12px; }
 .modulo { background: transparent; color: var(--texto); border: none; border-bottom: 3px solid transparent; border-radius: 0; padding: 4px 2px; font-weight: 600; font-size: 1rem; }
@@ -98,7 +99,7 @@ td { border-bottom: 1px solid var(--borde); padding: 8px; vertical-align: top; }
 /* Etiquetas de estado */
 .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .78rem; font-weight: 600; }
 .badge-disponible, .badge-activo, .badge-devuelto { background: var(--exito-fondo); color: var(--exito); }
-.badge-ocupado { background: #dbeafe; color: var(--primario); }
+.badge-ocupado { background: #d6f3f7; color: #0e7482; }
 .badge-mantenimiento { background: var(--aviso-fondo); color: var(--aviso); }
 .badge-vencido { background: var(--alerta); color: #fff; }
 .badge-por-vencer { background: var(--aviso); color: #fff; }
@@ -112,7 +113,7 @@ td { border-bottom: 1px solid var(--borde); padding: 8px; vertical-align: top; }
 
 /* Centro de notificaciones */
 .centro-notificaciones { position: relative; }
-.campana { position: relative; background: transparent; border: 1px solid var(--borde); color: var(--texto); font-size: 1.1rem; padding: 4px 10px; }
+.campana { position: relative; display: inline-flex; align-items: center; justify-content: center; background: transparent; border: 1px solid var(--borde); color: var(--alerta); padding: 4px 8px; }
 .campana.urgente { background: var(--alerta); border-color: var(--alerta); color: #fff; animation: latido 1.2s ease-in-out infinite; }
 @keyframes latido { 50% { box-shadow: 0 0 0 6px rgba(185,28,28,.25); } }
 @media (prefers-reduced-motion: reduce) { .campana.urgente { animation: none; } }
