@@ -60,13 +60,19 @@ y pegue los mismos dos valores.
 
 ## Funciones
 
+- **Sugerencias de nombre**: al escribir en Nombre aparecen hasta 3 nombres ya registrados (en laptops o
+  cubículos) que coinciden, los más recientes primero, sin importar mayúsculas ni acentos. Al elegir uno
+  (con el mouse o con las flechas y Enter) se rellenan género, instituto, condición, carrera, semestre,
+  motivo y, en cubículos, la cantidad de usuarios con los datos de su último registro. La laptop o el
+  cubículo, la fecha y las horas se eligen cada vez. Si un dato no existe en el módulo (por ejemplo DTI
+  en cubículos), queda vacío para elegirlo.
 - **Formulario**, en este orden: nombre, género (masculino, femenino), instituto (ITJO, IUJO, CFJO u Otro),
-  condición (estudiante, docente, otro), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
+  condición (estudiante, docente, otro; en laptops también DTI, que deja carrera y semestre en "No aplica"), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
   CFJO: secretariado administrativo, asistente administrativo o analista contable;
   Otro: queda en "No aplica"),
   semestre, nivel o sección (1 a 10 o "No aplica"; con ITJO, sección A a E), cantidad de usuarios (solo cubículos; se escribe el número),
   laptop (1 a 25 y 59 a 80) o cubículo (1 a 6 o Podcast), motivo de uso
-  (estudio, tarea, entretenimiento, TEG, didáctico), **fecha de la reserva** (un calendario; por
+  (estudio, tarea, entretenimiento, TEG, didáctico; en laptops también soporte), **fecha de la reserva** (un calendario; por
   defecto hoy) y hora de inicio. Los cubículos piden además hora de fin y muestran la duración
   (se calcula sola). Una reserva para más tarde u otro día sale como "Programada" en la lista de en curso,
   no ocupa la laptop o el cubículo hasta su hora de inicio y se puede cancelar; si choca con otra reserva
@@ -76,7 +82,9 @@ y pegue los mismos dos valores.
   laptop o la salida del cubículo. En los cubículos, el botón del **lápiz** cambia la fecha, el
   horario y la cantidad de usuarios de una reserva (se revisa que no choque con otra; si queda para más tarde, el cubículo
   se libera mientras tanto). En las laptops, la hora de devolución
-  se toma sola en el momento y se muestra el **tiempo transcurrido** desde la hora de inicio.
+  se toma sola en el momento y se muestra el **tiempo transcurrido** desde la hora de inicio. En los
+  cubículos, al confirmar la salida se guarda la hora exacta de ese momento, aunque sea antes o
+  después de la hora de fin, y se indica cuántos minutos se adelantó o se atrasó.
 - **Centro de notificaciones** (campana del encabezado): avisa cuando a una reserva de
   cubículo le faltan 10 minutos o menos para su hora de fin, y cuando ya se venció. Los
   avisos nuevos aparecen destacados en la esquina inferior (en rojo los vencidos) y la fila
@@ -85,7 +93,7 @@ y pegue los mismos dos valores.
   cambian en `MINUTOS_AVISO` (`src/services/registroService.ts`).
 - **Informes** (ícono de gráfica en el extremo derecho del encabezado): totales de un rango de fechas (por defecto, el mes actual): préstamos de
   laptops, horas de uso de laptops (de la hora de inicio a la devolución), reservas de
-  cubículos y horas reservadas de cubículos, con el desglose de cada uno por instituto,
+  cubículos y horas de uso de cubículos (hasta la salida real; si sigue activa, hasta la hora de fin), con el desglose de cada uno por instituto,
   género, condición, carrera o año y motivo de uso. El botón **Descargar PDF** guarda el informe; al final trae
   el **detalle** de cada préstamo y cada reserva del período (una fila por registro, con su fecha y horas).
 - **Respaldo**: en Informes, el botón **Descargar respaldo (Excel)** guarda un archivo con
@@ -101,7 +109,8 @@ y pegue los mismos dos valores.
 - **Hora de Caracas**: todas las horas se muestran y se registran en hora de Caracas,
   Venezuela, aunque la computadora tenga otra zona horaria.
 - **Equipos / Espacios** (pestaña de laptops / cubículos): estado de cada uno y opción de enviarlo a mantenimiento.
-- **Historial** (ícono de reloj): todos los registros, con búsqueda y marca de los que terminaron con retraso.
+- **Historial** (ícono de reloj): todos los registros, con búsqueda. En los cubículos muestra la hora real de
+  salida, cuánto antes o después de lo previsto fue y el tiempo real de uso (también en el Excel y el PDF).
 - **Actividad de hoy**: arriba de la pantalla principal, una gráfica de barras con la actividad de cada hora del día del módulo abierto (préstamos de laptops en Laptops, reservas de cubículos en Cubículos) (por la hora en que empiezan, en formato de 12 horas). Al pasar el mouse por una hora se ven las cantidades exactas; se actualiza sola.
 - **Resumen**: disponibles, en uso, en mantenimiento y (en cubículos) reservas vencidas.
 

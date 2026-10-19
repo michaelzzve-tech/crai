@@ -59,6 +59,13 @@ export function duracionEntreHoras(inicio: string, fin: string): string {
 }
 
 /** Duración entre dos fechas (ISO o Date); nunca negativa. */
+/** "12 min antes de lo previsto", "1 h 5 min después de lo previsto" o "a la hora prevista". */
+export function diferenciaConPrevisto(previsto: string, real: string): string {
+  const minutos = Math.round((new Date(real).getTime() - new Date(previsto).getTime()) / 60000);
+  if (minutos === 0) return 'a la hora prevista';
+  return `${formatearDuracion(Math.abs(minutos))} ${minutos < 0 ? 'antes' : 'después'} de lo previsto`;
+}
+
 export function duracionEntreFechas(inicio: string | Date, fin: string | Date): string {
   const minutos = Math.floor((new Date(fin).getTime() - new Date(inicio).getTime()) / 60000);
   return formatearDuracion(Math.max(0, minutos));

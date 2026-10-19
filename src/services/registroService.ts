@@ -195,10 +195,11 @@ export async function cancelarProgramado(modulo: Modulo, registro: Registro) {
 }
 
 /** Devuelve la laptop o libera el cubículo; la hora de fin real es la del momento. */
-export async function finalizar(modulo: Modulo, registro: Registro) {
+/** Guarda el momento exacto en que se devuelve o libera, sea antes o después de la hora de fin. */
+export async function finalizar(modulo: Modulo, registro: Registro, momento = new Date()) {
   await repositorio.guardarRegistro(modulo.tablaRegistros, {
     ...registro,
-    finReal: new Date().toISOString(),
+    finReal: momento.toISOString(),
   });
   const recursos = await repositorio.listarRecursos(modulo.tablaRecursos);
   const recurso = recursos.find((r) => r.id === registro.recursoId);

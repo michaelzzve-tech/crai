@@ -1,5 +1,5 @@
 import { CUBICULOS, LAPTOPS } from '../config/modulos';
-import { CARRERA_POR_INSTITUTO, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, SECCIONES_ITJO, SEMESTRES } from '../config/opciones';
+import { CARRERA_POR_INSTITUTO, CONDICIONES_LAPTOPS, GENEROS, INSTITUTOS, MOTIVOS_LAPTOPS, SECCIONES_ITJO, SEMESTRES } from '../config/opciones';
 import { repositorio } from '../data';
 import type { Registro } from '../types';
 import { diaDe } from '../utils/fechas';
@@ -16,7 +16,7 @@ export interface Informe {
   prestamosEnCurso: number; // De esos, los que aún no se devuelven (no suman horas)
   minutosLaptops: number; // Desde la hora de inicio hasta la devolución
   reservas: number; // Reservas de cubículos que empezaron en el período
-  minutosCubiculos: number; // Tiempo reservado: de la hora de inicio a la hora de fin
+  minutosCubiculos: number; // De la hora de inicio a la salida real (o a la hora de fin si sigue activa)
   usuariosCubiculos: number; // Suma de "Cantidad de usuarios" de esas reservas
   desgloseLaptops: Desglose[];
   desgloseCubiculos: Desglose[];
@@ -49,7 +49,7 @@ function enPeriodo(registros: Registro[], { desde, hasta }: Periodo): Registro[]
 /** "ITJO · Año 3", "IUJO · Informática", "CFJO · Analista contable". */
 function carreraOAnio(r: Registro): string {
   const campo = CARRERA_POR_INSTITUTO[r.instituto];
-  const valor = campo?.tipo === 'menu' && campo.opciones.every((o) => /^\d+$/.test(o)) ? `Año ${r.carrera}` : r.carrera;
+  const valor = r.carrera !== 'No aplica' && campo?.tipo === 'menu' && campo.opciones.every((o) => /^\d+$/.test(o)) ? `Año ${r.carrera}` : r.carrera;
   return `${r.instituto} · ${valor}`;
 }
 
@@ -86,10 +86,10 @@ function desglosar(registros: Registro[], minutos: (r: Registro) => number): Des
   return [
     agrupar('Por instituto', registros, (r) => r.instituto, minutos, INSTITUTOS),
     agrupar('Por género', registros, (r) => r.genero || 'Sin dato', minutos, GENEROS),
-    agrupar('Por condición', registros, (r) => r.condicion, minutos, CONDICIONES),
+    agrupar('Por condición', registros, (r) => r.condicion, minutos, CONDICIONES_LAPTOPS),
     agrupar('Por carrera o año', registros, carreraOAnio, minutos, ORDEN_CARRERAS),
     agrupar('Por semestre, nivel o sección', registros, (r) => r.semestre || 'Sin dato', minutos, [...SEMESTRES, ...SECCIONES_ITJO]),
-    agrupar('Por motivo de uso', registros, (r) => r.motivo, minutos, MOTIVOS),
+    agrupar('Por motivo de uso', registros, (r) => r.motivo, minutos, MOTIVOS_LAPTOPS),
   ];
 }
 
@@ -103,7 +103,11 @@ export async function generarInforme(periodo: Periodo): Promise<Informe> {
   const p = enPeriodo(prestamos, periodo).sort(porInicio);
   const r = enPeriodo(reservas, periodo).sort(porInicio);
   const usoLaptop = (x: Registro) => (x.finReal ? minutosEntre(x.inicio, x.finReal) : 0);
-  const reservaCubiculo = (x: Registro) => (x.fin ? minutosEntre(x.inicio, x.fin) : 0);
+  // Tiempo real si ya se liberó (antes o después de lo previsto); si no, el reservado.
+  const reservaCubiculo = (x: Registro) => {
+    const fin = x.finReal ?? x.fin;
+    return fin ? minutosEntre(x.inicio, fin) : 0;
+  };
   const sumar = (lista: Registro[], minutos: (x: Registro) => number) => lista.reduce((t, x) => t + minutos(x), 0);
   return {
     periodo,
@@ -132,7 +136,7 @@ export function filasInforme(informe: Informe, formatearHoras: (minutos: number)
       nota: 'Desde la hora de inicio hasta la devolución' },
     { titulo: 'Reservas de cubículos', valor: String(informe.reservas) },
     { titulo: 'Horas totales de reserva de cubículos', valor: formatearHoras(informe.minutosCubiculos),
-      nota: 'De la hora de inicio a la hora de fin de cada reserva' },
+      nota: 'De la hora de inicio a la hora real de salida (o a la hora de fin, si aún no se libera)' },
     { titulo: 'Usuarios en cubículos', valor: String(informe.usuariosCubiculos),
       nota: 'Suma de la cantidad de usuarios de cada reserva' },
   ];

@@ -2,6 +2,8 @@
 // (laptops, cubículos…) usando los mismos componentes y el mismo formulario.
 // Para agregar otro módulo, añada una entrada aquí y sus tablas en supabase/esquema.sql.
 
+import { CONDICIONES, CONDICIONES_LAPTOPS, MOTIVOS, MOTIVOS_LAPTOPS } from './opciones';
+
 /**
  * Nombre que se muestra para un recurso cuyo código guardado es otro. El código
  * no se cambia para no perder los préstamos y reservas ya guardados con él.
@@ -29,6 +31,8 @@ export interface Modulo {
   // false: solo hora de inicio; la hora de fin se toma sola al devolver y se
   // muestra el tiempo transcurrido.
   conHoraFin: boolean;
+  condiciones: string[]; // Opciones de "Condición"
+  motivos: string[]; // Opciones de "Motivo de uso"
   conUsuarios: boolean; // true: el formulario pide "Cantidad de usuarios" (un número que se escribe)
   tablaRecursos: string; // Tabla de la base de datos con los recursos
   tablaRegistros: string; // Tabla de la base de datos con los préstamos o reservas
@@ -52,6 +56,8 @@ export const LAPTOPS: Modulo = {
   opciones: [...del1Al(25), ...rango(59, 80)],
   conHoraFin: false,
   conUsuarios: false,
+  condiciones: CONDICIONES_LAPTOPS,
+  motivos: MOTIVOS_LAPTOPS,
   tablaRecursos: 'laptops',
   tablaRegistros: 'prestamos',
   registros: 'Préstamos',
@@ -74,6 +80,8 @@ export const CUBICULOS: Modulo = {
   opciones: [...del1Al(6), 'POD'],
   conHoraFin: true,
   conUsuarios: true,
+  condiciones: CONDICIONES,
+  motivos: MOTIVOS,
   tablaRecursos: 'cubiculos',
   tablaRegistros: 'reservas',
   registros: 'Reservas',
