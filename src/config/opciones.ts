@@ -3,7 +3,7 @@
 
 export const GENEROS = ['Masculino', 'Femenino'];
 
-export const INSTITUTOS = ['ITJO', 'IUJO', 'CFJO'];
+export const INSTITUTOS = ['ITJO', 'IUJO', 'CFJO', 'Otro'];
 
 export const CONDICIONES = ['Estudiante', 'Docente', 'Otro'];
 
@@ -29,6 +29,8 @@ export const CARRERA_POR_INSTITUTO: Record<string, CampoCarrera> = {
   ITJO: { tipo: 'menu', opciones: ANIOS },
   IUJO: { tipo: 'menu', opciones: CARRERAS },
   CFJO: { tipo: 'menu', opciones: CARRERAS_CFJO },
+  // Otra institución: no hay carrera ni año; el campo queda en "No aplica".
+  Otro: { tipo: 'menu', opciones: ['No aplica'] },
 };
 
 export const MOTIVOS = ['Estudio', 'Tarea', 'Entretenimiento', 'TEG', 'Didáctico'];

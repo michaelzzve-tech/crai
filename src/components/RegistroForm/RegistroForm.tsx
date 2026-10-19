@@ -49,6 +49,12 @@ function Desplegable({ id, titulo, valor, opciones, onCambiar }: {
   );
 }
 
+/** Valor de "Carrera o año" al elegir instituto: si su menú tiene una sola opción (Otro → "No aplica"), ya queda elegida. */
+function carreraInicial(instituto: string): string {
+  const campo = CARRERA_POR_INSTITUTO[instituto];
+  return campo?.tipo === 'menu' && campo.opciones.length === 1 ? campo.opciones[0] : '';
+}
+
 /** "Carrera o año": su forma depende del instituto (ver CARRERA_POR_INSTITUTO). */
 function CampoCarreraOAnio({ instituto, valor, onCambiar }: {
   instituto: string;
@@ -119,7 +125,7 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
           titulo="Instituto"
           valor={datos.instituto}
           opciones={INSTITUTOS}
-          onCambiar={(instituto) => setDatos({ ...datos, instituto, carrera: '', semestre: '' })}
+          onCambiar={(instituto) => setDatos({ ...datos, instituto, carrera: carreraInicial(instituto), semestre: '' })}
         />
         <Desplegable id="registro-condicion" titulo="Condición" valor={datos.condicion} opciones={CONDICIONES} onCambiar={cambiar('condicion')} />
         <CampoCarreraOAnio instituto={datos.instituto} valor={datos.carrera} onCambiar={cambiar('carrera')} />
