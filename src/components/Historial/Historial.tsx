@@ -46,7 +46,7 @@ export function Historial({ modulo, registros }: Props) {
               <th>Instituto</th>
               <th>Condición</th>
               <th>Carrera o año</th>
-              <th>Semestre o nivel</th>
+              <th>Semestre, nivel o sección</th>
               {modulo.conUsuarios && <th>Usuarios</th>}
               <th>Motivo</th>
               <th>Inicio</th>

@@ -3,7 +3,7 @@
 
 export const GENEROS = ['Masculino', 'Femenino'];
 
-export const INSTITUTOS = ['ITJO', 'IUJO', 'CFJO'];
+export const INSTITUTOS = ['ITJO', 'IUJO', 'CFJO', 'Otro'];
 
 export const CONDICIONES = ['Estudiante', 'Docente', 'Otro'];
 
@@ -12,6 +12,10 @@ export const CARRERAS = ['Administración', 'Contaduría', 'Informática', 'Elec
 export const ANIOS = ['1', '2', '3', '4', '5', '6'];
 
 export const SEMESTRES = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'No aplica'];
+/** Secciones de ITJO: con ese instituto, "Semestre, nivel o sección" muestra estas letras. */
+export const SECCIONES_ITJO = ['A', 'B', 'C', 'D', 'E'];
+/** Opciones de "Semestre, nivel o sección" según el instituto elegido. */
+export const semestresDe = (instituto: string) => (instituto === 'ITJO' ? SECCIONES_ITJO : SEMESTRES);
 
 export const CARRERAS_CFJO = ['Secretariado administrativo', 'Asistente administrativo', 'Analista contable'];
 
@@ -25,6 +29,8 @@ export const CARRERA_POR_INSTITUTO: Record<string, CampoCarrera> = {
   ITJO: { tipo: 'menu', opciones: ANIOS },
   IUJO: { tipo: 'menu', opciones: CARRERAS },
   CFJO: { tipo: 'menu', opciones: CARRERAS_CFJO },
+  // Otra institución: no hay carrera ni año; el campo queda en "No aplica".
+  Otro: { tipo: 'menu', opciones: ['No aplica'] },
 };
 
 export const MOTIVOS = ['Estudio', 'Tarea', 'Entretenimiento', 'TEG', 'Didáctico'];

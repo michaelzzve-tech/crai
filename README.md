@@ -60,10 +60,11 @@ y pegue los mismos dos valores.
 
 ## Funciones
 
-- **Formulario**, en este orden: nombre, género (masculino, femenino), instituto (ITJO, IUJO, CFJO),
+- **Formulario**, en este orden: nombre, género (masculino, femenino), instituto (ITJO, IUJO, CFJO u Otro),
   condición (estudiante, docente, otro), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
-  CFJO: secretariado administrativo, asistente administrativo o analista contable),
-  semestre o nivel (1 a 10 o "No aplica"), cantidad de usuarios (solo cubículos; se escribe el número),
+  CFJO: secretariado administrativo, asistente administrativo o analista contable;
+  Otro: queda en "No aplica"),
+  semestre, nivel o sección (1 a 10 o "No aplica"; con ITJO, sección A a E), cantidad de usuarios (solo cubículos; se escribe el número),
   laptop (1 a 25 y 59 a 80) o cubículo (1 a 6 o Podcast), motivo de uso
   (estudio, tarea, entretenimiento, TEG, didáctico), **fecha de la reserva** (un calendario; por
   defecto hoy) y hora de inicio. Los cubículos piden además hora de fin y muestran la duración
