@@ -177,3 +177,21 @@ button:disabled { opacity: .6; cursor: default; }
 .acciones-borrado { display: flex; gap: 8px; }
 .botones-formulario { display: flex; gap: 8px; flex-wrap: wrap; }
 button.boton-peligro { background: var(--alerta); border-color: var(--alerta); color: #fff; }
+
+/* Actividad de hoy (gráfica de barras por hora) */
+.actividad { min-width: 0; max-width: 100%; overflow: hidden; }
+.actividad .panel-encabezado { margin-bottom: 8px; }
+.actividad h2 { font-size: 1.05rem; }
+.actividad-leyenda { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding: 0; font-size: .9rem; color: var(--texto-suave); }
+.actividad-leyenda strong { color: var(--texto); }
+.actividad-muestra { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.actividad-grafica { position: relative; overflow-x: auto; }
+.actividad-grafica svg { display: block; width: 100%; min-width: 560px; height: auto; max-height: 200px; }
+.serie-laptops { fill: #179aac; background: #179aac; }
+.serie-cubiculos { fill: #7c3aed; background: #7c3aed; }
+.actividad-guia { stroke: var(--borde); stroke-width: 1; stroke-dasharray: 2 3; }
+.actividad-base { stroke: #9aa5b1; stroke-width: 1; }
+.actividad-eje { fill: var(--texto-suave); font-size: 11px; }
+.actividad-ahora { fill: var(--texto); font-weight: 700; }
+.actividad-resalte { fill: var(--fondo); }
+.actividad-detalle { position: absolute; top: 0; transform: translateX(-50%); pointer-events: none; background: var(--superficie); border: 1px solid var(--borde); border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.12); padding: 8px 10px; font-size: .85rem; display: grid; gap: 2px; white-space: nowrap; color: var(--texto); }
