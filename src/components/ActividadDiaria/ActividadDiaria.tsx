@@ -19,7 +19,9 @@ type Conteo = Record<Clave, number[]>; // Cantidad por hora del día (0 a 23)
 const horaDe = (iso: string) =>
   Number(new Intl.DateTimeFormat('en-GB', { hour: '2-digit', hourCycle: 'h23', timeZone: 'America/Caracas' }).format(new Date(iso)));
 
-const etiquetaHora = (h: number) => `${h}:00`;
+/** Hora en formato de 12 horas: 7 → "7 a. m.", 12 → "12 p. m.", 0 → "12 a. m.". */
+const hora12 = (h: number) => `${h % 12 || 12} ${h % 24 < 12 ? 'a. m.' : 'p. m.'}`;
+const etiquetaHora = (h: number) => hora12(h).replace(' ', ':00 ');
 
 /** Préstamos y reservas de hoy (hora de Caracas), agrupados por la hora en que empiezan. */
 async function contarHoy(): Promise<Conteo> {
@@ -112,7 +114,7 @@ export function ActividadDiaria() {
                   return <path key={s.clave} d={d} className={s.clase} />;
                 })}
                 <text x={centro} y={alto - 6} textAnchor="middle" className={h === horaActual ? 'actividad-eje actividad-ahora' : 'actividad-eje'}>
-                  {h}h
+                  {hora12(h)}
                 </text>
                 {/* Zona invisible de toda la columna para mostrar el detalle al pasar el mouse. */}
                 <rect x={x0} y={0} width={columna} height={alto} fill="transparent" onMouseEnter={() => setActiva(h)} />
