@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { CARRERA_POR_INSTITUTO, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, semestresDe } from '../../config/opciones';
+import { CARRERA_POR_INSTITUTO, CONDICIONES_SIN_CARRERA, type CampoCarrera, GENEROS, INSTITUTOS, semestresDe } from '../../config/opciones';
 import { nombreRecurso, type Modulo } from '../../config/modulos';
 import { useAhora } from '../../hooks/useAhora';
 import { registrar } from '../../services/registroService';
@@ -55,13 +55,16 @@ function carreraInicial(instituto: string): string {
   return campo?.tipo === 'menu' && campo.opciones.length === 1 ? campo.opciones[0] : '';
 }
 
-/** "Carrera o año": su forma depende del instituto (ver CARRERA_POR_INSTITUTO). */
-function CampoCarreraOAnio({ instituto, valor, onCambiar }: {
+const NO_APLICA = 'No aplica';
+
+/** "Carrera o año": su forma depende del instituto (ver CARRERA_POR_INSTITUTO), o solo "No aplica". */
+function CampoCarreraOAnio({ instituto, sinCarrera, valor, onCambiar }: {
   instituto: string;
+  sinCarrera: boolean;
   valor: string;
   onCambiar: (valor: string) => void;
 }) {
-  const campo = CARRERA_POR_INSTITUTO[instituto];
+  const campo: CampoCarrera | undefined = sinCarrera ? { tipo: 'menu', opciones: [NO_APLICA] } : CARRERA_POR_INSTITUTO[instituto];
   if (campo?.tipo === 'menu') {
     return <Desplegable id="registro-carrera" titulo="Carrera o año" valor={valor} opciones={campo.opciones} onCambiar={onCambiar} />;
   }
@@ -88,6 +91,13 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
   const [datos, setDatos] = useState<NuevoRegistro>(vacio);
   const cambiar = (campo: keyof NuevoRegistro) => (valor: string) =>
     setDatos({ ...datos, [campo]: valor });
+  // Con condiciones como DTI, carrera y semestre quedan en "No aplica".
+  const sinCarrera = CONDICIONES_SIN_CARRERA.includes(datos.condicion);
+  const cambiarCondicion = (condicion: string) => {
+    if (CONDICIONES_SIN_CARRERA.includes(condicion)) setDatos({ ...datos, condicion, carrera: NO_APLICA, semestre: NO_APLICA });
+    else if (sinCarrera) setDatos({ ...datos, condicion, carrera: carreraInicial(datos.instituto), semestre: '' });
+    else setDatos({ ...datos, condicion });
+  };
 
   const ahora = useAhora(30_000);
   // Para más tarde u otro día se puede elegir un recurso que hoy está en uso;
@@ -125,15 +135,15 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
           titulo="Instituto"
           valor={datos.instituto}
           opciones={INSTITUTOS}
-          onCambiar={(instituto) => setDatos({ ...datos, instituto, carrera: carreraInicial(instituto), semestre: '' })}
+          onCambiar={(instituto) => setDatos(sinCarrera ? { ...datos, instituto } : { ...datos, instituto, carrera: carreraInicial(instituto), semestre: '' })}
         />
-        <Desplegable id="registro-condicion" titulo="Condición" valor={datos.condicion} opciones={CONDICIONES} onCambiar={cambiar('condicion')} />
-        <CampoCarreraOAnio instituto={datos.instituto} valor={datos.carrera} onCambiar={cambiar('carrera')} />
+        <Desplegable id="registro-condicion" titulo="Condición" valor={datos.condicion} opciones={modulo.condiciones} onCambiar={cambiarCondicion} />
+        <CampoCarreraOAnio instituto={datos.instituto} sinCarrera={sinCarrera} valor={datos.carrera} onCambiar={cambiar('carrera')} />
         <Desplegable
           id="registro-semestre"
           titulo="Semestre, nivel o sección"
           valor={datos.semestre}
-          opciones={semestresDe(datos.instituto)}
+          opciones={sinCarrera ? [NO_APLICA] : semestresDe(datos.instituto)}
           onCambiar={cambiar('semestre')}
         />
         <label htmlFor="registro-recurso">
@@ -162,7 +172,7 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
             />
           </label>
         )}
-        <Desplegable id="registro-motivo" titulo="Motivo de uso" valor={datos.motivo} opciones={MOTIVOS} onCambiar={cambiar('motivo')} />
+        <Desplegable id="registro-motivo" titulo="Motivo de uso" valor={datos.motivo} opciones={modulo.motivos} onCambiar={cambiar('motivo')} />
         <label htmlFor="registro-fecha">
           Fecha de la reserva
           <input id="registro-fecha" type="date" required min={diaDe()} value={datos.fecha} onChange={(e) => cambiar('fecha')(e.target.value)} />

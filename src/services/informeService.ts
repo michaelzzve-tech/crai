@@ -1,5 +1,5 @@
 import { CUBICULOS, LAPTOPS } from '../config/modulos';
-import { CARRERA_POR_INSTITUTO, CONDICIONES, GENEROS, INSTITUTOS, MOTIVOS, SECCIONES_ITJO, SEMESTRES } from '../config/opciones';
+import { CARRERA_POR_INSTITUTO, CONDICIONES_LAPTOPS, GENEROS, INSTITUTOS, MOTIVOS_LAPTOPS, SECCIONES_ITJO, SEMESTRES } from '../config/opciones';
 import { repositorio } from '../data';
 import type { Registro } from '../types';
 import { diaDe } from '../utils/fechas';
@@ -49,7 +49,7 @@ function enPeriodo(registros: Registro[], { desde, hasta }: Periodo): Registro[]
 /** "ITJO · Año 3", "IUJO · Informática", "CFJO · Analista contable". */
 function carreraOAnio(r: Registro): string {
   const campo = CARRERA_POR_INSTITUTO[r.instituto];
-  const valor = campo?.tipo === 'menu' && campo.opciones.every((o) => /^\d+$/.test(o)) ? `Año ${r.carrera}` : r.carrera;
+  const valor = r.carrera !== 'No aplica' && campo?.tipo === 'menu' && campo.opciones.every((o) => /^\d+$/.test(o)) ? `Año ${r.carrera}` : r.carrera;
   return `${r.instituto} · ${valor}`;
 }
 
@@ -86,10 +86,10 @@ function desglosar(registros: Registro[], minutos: (r: Registro) => number): Des
   return [
     agrupar('Por instituto', registros, (r) => r.instituto, minutos, INSTITUTOS),
     agrupar('Por género', registros, (r) => r.genero || 'Sin dato', minutos, GENEROS),
-    agrupar('Por condición', registros, (r) => r.condicion, minutos, CONDICIONES),
+    agrupar('Por condición', registros, (r) => r.condicion, minutos, CONDICIONES_LAPTOPS),
     agrupar('Por carrera o año', registros, carreraOAnio, minutos, ORDEN_CARRERAS),
     agrupar('Por semestre, nivel o sección', registros, (r) => r.semestre || 'Sin dato', minutos, [...SEMESTRES, ...SECCIONES_ITJO]),
-    agrupar('Por motivo de uso', registros, (r) => r.motivo, minutos, MOTIVOS),
+    agrupar('Por motivo de uso', registros, (r) => r.motivo, minutos, MOTIVOS_LAPTOPS),
   ];
 }
 

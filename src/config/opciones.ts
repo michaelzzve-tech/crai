@@ -6,6 +6,10 @@ export const GENEROS = ['Masculino', 'Femenino'];
 export const INSTITUTOS = ['ITJO', 'IUJO', 'CFJO', 'Otro'];
 
 export const CONDICIONES = ['Estudiante', 'Docente', 'Otro'];
+/** En Laptops también está DTI. */
+export const CONDICIONES_LAPTOPS = ['Estudiante', 'Docente', 'DTI', 'Otro'];
+/** Con estas condiciones, "Carrera o año" y "Semestre, nivel o sección" quedan en "No aplica". */
+export const CONDICIONES_SIN_CARRERA = ['DTI'];
 
 export const CARRERAS = ['Administración', 'Contaduría', 'Informática', 'Electrónica', 'Educación'];
 
@@ -34,5 +38,7 @@ export const CARRERA_POR_INSTITUTO: Record<string, CampoCarrera> = {
 };
 
 export const MOTIVOS = ['Estudio', 'Tarea', 'Entretenimiento', 'TEG', 'Didáctico'];
+/** En Laptops también está Soporte. */
+export const MOTIVOS_LAPTOPS = [...MOTIVOS, 'Soporte'];
 
 // La cantidad de laptops y de cubículos está en src/config/modulos.ts.
