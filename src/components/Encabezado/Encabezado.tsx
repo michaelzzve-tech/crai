@@ -19,10 +19,11 @@ interface Props {
 
 /** Título, selector de módulo (laptops, cubículos…) y pestañas del módulo. */
 export function Encabezado({ modulos, modulo, onCambiarModulo, enInformes, onInformes, activa, onCambiar, correo, onCerrarSesion, notificaciones }: Props) {
-  const pestanas: { id: Pestana; titulo: string }[] = [
+  // Historial se muestra como un ícono de reloj; su nombre queda en la ayuda y para lectores de pantalla.
+  const pestanas: { id: Pestana; titulo: string; icono?: ReactNode }[] = [
     { id: 'registro', titulo: modulo.registros },
-    { id: 'recursos', titulo: modulo.recursos },
-    { id: 'historial', titulo: 'Historial' },
+    { id: 'recursos', titulo: modulo.pestanaRecursos },
+    { id: 'historial', titulo: 'Historial', icono: <IconoReloj /> },
   ];
 
   return (
@@ -66,10 +67,12 @@ export function Encabezado({ modulos, modulo, onCambiarModulo, enInformes, onInf
           {pestanas.map((p) => (
             <button
               key={p.id}
-              className={p.id === activa ? 'pestana activa' : 'pestana'}
+              className={`pestana${p.icono ? ' pestana-icono' : ''}${p.id === activa ? ' activa' : ''}`}
               onClick={() => onCambiar(p.id)}
+              aria-label={p.icono ? p.titulo : undefined}
+              title={p.icono ? p.titulo : undefined}
             >
-              {p.titulo}
+              {p.icono ?? p.titulo}
             </button>
           ))}
         </nav>
@@ -86,6 +89,16 @@ function IconoGrafica() {
       <path d="M7 17v-5" />
       <path d="M12 17V7" />
       <path d="M17 17v-8" />
+    </svg>
+  );
+}
+
+/** Reloj minimalista para la pestaña Historial. */
+function IconoReloj() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
     </svg>
   );
 }

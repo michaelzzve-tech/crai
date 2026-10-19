@@ -23,6 +23,7 @@ export interface Modulo {
   id: string;
   recurso: string; // Nombre del campo del formulario: "Laptop"
   recursos: string; // Plural: "Laptops"
+  pestanaRecursos: string; // Botón de la pestaña con el estado de cada recurso: "Equipos"
   opciones: string[]; // Opciones del menú: "1", "2"… y códigos como "POD" (ver NOMBRES_RECURSOS)
   // true: el formulario pide hora de fin y muestra la duración (y hay vencidos).
   // false: solo hora de inicio; la hora de fin se toma sola al devolver y se
@@ -47,6 +48,7 @@ export const LAPTOPS: Modulo = {
   id: 'laptops',
   recurso: 'Laptop',
   recursos: 'Laptops',
+  pestanaRecursos: 'Equipos',
   opciones: [...del1Al(25), ...rango(59, 80)],
   conHoraFin: false,
   conUsuarios: false,
@@ -68,6 +70,7 @@ export const CUBICULOS: Modulo = {
   id: 'cubiculos',
   recurso: 'Cubículo',
   recursos: 'Cubículos',
+  pestanaRecursos: 'Espacios',
   opciones: [...del1Al(6), 'POD'],
   conHoraFin: true,
   conUsuarios: true,

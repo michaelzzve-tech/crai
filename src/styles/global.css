@@ -40,6 +40,7 @@ h2 { font-size: 1.1rem; margin-bottom: 12px; }
 .cargando { text-align: center; color: var(--texto-suave); padding: 48px 16px; }
 .campos.una-columna { grid-template-columns: 1fr; margin-bottom: 0; }
 .pestanas { display: flex; gap: 8px; flex-wrap: wrap; max-width: 1200px; margin: 0 auto; }
+.pestana-icono { align-self: stretch; display: inline-flex; align-items: center; justify-content: center; }
 .pestana { background: transparent; color: var(--texto); border: 1px solid var(--borde); }
 .modulos { display: flex; gap: 8px; flex-wrap: wrap; max-width: 1200px; margin: 0 auto 12px; }
 .modulo { background: transparent; color: var(--texto); border: none; border-bottom: 3px solid transparent; border-radius: 0; padding: 4px 2px; font-weight: 600; font-size: 1rem; }
