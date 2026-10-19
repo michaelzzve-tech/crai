@@ -102,6 +102,7 @@ y pegue los mismos dos valores.
   Venezuela, aunque la computadora tenga otra zona horaria.
 - **Equipos / Espacios** (pestaña de laptops / cubículos): estado de cada uno y opción de enviarlo a mantenimiento.
 - **Historial** (ícono de reloj): todos los registros, con búsqueda y marca de los que terminaron con retraso.
+- **Actividad de hoy**: arriba de la pantalla principal, una gráfica de barras con los préstamos de laptops y las reservas de cubículos de cada hora del día (por la hora en que empiezan). Al pasar el mouse por una hora se ven las cantidades exactas; se actualiza sola.
 - **Resumen**: disponibles, en uso, en mantenimiento y (en cubículos) reservas vencidas.
 
 Reglas incluidas: solo se usan laptops o cubículos disponibles (los ocupados o en
@@ -129,6 +130,7 @@ src/
 ├── components/       Una carpeta por componente
 │   ├── Encabezado/        Título, módulos, pestañas y cerrar sesión
 │   ├── Login/             Pantalla de inicio de sesión
+│   ├── ActividadDiaria/   Gráfica de actividad de hoy por hora
 │   ├── Resumen/           Tarjetas con totales
 │   ├── EstadoBadge/       Etiqueta de color para estados
 │   ├── RecursoList/       Estado de las laptops o cubículos
