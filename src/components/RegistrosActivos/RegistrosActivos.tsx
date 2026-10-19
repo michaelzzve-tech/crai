@@ -4,7 +4,7 @@ import { cancelarProgramado, editarHorario, estaPorVencer, estaProgramado, estaV
 import type { Registro } from '../../types';
 import { useAhora } from '../../hooks/useAhora';
 import { usePaginacion } from '../../hooks/usePaginacion';
-import { diaDe, duracionEntreFechas, duracionEntreHoras, formatearDia, formatearHora, horaActual } from '../../utils/fechas';
+import { diaDe, diferenciaConPrevisto, duracionEntreFechas, duracionEntreHoras, formatearDia, formatearHora, horaActual } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 import { Paginador } from '../Paginador';
 import type { EjecutarAccion } from '../tipos';
@@ -79,6 +79,15 @@ function EditorHorario({ registro, conUsuarios, onGuardar, onCancelar }: {
   );
 }
 
+/** El momento exacto de la confirmación y, si hay hora de fin, cuánto se adelantó o atrasó. */
+function momentoDeFin(registro: Registro) {
+  const momento = new Date();
+  const detalle = registro.fin
+    ? ` a las ${formatearHora(momento.toISOString())} (${diferenciaConPrevisto(registro.fin, momento.toISOString())})`
+    : '';
+  return { momento, detalle };
+}
+
 /** Préstamos o reservas en curso, con el botón para devolver o liberar. */
 export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
   const [finalizando, setFinalizando] = useState<string | null>(null);
@@ -90,9 +99,10 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
   const paginacion = usePaginacion(activos);
 
   async function confirmar(registro: Registro) {
+    const { momento, detalle } = momentoDeFin(registro);
     const ok = estaProgramado(registro)
       ? await ejecutar(() => cancelarProgramado(modulo, registro), `Reserva de ${modulo.recurso.toLowerCase()} ${nombreRecurso(registro.recursoId)} cancelada.`)
-      : await ejecutar(() => finalizar(modulo, registro), modulo.mensajeFinalizado(nombreRecurso(registro.recursoId)));
+      : await ejecutar(() => finalizar(modulo, registro, momento), modulo.mensajeFinalizado(nombreRecurso(registro.recursoId)).replace(/\.$/, `${detalle}.`));
     if (ok) setFinalizando(null);
   }
 
@@ -172,6 +182,12 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                           <span className="secundario">
                             Hora de devolución: <strong>{formatearHora(ahora.toISOString())}</strong>
                             {' · '}Tiempo transcurrido: <strong>{duracionEntreFechas(r.inicio, ahora)}</strong>
+                          </span>
+                        )}
+                        {conFin && !programado && r.fin && (
+                          <span className="secundario">
+                            Hora de salida: <strong>{formatearHora(ahora.toISOString())}</strong>
+                            {' · '}{diferenciaConPrevisto(r.fin, ahora.toISOString())}
                           </span>
                         )}
                         {programado && <span className="secundario">¿Cancelar esta reserva? Se borrará.</span>}

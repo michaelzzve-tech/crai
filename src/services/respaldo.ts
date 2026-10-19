@@ -1,7 +1,7 @@
 import { CUBICULOS, LAPTOPS, nombreRecurso, type Modulo } from '../config/modulos';
 import { repositorio } from '../data';
 import type { Registro } from '../types';
-import { diaDe, duracionEntreFechas, formatearDia, formatearHora } from '../utils/fechas';
+import { diaDe, diferenciaConPrevisto, duracionEntreFechas, formatearDia, formatearHora } from '../utils/fechas';
 
 export interface Columna {
   titulo: string;
@@ -35,6 +35,8 @@ export function columnasDetalle(modulo: Modulo): Columna[] {
         { titulo: 'Hora de fin', ancho: 12, valor: (r) => hora(r.fin) },
         { titulo: 'Duración', ancho: 14, valor: (r) => (r.fin ? duracionEntreFechas(r.inicio, r.fin) : '') },
         { titulo: 'Hora de salida', ancho: 14, valor: horaFinal },
+        { titulo: 'Tiempo real de uso', ancho: 16, valor: (r) => (r.finReal ? duracionEntreFechas(r.inicio, r.finReal) : '') },
+        { titulo: 'Diferencia con lo previsto', ancho: 26, valor: (r) => (r.finReal && r.fin ? diferenciaConPrevisto(r.fin, r.finReal) : '') },
       ]
     : [
         { titulo: 'Hora de devolución', ancho: 18, valor: horaFinal },

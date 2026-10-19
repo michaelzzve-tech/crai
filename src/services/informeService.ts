@@ -16,7 +16,7 @@ export interface Informe {
   prestamosEnCurso: number; // De esos, los que aún no se devuelven (no suman horas)
   minutosLaptops: number; // Desde la hora de inicio hasta la devolución
   reservas: number; // Reservas de cubículos que empezaron en el período
-  minutosCubiculos: number; // Tiempo reservado: de la hora de inicio a la hora de fin
+  minutosCubiculos: number; // De la hora de inicio a la salida real (o a la hora de fin si sigue activa)
   usuariosCubiculos: number; // Suma de "Cantidad de usuarios" de esas reservas
   desgloseLaptops: Desglose[];
   desgloseCubiculos: Desglose[];
@@ -103,7 +103,11 @@ export async function generarInforme(periodo: Periodo): Promise<Informe> {
   const p = enPeriodo(prestamos, periodo).sort(porInicio);
   const r = enPeriodo(reservas, periodo).sort(porInicio);
   const usoLaptop = (x: Registro) => (x.finReal ? minutosEntre(x.inicio, x.finReal) : 0);
-  const reservaCubiculo = (x: Registro) => (x.fin ? minutosEntre(x.inicio, x.fin) : 0);
+  // Tiempo real si ya se liberó (antes o después de lo previsto); si no, el reservado.
+  const reservaCubiculo = (x: Registro) => {
+    const fin = x.finReal ?? x.fin;
+    return fin ? minutosEntre(x.inicio, fin) : 0;
+  };
   const sumar = (lista: Registro[], minutos: (x: Registro) => number) => lista.reduce((t, x) => t + minutos(x), 0);
   return {
     periodo,
@@ -132,7 +136,7 @@ export function filasInforme(informe: Informe, formatearHoras: (minutos: number)
       nota: 'Desde la hora de inicio hasta la devolución' },
     { titulo: 'Reservas de cubículos', valor: String(informe.reservas) },
     { titulo: 'Horas totales de reserva de cubículos', valor: formatearHoras(informe.minutosCubiculos),
-      nota: 'De la hora de inicio a la hora de fin de cada reserva' },
+      nota: 'De la hora de inicio a la hora real de salida (o a la hora de fin, si aún no se libera)' },
     { titulo: 'Usuarios en cubículos', valor: String(informe.usuariosCubiculos),
       nota: 'Suma de la cantidad de usuarios de cada reserva' },
   ];

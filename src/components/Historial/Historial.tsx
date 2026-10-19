@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { nombreRecurso, type Modulo } from '../../config/modulos';
 import type { Registro } from '../../types';
-import { duracionEntreFechas, formatearFecha, formatearHora } from '../../utils/fechas';
+import { diferenciaConPrevisto, duracionEntreFechas, formatearFecha, formatearHora } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 import { usePaginacion } from '../../hooks/usePaginacion';
 import { Paginador } from '../Paginador';
@@ -57,7 +57,7 @@ export function Historial({ modulo, registros }: Props) {
                 </>
               )}
               <th>{modulo.finalizado}</th>
-              {!conFin && <th>Tiempo transcurrido</th>}
+              <th>{conFin ? 'Tiempo real' : 'Tiempo transcurrido'}</th>
             </tr>
           </thead>
           <tbody>
@@ -85,13 +85,13 @@ export function Historial({ modulo, registros }: Props) {
                     {r.finReal ? (
                       <>
                         {formatearHora(r.finReal)}
-                        {tarde && <div className="secundario texto-alerta">Con retraso</div>}
+                        {r.fin && <div className={tarde ? 'secundario texto-alerta' : 'secundario'}>{diferenciaConPrevisto(r.fin, r.finReal)}</div>}
                       </>
                     ) : (
                       <EstadoBadge estado="ocupado" textoOcupado={modulo.ocupado} />
                     )}
                   </td>
-                  {!conFin && <td>{r.finReal ? duracionEntreFechas(r.inicio, r.finReal) : '—'}</td>}
+                  <td>{r.finReal ? duracionEntreFechas(r.inicio, r.finReal) : '—'}</td>
                 </tr>
               );
             })}
