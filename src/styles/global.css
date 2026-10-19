@@ -98,7 +98,8 @@ td { border-bottom: 1px solid var(--borde); padding: 8px; vertical-align: top; }
 
 /* Etiquetas de estado */
 .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .78rem; font-weight: 600; }
-.badge-disponible, .badge-activo, .badge-devuelto { background: var(--exito-fondo); color: var(--exito); }
+.badge-activo, .badge-devuelto { background: var(--exito-fondo); color: var(--exito); }
+.badge-disponible { background: #bebebe; color: var(--texto); }
 .badge-ocupado { background: #d6f3f7; color: #0e7482; }
 .badge-mantenimiento { background: var(--aviso-fondo); color: var(--aviso); }
 .badge-vencido { background: var(--alerta); color: #fff; }
