@@ -32,7 +32,7 @@ export function columnasDetalle(modulo: Modulo): Columna[] {
   ];
   const finales: Columna[] = modulo.conHoraFin
     ? [
-        { titulo: 'Hora de fin', ancho: 12, valor: (r) => hora(r.fin) },
+        { titulo: 'Hora de fin', ancho: 14, valor: (r) => hora(r.fin) },
         { titulo: 'Duración', ancho: 14, valor: (r) => (r.fin ? duracionEntreFechas(r.inicio, r.fin) : '') },
         { titulo: 'Hora de salida', ancho: 14, valor: horaFinal },
         { titulo: 'Tiempo real de uso', ancho: 16, valor: (r) => (r.finReal ? duracionEntreFechas(r.inicio, r.finReal) : '') },

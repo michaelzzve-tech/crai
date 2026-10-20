@@ -107,7 +107,8 @@ y pegue los mismos dos valores.
   (« ‹ › ») para pasar de página. El número se cambia en `REGISTROS_POR_PAGINA`
   (`src/hooks/usePaginacion.ts`).
 - **Hora de Caracas**: todas las horas se muestran y se registran en hora de Caracas,
-  Venezuela, aunque la computadora tenga otra zona horaria.
+  Venezuela, aunque la computadora tenga otra zona horaria, y en formato de 12 horas ("3:47 p. m.") en pantallas,
+  avisos, Excel y PDF. Los campos donde se escribe la hora usan el formato que tenga configurado el navegador.
 - **Equipos / Espacios** (pestaña de laptops / cubículos): estado de cada uno y opción de enviarlo a mantenimiento.
 - **Historial** (ícono de reloj): todos los registros, con búsqueda. En los cubículos muestra la hora real de
   salida, cuánto antes o después de lo previsto fue y el tiempo real de uso (también en el Excel y el PDF).
