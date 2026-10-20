@@ -224,3 +224,8 @@ button.boton-peligro { background: var(--alerta); border-color: var(--alerta); c
 .grafica-lineas .actividad-leyenda { justify-content: center; margin-bottom: 4px; }
 .grafica-cursor { stroke: #9aa5b1; stroke-width: 1; }
 .grafica-lineas svg { max-height: 300px; }
+
+/* Tarjeta "Disponibles": números de los disponibles al pasar el mouse */
+.tarjeta.con-detalle { position: relative; cursor: default; }
+.tarjeta-detalle { display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 15; width: max(100%, 260px); padding: 8px 10px; background: var(--superficie); color: var(--texto); border: 1px solid var(--borde); border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,.12); font-size: .85rem; line-height: 1.4; }
+.tarjeta.con-detalle:hover .tarjeta-detalle, .tarjeta.con-detalle:focus .tarjeta-detalle { display: block; }

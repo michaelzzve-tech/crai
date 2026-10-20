@@ -120,7 +120,8 @@ y pegue los mismos dos valores.
 - **Historial** (ícono de reloj): todos los registros, con búsqueda. En los cubículos muestra la hora real de
   salida, cuánto antes o después de lo previsto fue y el tiempo real de uso (también en el Excel y el PDF).
 - **Actividad de hoy**: arriba de la pantalla principal, una gráfica de barras con la actividad de cada hora del día del módulo abierto (préstamos de laptops en Laptops, reservas de cubículos en Cubículos) (por la hora en que empiezan, en formato de 12 horas). Al pasar el mouse por una hora se ven las cantidades exactas; se actualiza sola.
-- **Resumen**: disponibles, en uso, en mantenimiento y (en cubículos) reservas vencidas.
+- **Resumen**: disponibles, en uso, en mantenimiento y (en cubículos) reservas vencidas. Al pasar el mouse por
+  **Disponibles** se ven los números de las laptops o cubículos disponibles; si no queda ninguno, la tarjeta se pone roja.
 
 Reglas incluidas: solo se usan laptops o cubículos disponibles (los ocupados o en
 mantenimiento aparecen desactivados en el menú) y, en los cubículos, la hora de fin debe ser posterior a la de inicio.
