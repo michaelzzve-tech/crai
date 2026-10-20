@@ -95,7 +95,7 @@ const GRUPOS: Record<string, string> = {
 };
 
 const INSTITUCIONES = ['ITJO', 'IUJO', 'CFJO'];
-const GENEROS = ['Femenino', 'Masculino']; // Orden de los cuadros del reporte
+const GENEROS = ['Femenino', 'Masculino', 'No aplica']; // Orden de los cuadros del reporte
 const OTROS = 'OTROS';
 const OTROS_DTI = 'OTROS (DTI)';
 
@@ -193,6 +193,10 @@ function servicio(
       valor: dosCifras(registros.length - porCondicion('Estudiante') - porCondicion('Docente')) },
     { etiqueta: 'Total de usuarias', valor: dosCifras(deGenero(registros, 'Femenino')) },
     { etiqueta: 'Total de usuarios', valor: dosCifras(deGenero(registros, 'Masculino')) },
+    // Género "No aplica": solo aparece si hay alguno, para que los totales cuadren.
+    ...(deGenero(registros, 'No aplica') > 0
+      ? [{ etiqueta: 'Género no aplica', valor: dosCifras(deGenero(registros, 'No aplica')) }]
+      : []),
     { etiqueta: conUsuarios ? 'Tiempo total de uso general' : 'Tiempo total de horas de uso',
       valor: `${Math.floor(total / 60)} horas con ${dosCifras(total % 60)} minutos` },
   );

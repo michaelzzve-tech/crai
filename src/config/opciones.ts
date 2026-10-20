@@ -1,7 +1,7 @@
 // Opciones de los menús desplegables. Para agregar o quitar una opción,
 // basta con editar estas listas.
 
-export const GENEROS = ['Masculino', 'Femenino'];
+export const GENEROS = ['Masculino', 'Femenino', 'No aplica'];
 
 export const INSTITUTOS = ['ITJO', 'IUJO', 'CFJO', 'Otro'];
 
