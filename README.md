@@ -67,7 +67,7 @@ y pegue los mismos dos valores.
   cubículo, la fecha y las horas se eligen cada vez. Si un dato no existe en el módulo (por ejemplo DTI
   en cubículos), queda vacío para elegirlo.
 - **Formulario**, en este orden: nombre, género (masculino, femenino), instituto (ITJO, IUJO, CFJO u Otro),
-  condición (estudiante, docente, otro; en laptops también DTI, que deja carrera y semestre en "No aplica"), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
+  condición (estudiante, docente, psicólogo, otro; en laptops también DTI; con docente, psicólogo o DTI, carrera y semestre quedan en "No aplica"), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
   CFJO: secretariado administrativo, asistente administrativo o analista contable;
   Otro: queda en "No aplica"),
   semestre, nivel o sección (1 a 10 o "No aplica"; con ITJO, sección A a E), cantidad de usuarios (solo cubículos; se escribe el número),
@@ -91,11 +91,18 @@ y pegue los mismos dos valores.
   se marca en amarillo (por vencer) o en rojo (vencida). Desde la campana se pueden activar
   los avisos del sistema para verlos aunque la página esté en segundo plano. Los minutos se
   cambian en `MINUTOS_AVISO` (`src/services/registroService.ts`).
-- **Informes** (ícono de gráfica en el extremo derecho del encabezado): totales de un rango de fechas (por defecto, el mes actual): préstamos de
-  laptops, horas de uso de laptops (de la hora de inicio a la devolución), reservas de
-  cubículos y horas de uso de cubículos (hasta la salida real; si sigue activa, hasta la hora de fin), con el desglose de cada uno por instituto,
-  género, condición, carrera o año y motivo de uso. El botón **Descargar PDF** guarda el informe; al final trae
-  el **detalle** de cada préstamo y cada reserva del período (una fila por registro, con su fecha y horas).
+- **Informes** (ícono de gráfica en el extremo derecho del encabezado): informe de actividades con el formato
+  del reporte mensual del CRAI, para un mes (campo **Mes**) o un rango de fechas (por defecto, el mes actual):
+  - **Beneficiarios alcanzados por servicio prestado**: para cubículos y laptops, los totales (reservas o
+    solicitudes, por estudiantes, docentes y otros, usuarias, usuarios, usuarios en cubículos y tiempo total)
+    y el detalle por institución (ITJO, IUJO, CFJO, Otros y Otros (DTI)) y por condición: cantidad, cursantes
+    de cada carrera o año, motivos de uso, usuarios en cubículos y horas de uso.
+  - **Cuadros comparativos progresivos**: los últimos 13 meses hasta el mes del informe, por género, por
+    institución, usuarios de cubículos y horas de uso de cubículos y de laptops, cada cuadro con su gráfica.
+  Las horas de laptops van de la hora de inicio a la devolución; las de cubículos, hasta la salida real (si
+  sigue activa, hasta la hora de fin). El botón **Descargar PDF** guarda el mismo informe con membrete y, al
+  final, el **detalle** de cada préstamo y cada reserva del período. Los textos de logros, metas y
+  conclusiones del reporte se escriben a mano; el sistema no los genera.
 - **Respaldo**: en Informes, el botón **Descargar respaldo (Excel)** guarda un archivo con
   los préstamos y las reservas (una hoja para cada uno, una fila por registro con su fecha): todos, los de un año
   o los de un mes (se cuentan por la fecha de inicio, en hora de Caracas). Si la devolución o salida fue otro día,
@@ -107,12 +114,14 @@ y pegue los mismos dos valores.
   (« ‹ › ») para pasar de página. El número se cambia en `REGISTROS_POR_PAGINA`
   (`src/hooks/usePaginacion.ts`).
 - **Hora de Caracas**: todas las horas se muestran y se registran en hora de Caracas,
-  Venezuela, aunque la computadora tenga otra zona horaria.
+  Venezuela, aunque la computadora tenga otra zona horaria, y en formato de 12 horas ("3:47 p. m.") en pantallas,
+  avisos, Excel y PDF. Los campos donde se escribe la hora usan el formato que tenga configurado el navegador.
 - **Equipos / Espacios** (pestaña de laptops / cubículos): estado de cada uno y opción de enviarlo a mantenimiento.
 - **Historial** (ícono de reloj): todos los registros, con búsqueda. En los cubículos muestra la hora real de
   salida, cuánto antes o después de lo previsto fue y el tiempo real de uso (también en el Excel y el PDF).
 - **Actividad de hoy**: arriba de la pantalla principal, una gráfica de barras con la actividad de cada hora del día del módulo abierto (préstamos de laptops en Laptops, reservas de cubículos en Cubículos) (por la hora en que empiezan, en formato de 12 horas). Al pasar el mouse por una hora se ven las cantidades exactas; se actualiza sola.
-- **Resumen**: disponibles, en uso, en mantenimiento y (en cubículos) reservas vencidas.
+- **Resumen**: disponibles, en uso, en mantenimiento y (en cubículos) reservas vencidas. Al pasar el mouse por
+  **Disponibles** se ven los números de las laptops o cubículos disponibles; si no queda ninguno, la tarjeta se pone roja.
 
 Reglas incluidas: solo se usan laptops o cubículos disponibles (los ocupados o en
 mantenimiento aparecen desactivados en el menú) y, en los cubículos, la hora de fin debe ser posterior a la de inicio.

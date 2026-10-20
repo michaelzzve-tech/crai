@@ -4,8 +4,9 @@
 export const ZONA_HORARIA = 'America/Caracas';
 const DESFASE_CARACAS = '-04:00';
 
-const formatoFecha = new Intl.DateTimeFormat('es', { dateStyle: 'short', timeStyle: 'short', timeZone: ZONA_HORARIA });
-const formatoHora = new Intl.DateTimeFormat('es', { timeStyle: 'short', timeZone: ZONA_HORARIA });
+// Horas en formato de 12 horas: "3:47 p. m.".
+const formatoFecha = new Intl.DateTimeFormat('es', { dateStyle: 'short', timeStyle: 'short', hour12: true, timeZone: ZONA_HORARIA });
+const formatoHora = new Intl.DateTimeFormat('es', { timeStyle: 'short', hour12: true, timeZone: ZONA_HORARIA });
 const formatoDia = new Intl.DateTimeFormat('en-CA', { timeZone: ZONA_HORARIA }); // "2026-10-11"
 const formatoHHMM = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: ZONA_HORARIA });
 

@@ -117,7 +117,7 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
   const [datos, setDatos] = useState<NuevoRegistro>(vacio);
   const cambiar = (campo: keyof NuevoRegistro) => (valor: string) =>
     setDatos({ ...datos, [campo]: valor });
-  // Con condiciones como DTI, carrera y semestre quedan en "No aplica".
+  // Con condiciones como Docente, Psicólogo o DTI, carrera y semestre quedan en "No aplica".
   const sinCarrera = CONDICIONES_SIN_CARRERA.includes(datos.condicion);
   const cambiarCondicion = (condicion: string) => {
     if (CONDICIONES_SIN_CARRERA.includes(condicion)) setDatos({ ...datos, condicion, carrera: NO_APLICA, semestre: NO_APLICA });
