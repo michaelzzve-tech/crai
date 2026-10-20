@@ -1,37 +1,83 @@
 import { useEffect, useState } from 'react';
 import { descargarInformePdf } from '../../services/informePdf';
-import { filasInforme, generarInforme, periodoDelMes, seccionesDesglose, type Desglose, type Informe, type Periodo } from '../../services/informeService';
-import { formatearDuracion } from '../../utils/fechas';
+import {
+  dosCifras, generarInforme, horasCortas, lineasGrupo, lineasInstitucion, periodoDelMes, periodoDeMes,
+  type Cuadro, type Informe, type Periodo, type Servicio,
+} from '../../services/informeService';
 import { BorrarRegistros } from '../BorrarRegistros';
 import { Respaldo } from '../Respaldo';
+import { GraficaLineas } from './GraficaLineas';
 
-function TablaDesglose({ desglose, columnaHoras }: { desglose: Desglose; columnaHoras: string }) {
+/** Sección 3 del reporte: totales del servicio y el detalle por institución. */
+function BloqueServicio({ servicio }: { servicio: Servicio }) {
+  const conUsuarios = servicio.unidad === 'reservas';
   return (
-    <div className="desglose">
-      <h3>{desglose.titulo}</h3>
-      {desglose.filas.length === 0 ? (
-        <p className="vacio">Sin registros.</p>
-      ) : (
+    <section className="panel servicio-informe">
+      <div className="servicio-totales">
+        <h3>{servicio.titulo}</h3>
+        {servicio.totales.map((t) => (
+          <p key={t.etiqueta}>{t.etiqueta}: <strong>{t.valor}</strong></p>
+        ))}
+      </div>
+      <div className="instituciones-informe">
+        {servicio.instituciones.map((b) => (
+          <div key={b.nombre}>
+            <h4>{b.nombre}</h4>
+            <ul>
+              {lineasInstitucion(b, servicio.unidad, conUsuarios).map((l) => <li key={l}>{l}</li>)}
+              {b.grupos.map((g) => (
+                <li key={g.titulo}>
+                  {g.titulo}:
+                  <ul>{lineasGrupo(g, servicio.unidad).map((l) => <li key={l}>{l}</li>)}</ul>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** Sección 4: cuadro de un año (meses en columnas) con su gráfica. */
+function CuadroComparativo({ cuadro }: { cuadro: Cuadro }) {
+  const formato = (v: number) => (cuadro.horas ? horasCortas(v) : String(v));
+  const suma = (valores: number[]) => valores.reduce((a, b) => a + b, 0);
+  const totales = cuadro.meses.map((_, i) => suma(cuadro.filas.map((f) => f.valores[i])));
+  return (
+    <div className="cuadro-comparativo">
+      <div className="tabla-cuadro">
         <table>
+          <caption>{cuadro.titulo}</caption>
           <thead>
-            <tr><th></th><th className="numero">Cantidad</th><th className="numero">{columnaHoras}</th></tr>
+            <tr>
+              <th>{cuadro.columna}</th>
+              {cuadro.meses.map((m) => <th key={m} className="numero">{m}</th>)}
+              <th className="numero">TOTAL</th>
+            </tr>
           </thead>
           <tbody>
-            {desglose.filas.map((f) => (
+            {cuadro.filas.map((f) => (
               <tr key={f.etiqueta}>
                 <td>{f.etiqueta}</td>
-                <td className="numero">{f.cantidad}</td>
-                <td className="numero">{formatearDuracion(f.minutos)}</td>
+                {f.valores.map((v, i) => <td key={i} className="numero">{formato(v)}</td>)}
+                <td className="numero"><strong>{formato(suma(f.valores))}</strong></td>
               </tr>
             ))}
+            <tr className="fila-total">
+              <td>TOTALES</td>
+              {totales.map((v, i) => <td key={i} className="numero">{formato(v)}</td>)}
+              <td className="numero">{formato(suma(totales))}</td>
+            </tr>
           </tbody>
         </table>
-      )}
+      </div>
+      <GraficaLineas cuadro={cuadro} />
     </div>
   );
 }
 
-/** Totales de préstamos y reservas en un rango de fechas, con descarga en PDF. */
+/** Informe con el formato del reporte mensual del CRAI, con descarga en PDF. */
 export function Informes() {
   const [periodo, setPeriodo] = useState<Periodo>(() => periodoDelMes());
   const [version, setVersion] = useState(0); // Sube tras borrar todo, para recalcular
@@ -67,8 +113,13 @@ export function Informes() {
       <Respaldo />
 
       <section className="formulario">
-        <h2>Informe de uso</h2>
+        <h2>Informe de actividades</h2>
         <div className="campos">
+          <label htmlFor="informe-mes">
+            Mes
+            <input id="informe-mes" type="month" value={periodo.desde.slice(0, 7)}
+              onChange={(e) => e.target.value && setPeriodo(periodoDeMes(e.target.value))} />
+          </label>
           <label htmlFor="informe-desde">
             Desde
             <input id="informe-desde" type="date" value={periodo.desde} max={periodo.hasta}
@@ -89,25 +140,29 @@ export function Informes() {
       {error && <div className="aviso aviso-error" role="alert">No se pudo generar el informe. {error}</div>}
 
       {informe && rangoValido && (
-        <section className="resumen informe">
-          {filasInforme(informe, formatearDuracion).map((f) => (
-            <div key={f.titulo} className="tarjeta">
-              <span className="tarjeta-valor">{f.valor}</span>
-              <span className="tarjeta-titulo">{f.titulo}</span>
-              {f.nota && <span className="secundario">{f.nota}</span>}
-            </div>
-          ))}
-        </section>
-      )}
+        <>
+          <section className="panel portada-informe">
+            <p><strong>INFORME DE ACTIVIDADES</strong></p>
+            <p><strong>CENTRO DE RECURSOS DE APRENDIZAJE E INVESTIGACIÓN</strong></p>
+            <p><strong>BIBLIOTECA HERMANO KORTA S.J.</strong></p>
+            <p>Reporte Mensual | <strong>{informe.titulo}</strong></p>
+          </section>
 
-      {informe && rangoValido && seccionesDesglose(informe).map((s) => (
-        <section key={s.titulo} className="panel">
-          <h2>{s.titulo}</h2>
-          <div className="desgloses">
-            {s.desgloses.map((d) => <TablaDesglose key={d.titulo} desglose={d} columnaHoras={s.columnaHoras} />)}
-          </div>
-        </section>
-      ))}
+          <h2 className="titulo-seccion-informe">Beneficiarios alcanzados por servicio prestado</h2>
+          {informe.servicios.map((s) => <BloqueServicio key={s.titulo} servicio={s} />)}
+
+          <h2 className="titulo-seccion-informe">Cuadros comparativos progresivos</h2>
+          <p className="secundario">
+            Evolución de los últimos {dosCifras(informe.comparativos[0].cuadros[0].meses.length)} meses, hasta el mes del informe.
+          </p>
+          {informe.comparativos.map((sec) => (
+            <section key={sec.titulo} className="panel">
+              <h3>{sec.titulo}</h3>
+              {sec.cuadros.map((c) => <CuadroComparativo key={c.titulo} cuadro={c} />)}
+            </section>
+          ))}
+        </>
+      )}
 
       <BorrarRegistros onBorrado={() => setVersion((v) => v + 1)} />
     </main>

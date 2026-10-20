@@ -91,11 +91,18 @@ y pegue los mismos dos valores.
   se marca en amarillo (por vencer) o en rojo (vencida). Desde la campana se pueden activar
   los avisos del sistema para verlos aunque la página esté en segundo plano. Los minutos se
   cambian en `MINUTOS_AVISO` (`src/services/registroService.ts`).
-- **Informes** (ícono de gráfica en el extremo derecho del encabezado): totales de un rango de fechas (por defecto, el mes actual): préstamos de
-  laptops, horas de uso de laptops (de la hora de inicio a la devolución), reservas de
-  cubículos y horas de uso de cubículos (hasta la salida real; si sigue activa, hasta la hora de fin), con el desglose de cada uno por instituto,
-  género, condición, carrera o año y motivo de uso. El botón **Descargar PDF** guarda el informe; al final trae
-  el **detalle** de cada préstamo y cada reserva del período (una fila por registro, con su fecha y horas).
+- **Informes** (ícono de gráfica en el extremo derecho del encabezado): informe de actividades con el formato
+  del reporte mensual del CRAI, para un mes (campo **Mes**) o un rango de fechas (por defecto, el mes actual):
+  - **Beneficiarios alcanzados por servicio prestado**: para cubículos y laptops, los totales (reservas o
+    solicitudes, por estudiantes, docentes y otros, usuarias, usuarios, usuarios en cubículos y tiempo total)
+    y el detalle por institución (ITJO, IUJO, CFJO, Otros y Otros (DTI)) y por condición: cantidad, cursantes
+    de cada carrera o año, motivos de uso, usuarios en cubículos y horas de uso.
+  - **Cuadros comparativos progresivos**: los últimos 13 meses hasta el mes del informe, por género, por
+    institución, usuarios de cubículos y horas de uso de cubículos y de laptops, cada cuadro con su gráfica.
+  Las horas de laptops van de la hora de inicio a la devolución; las de cubículos, hasta la salida real (si
+  sigue activa, hasta la hora de fin). El botón **Descargar PDF** guarda el mismo informe con membrete y, al
+  final, el **detalle** de cada préstamo y cada reserva del período. Los textos de logros, metas y
+  conclusiones del reporte se escriben a mano; el sistema no los genera.
 - **Respaldo**: en Informes, el botón **Descargar respaldo (Excel)** guarda un archivo con
   los préstamos y las reservas (una hoja para cada uno, una fila por registro con su fecha): todos, los de un año
   o los de un mes (se cuentan por la fecha de inicio, en hora de Caracas). Si la devolución o salida fue otro día,

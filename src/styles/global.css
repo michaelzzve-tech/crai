@@ -202,3 +202,25 @@ button.boton-peligro { background: var(--alerta); border-color: var(--alerta); c
 .sugerencias li { display: grid; gap: 1px; padding: 6px 8px; border-radius: 6px; cursor: pointer; color: var(--texto); }
 .sugerencias li span { color: var(--texto-suave); font-size: .8rem; }
 .sugerencias li.marcada { background: #d6f3f7; }
+
+/* Informe con el formato del reporte mensual */
+.portada-informe { text-align: center; display: grid; gap: 4px; }
+.portada-informe p { margin: 0; }
+.titulo-seccion-informe { margin: 8px 0 -8px; font-size: 1.15rem; }
+.servicio-totales { text-align: center; display: grid; gap: 2px; padding-bottom: 12px; border-bottom: 1px solid var(--borde); margin-bottom: 12px; }
+.servicio-totales h3 { margin: 0 0 6px; font-size: 1.2rem; font-weight: 500; }
+.servicio-totales p { margin: 0; }
+.instituciones-informe { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px 24px; }
+.instituciones-informe h4 { margin: 0 0 4px; }
+.instituciones-informe ul { margin: 0; padding-left: 20px; }
+.instituciones-informe ul ul { list-style: circle; }
+.cuadro-comparativo { display: grid; gap: 8px; margin-bottom: 20px; }
+.tabla-cuadro { overflow-x: auto; }
+.tabla-cuadro table { font-size: .82rem; }
+.tabla-cuadro caption { font-weight: 700; padding: 4px; background: #dbeafe; border-radius: 6px 6px 0 0; }
+.tabla-cuadro .fila-total td { font-weight: 700; border-top: 2px solid var(--borde); }
+.grafica-lineas { margin: 0; }
+.grafica-lineas figcaption { color: var(--texto-suave); text-align: center; margin-bottom: 4px; }
+.grafica-lineas .actividad-leyenda { justify-content: center; margin-bottom: 4px; }
+.grafica-cursor { stroke: #9aa5b1; stroke-width: 1; }
+.grafica-lineas svg { max-height: 300px; }
