@@ -9,7 +9,7 @@ export const CONDICIONES = ['Estudiante', 'Docente', 'Otro'];
 /** En Laptops también está DTI. */
 export const CONDICIONES_LAPTOPS = ['Estudiante', 'Docente', 'DTI', 'Otro'];
 /** Con estas condiciones, "Carrera o año" y "Semestre, nivel o sección" quedan en "No aplica". */
-export const CONDICIONES_SIN_CARRERA = ['DTI'];
+export const CONDICIONES_SIN_CARRERA = ['Docente', 'DTI'];
 
 export const CARRERAS = ['Administración', 'Contaduría', 'Informática', 'Electrónica', 'Educación'];
 
