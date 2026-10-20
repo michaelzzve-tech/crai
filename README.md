@@ -67,7 +67,7 @@ y pegue los mismos dos valores.
   cubículo, la fecha y las horas se eligen cada vez. Si un dato no existe en el módulo (por ejemplo DTI
   en cubículos), queda vacío para elegirlo.
 - **Formulario**, en este orden: nombre, género (masculino, femenino), instituto (ITJO, IUJO, CFJO u Otro),
-  condición (estudiante, docente, otro; en laptops también DTI; con docente o DTI, carrera y semestre quedan en "No aplica"), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
+  condición (estudiante, docente, psicólogo, otro; en laptops también DTI; con docente, psicólogo o DTI, carrera y semestre quedan en "No aplica"), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
   CFJO: secretariado administrativo, asistente administrativo o analista contable;
   Otro: queda en "No aplica"),
   semestre, nivel o sección (1 a 10 o "No aplica"; con ITJO, sección A a E), cantidad de usuarios (solo cubículos; se escribe el número),

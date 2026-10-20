@@ -5,11 +5,11 @@ export const GENEROS = ['Masculino', 'Femenino'];
 
 export const INSTITUTOS = ['ITJO', 'IUJO', 'CFJO', 'Otro'];
 
-export const CONDICIONES = ['Estudiante', 'Docente', 'Otro'];
+export const CONDICIONES = ['Estudiante', 'Docente', 'Psicólogo', 'Otro'];
 /** En Laptops también está DTI. */
-export const CONDICIONES_LAPTOPS = ['Estudiante', 'Docente', 'DTI', 'Otro'];
+export const CONDICIONES_LAPTOPS = ['Estudiante', 'Docente', 'Psicólogo', 'DTI', 'Otro'];
 /** Con estas condiciones, "Carrera o año" y "Semestre, nivel o sección" quedan en "No aplica". */
-export const CONDICIONES_SIN_CARRERA = ['Docente', 'DTI'];
+export const CONDICIONES_SIN_CARRERA = ['Docente', 'Psicólogo', 'DTI'];
 
 export const CARRERAS = ['Administración', 'Contaduría', 'Informática', 'Electrónica', 'Educación'];
 
