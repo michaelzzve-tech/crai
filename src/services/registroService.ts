@@ -123,6 +123,8 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
     throw new Error('La cantidad de usuarios debe ser un número entero mayor que 0.');
   }
 
+  if (!datos.motivo.trim()) throw new Error('Escriba el motivo de uso.');
+
   await revisarChoque(modulo, recurso.id, inicio, fin);
 
   const registro: Registro = {
@@ -135,7 +137,7 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
     carrera: datos.carrera,
     semestre: datos.semestre,
     usuarios,
-    motivo: datos.motivo,
+    motivo: datos.motivo.trim(),
     inicio: inicio.toISOString(),
     fin: fin?.toISOString(),
   };

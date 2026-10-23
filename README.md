@@ -72,7 +72,8 @@ y pegue los mismos dos valores.
   Otro: queda en "No aplica"),
   semestre, nivel o sección (1 a 10 o "No aplica"; con ITJO, sección A a E), cantidad de usuarios (solo cubículos; se escribe el número),
   laptop (1 a 25 y 59 a 80) o cubículo (1 a 6 o Podcast), motivo de uso
-  (estudio, tarea, entretenimiento, TEG, didáctico; en laptops también soporte), **fecha de la reserva** (un calendario; por
+  (estudio, tarea, entretenimiento, TEG, didáctico; en laptops también soporte; con **Otro** aparece una casilla
+  para escribir el motivo, y se guarda lo escrito), **fecha de la reserva** (un calendario; por
   defecto hoy) y hora de inicio. Los cubículos piden además hora de fin y muestran la duración
   (se calcula sola). Una reserva para más tarde u otro día sale como "Programada" en la lista de en curso,
   no ocupa la laptop o el cubículo hasta su hora de inicio y se puede cancelar; si choca con otra reserva
