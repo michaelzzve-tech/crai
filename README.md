@@ -99,8 +99,11 @@ y pegue los mismos dos valores.
     de cada carrera o año, motivos de uso, usuarios en cubículos y horas de uso.
   - **Cuadros comparativos progresivos**: los últimos 13 meses hasta el mes del informe, por género, por
     institución, usuarios de cubículos y horas de uso de cubículos y de laptops, cada cuadro con su gráfica.
+  En pantalla el informe empieza como **vista previa** (portada y totales de cada servicio); cada botón
+  **Ver más** agrega una parte: primero el detalle por institución y luego cada grupo de cuadros comparativos.
+  Al cambiar el mes o las fechas se vuelve a la vista previa.
   Las horas de laptops van de la hora de inicio a la devolución; las de cubículos, hasta la salida real (si
-  sigue activa, hasta la hora de fin). El botón **Descargar PDF** guarda el mismo informe con membrete y, al
+  sigue activa, hasta la hora de fin). El botón **Descargar PDF** guarda siempre el informe completo con membrete y, al
   final, el **detalle** de cada préstamo y cada reserva del período. Los textos de logros, metas y
   conclusiones del reporte se escriben a mano; el sistema no los genera.
 - **Respaldo**: en Informes, el botón **Descargar respaldo (Excel)** guarda un archivo con

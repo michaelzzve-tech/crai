@@ -207,7 +207,8 @@ button.boton-peligro { background: var(--alerta); border-color: var(--alerta); c
 .portada-informe { text-align: center; display: grid; gap: 4px; }
 .portada-informe p { margin: 0; }
 .titulo-seccion-informe { margin: 8px 0 -8px; font-size: 1.15rem; }
-.servicio-totales { text-align: center; display: grid; gap: 2px; padding-bottom: 12px; border-bottom: 1px solid var(--borde); margin-bottom: 12px; }
+.servicio-totales { text-align: center; display: grid; gap: 2px; }
+.servicio-totales:not(:last-child) { padding-bottom: 12px; border-bottom: 1px solid var(--borde); margin-bottom: 12px; }
 .servicio-totales h3 { margin: 0 0 6px; font-size: 1.2rem; font-weight: 500; }
 .servicio-totales p { margin: 0; }
 .instituciones-informe { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px 24px; }
@@ -229,3 +230,4 @@ button.boton-peligro { background: var(--alerta); border-color: var(--alerta); c
 .tarjeta.con-detalle { position: relative; cursor: default; }
 .tarjeta-detalle { display: none; position: absolute; top: calc(100% + 6px); left: 0; z-index: 15; width: max(100%, 260px); padding: 8px 10px; background: var(--superficie); color: var(--texto); border: 1px solid var(--borde); border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,.12); font-size: .85rem; line-height: 1.4; }
 .tarjeta.con-detalle:hover .tarjeta-detalle, .tarjeta.con-detalle:focus .tarjeta-detalle { display: block; }
+.ver-mas { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; }
