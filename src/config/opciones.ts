@@ -37,8 +37,10 @@ export const CARRERA_POR_INSTITUTO: Record<string, CampoCarrera> = {
   Otro: { tipo: 'menu', opciones: ['No aplica'] },
 };
 
-export const MOTIVOS = ['Estudio', 'Tarea', 'Entretenimiento', 'TEG', 'Didáctico'];
+/** "Otro" va siempre al final: al elegirlo se escribe el motivo a mano (ver OTRO_MOTIVO). */
+export const OTRO_MOTIVO = 'Otro';
+export const MOTIVOS = ['Estudio', 'Tarea', 'Entretenimiento', 'TEG', 'Didáctico', OTRO_MOTIVO];
 /** En Laptops también está Soporte. */
-export const MOTIVOS_LAPTOPS = [...MOTIVOS, 'Soporte'];
+export const MOTIVOS_LAPTOPS = [...MOTIVOS.slice(0, -1), 'Soporte', OTRO_MOTIVO];
 
 // La cantidad de laptops y de cubículos está en src/config/modulos.ts.

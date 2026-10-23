@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { CARRERA_POR_INSTITUTO, CONDICIONES_SIN_CARRERA, type CampoCarrera, GENEROS, INSTITUTOS, semestresDe } from '../../config/opciones';
+import { CARRERA_POR_INSTITUTO, CONDICIONES_SIN_CARRERA, type CampoCarrera, GENEROS, INSTITUTOS, MOTIVOS_LAPTOPS, OTRO_MOTIVO, semestresDe } from '../../config/opciones';
 import { nombreRecurso, type Modulo } from '../../config/modulos';
 import { useAhora } from '../../hooks/useAhora';
 import { registrar } from '../../services/registroService';
@@ -87,6 +87,46 @@ function CampoCarreraOAnio({ instituto, sinCarrera, valor, onCambiar }: {
   );
 }
 
+/** Un motivo escrito a mano (con "Otro") es cualquiera que no esté en los menús. */
+const esMotivoPropio = (motivo: string) => motivo !== '' && !MOTIVOS_LAPTOPS.includes(motivo);
+
+/**
+ * "Motivo de uso": menú y, si se elige "Otro", una casilla para escribir el motivo.
+ * Se guarda lo escrito (por ejemplo, "Impresión"), no la palabra "Otro".
+ */
+function CampoMotivo({ opciones, valor, otro, onCambiar }: {
+  opciones: string[];
+  valor: string;
+  otro: boolean;
+  onCambiar: (valor: string, otro: boolean) => void;
+}) {
+  return (
+    <>
+      <Desplegable
+        id="registro-motivo"
+        titulo="Motivo de uso"
+        valor={otro ? OTRO_MOTIVO : valor}
+        opciones={opciones}
+        onCambiar={(v) => (v === OTRO_MOTIVO ? onCambiar('', true) : onCambiar(v, false))}
+      />
+      {otro && (
+        <label htmlFor="registro-motivo-otro">
+          Otro motivo
+          <input
+            id="registro-motivo-otro"
+            required
+            autoFocus
+            maxLength={60}
+            placeholder="Escriba el motivo"
+            value={valor}
+            onChange={(e) => onCambiar(e.target.value, true)}
+          />
+        </label>
+      )}
+    </>
+  );
+}
+
 /**
  * Datos personales del último registro de una persona, para rellenar el formulario.
  * Lo que no exista en este módulo (por ejemplo, DTI en cubículos) queda vacío para elegirlo.
@@ -107,7 +147,7 @@ function datosDe(r: Registro, modulo: Modulo): Partial<NuevoRegistro> {
     condicion,
     carrera,
     semestre: sinCarrera ? NO_APLICA : valido(r.semestre, semestresDe(instituto)),
-    motivo: valido(r.motivo, modulo.motivos),
+    motivo: esMotivoPropio(r.motivo) ? r.motivo : valido(r.motivo, modulo.motivos),
     ...(modulo.conUsuarios && r.usuarios ? { usuarios: String(r.usuarios) } : {}),
   };
 }
@@ -115,6 +155,8 @@ function datosDe(r: Registro, modulo: Modulo): Partial<NuevoRegistro> {
 /** Formulario de préstamo o reserva; el campo del recurso cambia según el módulo. */
 export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
   const [datos, setDatos] = useState<NuevoRegistro>(vacio);
+  const [otroMotivo, setOtroMotivo] = useState(false); // "Otro" elegido en Motivo de uso
+  const limpiar = () => { setDatos(vacio()); setOtroMotivo(false); };
   const cambiar = (campo: keyof NuevoRegistro) => (valor: string) =>
     setDatos({ ...datos, [campo]: valor });
   // Con condiciones como Docente, Psicólogo o DTI, carrera y semestre quedan en "No aplica".
@@ -144,14 +186,14 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
       ? `${modulo.recurso} ${recurso} reservada para ${datos.nombre}.`
       : modulo.mensajeRegistrado(recurso, datos.nombre);
     const ok = await ejecutar(() => registrar(modulo, datos), mensaje);
-    if (ok) setDatos(vacio());
+    if (ok) limpiar();
   }
 
   return (
     <form className="formulario" onSubmit={enviar}>
       <h2>{modulo.nuevo}</h2>
       <div className="campos">
-        <CampoNombre valor={datos.nombre} onCambiar={cambiar('nombre')} onElegir={(r) => setDatos({ ...datos, ...datosDe(r, modulo) })} />
+        <CampoNombre valor={datos.nombre} onCambiar={cambiar('nombre')} onElegir={(r) => { setDatos({ ...datos, ...datosDe(r, modulo) }); setOtroMotivo(esMotivoPropio(r.motivo)); }} />
         <Desplegable id="registro-genero" titulo="Género" valor={datos.genero} opciones={GENEROS} onCambiar={cambiar('genero')} />
         <Desplegable
           id="registro-instituto"
@@ -195,7 +237,12 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
             />
           </label>
         )}
-        <Desplegable id="registro-motivo" titulo="Motivo de uso" valor={datos.motivo} opciones={modulo.motivos} onCambiar={cambiar('motivo')} />
+        <CampoMotivo
+          opciones={modulo.motivos}
+          valor={datos.motivo}
+          otro={otroMotivo}
+          onCambiar={(motivo, otro) => { setDatos({ ...datos, motivo }); setOtroMotivo(otro); }}
+        />
         <label htmlFor="registro-fecha">
           Fecha de la reserva
           <input id="registro-fecha" type="date" required min={diaDe()} value={datos.fecha} onChange={(e) => cambiar('fecha')(e.target.value)} />
@@ -227,7 +274,7 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
       <div className="botones-formulario">
         <button type="submit" className="primario">{modulo.registrar}</button>
         {/* Vacía los campos y vuelve a poner la hora de inicio en la hora actual. */}
-        <button type="button" onClick={() => setDatos(vacio())}>Limpiar</button>
+        <button type="button" onClick={limpiar}>Limpiar</button>
       </div>
     </form>
   );
