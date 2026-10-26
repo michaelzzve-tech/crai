@@ -1,5 +1,8 @@
 import { useState, type FormEvent } from 'react';
-import { CARRERA_POR_INSTITUTO, CONDICIONES_SIN_CARRERA, type CampoCarrera, GENEROS, INSTITUTOS, MOTIVOS_LAPTOPS, OTRO_MOTIVO, semestresDe } from '../../config/opciones';
+import {
+  CARRERA_POR_INSTITUTO, campoCarreraDe, CONDICIONES_SIN_CARRERA, type CampoCarrera, GENEROS, INSTITUTOS, MOTIVOS_LAPTOPS,
+  NO_APLICA, OTRO_MOTIVO, semestresDe,
+} from '../../config/opciones';
 import { nombreRecurso, type Modulo } from '../../config/modulos';
 import { useAhora } from '../../hooks/useAhora';
 import { registrar } from '../../services/registroService';
@@ -56,16 +59,15 @@ function carreraInicial(instituto: string): string {
   return campo?.tipo === 'menu' && campo.opciones.length === 1 ? campo.opciones[0] : '';
 }
 
-const NO_APLICA = 'No aplica';
-
-/** "Carrera o año": su forma depende del instituto (ver CARRERA_POR_INSTITUTO), o solo "No aplica". */
-function CampoCarreraOAnio({ instituto, sinCarrera, valor, onCambiar }: {
+/** "Carrera o año": su forma depende del instituto y la condición (ver campoCarreraDe), o solo "No aplica". */
+function CampoCarreraOAnio({ instituto, condicion, sinCarrera, valor, onCambiar }: {
   instituto: string;
+  condicion: string;
   sinCarrera: boolean;
   valor: string;
   onCambiar: (valor: string) => void;
 }) {
-  const campo: CampoCarrera | undefined = sinCarrera ? { tipo: 'menu', opciones: [NO_APLICA] } : CARRERA_POR_INSTITUTO[instituto];
+  const campo: CampoCarrera | undefined = sinCarrera ? { tipo: 'menu', opciones: [NO_APLICA] } : campoCarreraDe(instituto, condicion);
   if (campo?.tipo === 'menu') {
     return <Desplegable id="registro-carrera" titulo="Carrera o año" valor={valor} opciones={campo.opciones} onCambiar={onCambiar} />;
   }
@@ -136,7 +138,7 @@ function datosDe(r: Registro, modulo: Modulo): Partial<NuevoRegistro> {
   const instituto = valido(r.instituto, INSTITUTOS);
   const condicion = valido(r.condicion, modulo.condiciones);
   const sinCarrera = CONDICIONES_SIN_CARRERA.includes(condicion);
-  const campo = CARRERA_POR_INSTITUTO[instituto];
+  const campo = campoCarreraDe(instituto, condicion);
   const carrera = sinCarrera ? NO_APLICA
     : campo?.tipo === 'menu' ? valido(r.carrera, campo.opciones) || carreraInicial(instituto)
     : campo && /^\d+$/.test(r.carrera) ? r.carrera : '';
@@ -146,7 +148,7 @@ function datosDe(r: Registro, modulo: Modulo): Partial<NuevoRegistro> {
     instituto,
     condicion,
     carrera,
-    semestre: sinCarrera ? NO_APLICA : valido(r.semestre, semestresDe(instituto)),
+    semestre: sinCarrera ? NO_APLICA : valido(r.semestre, semestresDe(instituto, condicion)),
     motivo: esMotivoPropio(r.motivo) ? r.motivo : valido(r.motivo, modulo.motivos),
     ...(modulo.conUsuarios && r.usuarios ? { usuarios: String(r.usuarios) } : {}),
   };
@@ -159,12 +161,19 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
   const limpiar = () => { setDatos(vacio()); setOtroMotivo(false); };
   const cambiar = (campo: keyof NuevoRegistro) => (valor: string) =>
     setDatos({ ...datos, [campo]: valor });
-  // Con condiciones como Docente, Psicólogo o DTI, carrera y semestre quedan en "No aplica".
+  // Con Psicólogo o DTI, carrera y semestre quedan en "No aplica"; con Docente se eligen, y "No aplica" es una opción más.
   const sinCarrera = CONDICIONES_SIN_CARRERA.includes(datos.condicion);
   const cambiarCondicion = (condicion: string) => {
-    if (CONDICIONES_SIN_CARRERA.includes(condicion)) setDatos({ ...datos, condicion, carrera: NO_APLICA, semestre: NO_APLICA });
-    else if (sinCarrera) setDatos({ ...datos, condicion, carrera: carreraInicial(datos.instituto), semestre: '' });
-    else setDatos({ ...datos, condicion });
+    if (CONDICIONES_SIN_CARRERA.includes(condicion)) {
+      setDatos({ ...datos, condicion, carrera: NO_APLICA, semestre: NO_APLICA });
+      return;
+    }
+    // Lo ya elegido se mantiene si sigue en los menús de la nueva condición (por ejemplo, "No aplica" al pasar a Estudiante en ITJO, no).
+    const campo = campoCarreraDe(datos.instituto, condicion);
+    const carrera = campo?.tipo === 'menu' && !campo.opciones.includes(datos.carrera) ? carreraInicial(datos.instituto)
+      : !campo || (campo.tipo === 'numero' && !/^\d+$/.test(datos.carrera)) ? '' : datos.carrera;
+    const semestre = semestresDe(datos.instituto, condicion).includes(datos.semestre) ? datos.semestre : '';
+    setDatos({ ...datos, condicion, carrera, semestre });
   };
 
   const ahora = useAhora(30_000);
@@ -203,12 +212,12 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
           onCambiar={(instituto) => setDatos(sinCarrera ? { ...datos, instituto } : { ...datos, instituto, carrera: carreraInicial(instituto), semestre: '' })}
         />
         <Desplegable id="registro-condicion" titulo="Condición" valor={datos.condicion} opciones={modulo.condiciones} onCambiar={cambiarCondicion} />
-        <CampoCarreraOAnio instituto={datos.instituto} sinCarrera={sinCarrera} valor={datos.carrera} onCambiar={cambiar('carrera')} />
+        <CampoCarreraOAnio instituto={datos.instituto} condicion={datos.condicion} sinCarrera={sinCarrera} valor={datos.carrera} onCambiar={cambiar('carrera')} />
         <Desplegable
           id="registro-semestre"
           titulo="Semestre, nivel o sección"
           valor={datos.semestre}
-          opciones={sinCarrera ? [NO_APLICA] : semestresDe(datos.instituto)}
+          opciones={sinCarrera ? [NO_APLICA] : semestresDe(datos.instituto, datos.condicion)}
           onCambiar={cambiar('semestre')}
         />
         <label htmlFor="registro-recurso">
