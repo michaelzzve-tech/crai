@@ -15,8 +15,9 @@ export const CONDICIONES_SIN_CARRERA = ['Psicólogo', 'DTI'];
 /** Con estas, se elige carrera y semestre del instituto como siempre, pero los menús también ofrecen "No aplica". */
 export const CONDICIONES_CON_NO_APLICA = ['Docente'];
 
-const conNoAplica = (opciones: string[], condicion: string) =>
-  CONDICIONES_CON_NO_APLICA.includes(condicion) && !opciones.includes(NO_APLICA) ? [...opciones, NO_APLICA] : opciones;
+const ofreceNoAplica = (condicion: string) => CONDICIONES_CON_NO_APLICA.includes(condicion);
+const conNoAplica = (opciones: string[], incluir: boolean) =>
+  incluir && !opciones.includes(NO_APLICA) ? [...opciones, NO_APLICA] : opciones;
 
 export const CARRERAS = ['Administración', 'Contaduría', 'Informática', 'Electrónica', 'Educación'];
 
@@ -25,9 +26,12 @@ export const ANIOS = ['1', '2', '3', '4', '5', '6'];
 export const SEMESTRES = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'No aplica'];
 /** Secciones de ITJO: con ese instituto, "Semestre, nivel o sección" muestra estas letras. */
 export const SECCIONES_ITJO = ['A', 'B', 'C', 'D', 'E'];
-/** Opciones de "Semestre, nivel o sección" según el instituto (y la condición, ver CONDICIONES_CON_NO_APLICA). */
-export const semestresDe = (instituto: string, condicion = '') =>
-  conNoAplica(instituto === 'ITJO' ? SECCIONES_ITJO : SEMESTRES, condicion);
+/**
+ * Opciones de "Semestre, nivel o sección" según el instituto. Incluye "No aplica" según la
+ * condición (ver CONDICIONES_CON_NO_APLICA) o si se pide con `noAplica` (salas especiales).
+ */
+export const semestresDe = (instituto: string, condicion = '', noAplica = ofreceNoAplica(condicion)) =>
+  conNoAplica(instituto === 'ITJO' ? SECCIONES_ITJO : SEMESTRES, noAplica);
 
 export const CARRERAS_CFJO = ['Secretariado administrativo', 'Asistente administrativo', 'Analista contable'];
 
@@ -45,10 +49,10 @@ export const CARRERA_POR_INSTITUTO: Record<string, CampoCarrera> = {
   Otro: { tipo: 'menu', opciones: [NO_APLICA] },
 };
 
-/** "Carrera o año" según el instituto (y la condición, ver CONDICIONES_CON_NO_APLICA). */
-export function campoCarreraDe(instituto: string, condicion = ''): CampoCarrera | undefined {
+/** "Carrera o año" según el instituto; "No aplica" se agrega igual que en semestresDe. */
+export function campoCarreraDe(instituto: string, condicion = '', noAplica = ofreceNoAplica(condicion)): CampoCarrera | undefined {
   const campo = CARRERA_POR_INSTITUTO[instituto];
-  return campo?.tipo === 'menu' ? { tipo: 'menu', opciones: conNoAplica(campo.opciones, condicion) } : campo;
+  return campo?.tipo === 'menu' ? { tipo: 'menu', opciones: conNoAplica(campo.opciones, noAplica) } : campo;
 }
 
 /** "Otro" va siempre al final: al elegirlo se escribe el motivo a mano (ver OTRO_MOTIVO). */

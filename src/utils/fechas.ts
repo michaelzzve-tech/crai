@@ -71,3 +71,40 @@ export function duracionEntreFechas(inicio: string | Date, fin: string | Date): 
   const minutos = Math.floor((new Date(fin).getTime() - new Date(inicio).getTime()) / 60000);
   return formatearDuracion(Math.max(0, minutos));
 }
+
+// Días como texto "AAAA-MM-DD" (sin hora), para recorrer el calendario por semanas.
+const aMediodia = (dia: string) => new Date(`${dia}T12:00:00Z`);
+const textoDia = (fecha: Date) => fecha.toISOString().slice(0, 10);
+
+/** El día `n` días después (o antes, si es negativo) de `dia`. */
+export function sumarDias(dia: string, n: number): string {
+  const fecha = aMediodia(dia);
+  fecha.setUTCDate(fecha.getUTCDate() + n);
+  return textoDia(fecha);
+}
+
+/** Lunes de la semana de `dia`. */
+export function lunesDe(dia: string): string {
+  const semana = aMediodia(dia).getUTCDay(); // 0 = domingo
+  return sumarDias(dia, semana === 0 ? -6 : 1 - semana);
+}
+
+const formatoDiaCorto = new Intl.DateTimeFormat('es', { weekday: 'short', day: 'numeric', timeZone: 'UTC' });
+const formatoDiaLargo = new Intl.DateTimeFormat('es', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+const formatoMesCorto = new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+
+/** "lun 27" */
+export const formatearDiaCorto = (dia: string) => formatoDiaCorto.format(aMediodia(dia)).replace(',', '');
+/** "lunes, 27 de octubre de 2026" */
+export const formatearDiaLargo = (dia: string) => formatoDiaLargo.format(aMediodia(dia));
+/** "27 oct – 2 nov 2026" */
+export function formatearSemana(lunes: string): string {
+  const domingo = sumarDias(lunes, 6);
+  return `${formatoMesCorto.format(aMediodia(lunes))} – ${formatoMesCorto.format(aMediodia(domingo))} ${domingo.slice(0, 4)}`;
+}
+
+/** Minutos desde la medianoche (hora de Caracas) de una fecha ISO. */
+export function minutosDelDia(iso: string): number {
+  const [h, m] = horaActual(new Date(iso)).split(':').map(Number);
+  return h * 60 + m;
+}

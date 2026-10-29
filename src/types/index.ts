@@ -42,3 +42,34 @@ export interface NuevoRegistro {
   horaInicio: string; // "HH:MM"
   horaFin: string; // "HH:MM"; vacío en módulos sin hora de fin
 }
+
+/** Una reserva de una sala especial (Sala Javier, Loyola…). */
+export interface ReservaSala {
+  id: string;
+  salaId: string; // Ver SALAS en src/config/salas.ts
+  instituto: string;
+  carrera: string;
+  semestre: string;
+  actividad: string;
+  usuarios: number; // Total de usuarios
+  solicitante: string; // "Solicitado por"
+  profesor: string; // "Profesor(a)"
+  inicio: string; // ISO 8601
+  fin: string; // ISO 8601
+  creada: string; // Cuándo se registró la reserva, ISO 8601
+}
+
+/** Datos del formulario de reserva de sala. */
+export interface NuevaReservaSala {
+  salaId: string;
+  instituto: string;
+  carrera: string;
+  semestre: string;
+  fecha: string; // "Fecha de solicitud": día en que se usará la sala, "AAAA-MM-DD"
+  horaInicio: string; // "HH:MM"
+  horaFin: string; // "HH:MM"
+  actividad: string;
+  usuarios: string;
+  solicitante: string;
+  profesor: string;
+}

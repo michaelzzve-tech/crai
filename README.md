@@ -1,12 +1,14 @@
 # Préstamos y reservas · Biblioteca universitaria
 
-Aplicación web con dos módulos que funcionan igual:
+Aplicación web con tres módulos:
 
 - **Laptops**: préstamo de las laptops 1 a 25 y 59 a 80.
 - **Cubículos**: reserva de los cubículos 1 a 6 y el Podcast.
+- **Salas especiales**: reserva de la Sala Javier (24 personas), Loyola (32), Basabe (50) y
+  Piedra (50) en un calendario semanal.
 
-Cada módulo tiene su formulario, la lista de préstamos o reservas en curso (con alerta de
-vencidos), el estado de cada laptop o cubículo y el historial.
+Laptops y Cubículos funcionan igual: cada uno tiene su formulario, la lista de préstamos o
+reservas en curso (con alerta de vencidos), el estado de cada laptop o cubículo y el historial.
 
 ![Pantalla de préstamos](docs/captura.png)
 
@@ -43,6 +45,8 @@ Sin Supabase, cada persona que la abre tiene sus propios datos, guardados en su 
    `alter table prestamos add column if not exists genero text; alter table reservas add column if not exists genero text;`
    Y para el campo Semestre o nivel (tampoco borra datos):
    `alter table prestamos add column if not exists semestre text; alter table reservas add column if not exists semestre text;`
+   Para el módulo Salas especiales ejecute [`supabase/salas-especiales.sql`](supabase/salas-especiales.sql),
+   que crea su tabla sin borrar datos.
    Y para el campo Cantidad de usuarios de los cubículos (tampoco borra datos):
    `alter table prestamos add column if not exists usuarios integer; alter table reservas add column if not exists usuarios integer;`
 3. En **Authentication → Users → Add user → Create new user**, cree una cuenta (correo y
@@ -92,6 +96,15 @@ y pegue los mismos dos valores.
   se marca en amarillo (por vencer) o en rojo (vencida). Desde la campana se pueden activar
   los avisos del sistema para verlos aunque la página esté en segundo plano. Los minutos se
   cambian en `MINUTOS_AVISO` (`src/services/registroService.ts`).
+- **Salas especiales**: calendario de la semana (lunes a domingo, de 7 a. m. a 9 p. m.) con las
+  reservas de cada sala en su color, lado a lado si coinciden en horario. Las flechas cambian de
+  semana y **Hoy** vuelve a la actual; los botones de cada sala la muestran u ocultan y dicen cuántas
+  reservas tiene esa semana. Se reserva con **+ Nueva reserva** o con un clic en un espacio libre
+  (queda elegido ese día y esa hora). El formulario pide sala, institución, carrera o año, semestre,
+  hora de inicio y de fin, actividad (con sugerencias o escrita), total de usuarios (hasta la
+  capacidad de la sala), fecha de solicitud (el día en que se usará la sala), solicitado por y
+  profesor(a). No deja reservar una sala ya ocupada a esa hora ni un día pasado. Con un clic en una
+  reserva se ven todos sus datos y se puede **Modificar** o **Cancelar reserva**.
 - **Informes** (ícono de gráfica en el extremo derecho del encabezado): informe de actividades con el formato
   del reporte mensual del CRAI, para un mes (campo **Mes**) o un rango de fechas (por defecto, el mes actual):
   - **Beneficiarios alcanzados por servicio prestado**: para cubículos y laptops, los totales (reservas o
@@ -136,7 +149,8 @@ mantenimiento aparecen desactivados en el menú) y, en los cubículos, la hora d
 src/
 ├── config/
 │   ├── modulos.ts        Módulos (laptops, cubículos): cantidad, tablas y textos
-│   └── opciones.ts       Opciones de los menús desplegables
+│   ├── opciones.ts       Opciones de los menús desplegables
+│   └── salas.ts          Salas especiales: nombres, capacidad y colores
 ├── types/            Tipos de datos (Recurso, Registro…)
 ├── data/             Acceso a datos
 │   ├── repository.ts             Interfaz `Repositorio`
@@ -158,7 +172,8 @@ src/
 │   ├── RecursoList/       Estado de las laptops o cubículos
 │   ├── RegistroForm/      Formulario de préstamo o reserva
 │   ├── RegistrosActivos/  Registros en curso y devolución o salida
-│   └── Historial/         Historial de préstamos o reservas
+│   ├── Historial/         Historial de préstamos o reservas
+│   └── Salas/             Salas especiales: calendario semanal y formulario
 ├── styles/global.css  Estilos y colores (variables al inicio)
 └── App.tsx            Une los componentes
 ```
@@ -170,6 +185,7 @@ src/
 
 | Quiero… | Archivo |
 |---|---|
+| Agregar o cambiar una sala especial (nombre, capacidad, color) | `SALAS` en `src/config/salas.ts` |
 | Cambiar las opciones de un menú (institutos, carreras, años, motivos…) | `src/config/opciones.ts` |
 | Cambiar las laptops o cubículos del menú (cantidad, o nombres como Podcast) | `opciones` y `NOMBRES_RECURSOS` en `src/config/modulos.ts` |
 | Agregar otro módulo (por ejemplo, salas) | una entrada en `src/config/modulos.ts` y sus tablas en `supabase/esquema.sql` |

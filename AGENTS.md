@@ -40,11 +40,13 @@ advertencias `npm run lint` y `npm run build`, y conviene probarlo en el navegad
 src/
 ├── config/
 │   ├── modulos.ts      Módulos (Laptops, Cubículos): recursos, tablas, textos, opciones
-│   └── opciones.ts     Opciones de los menús (institutos, carreras, condiciones, motivos…)
-├── types/              Recurso, Registro, NuevoRegistro
+│   ├── opciones.ts     Opciones de los menús (institutos, carreras, condiciones, motivos…)
+│   └── salas.ts        Salas especiales: nombre, capacidad y color de cada sala
+├── types/              Recurso, Registro, NuevoRegistro, ReservaSala
 ├── data/               Repositorio: Supabase o localStorage
 ├── services/
 │   ├── registroService.ts      Reglas: registrar, finalizar, validar, choques de horario
+│   ├── salaService.ts          Reglas de las salas: capacidad y choques de horario
 │   ├── notificacionService.ts  Avisos de cubículos por vencer o vencidos
 │   ├── informeService.ts       Cálculo del informe mensual
 │   ├── informePdf.ts           PDF del informe (jsPDF, carga diferida)
@@ -52,14 +54,18 @@ src/
 │   └── reinicio.ts             Borrar todos los registros
 ├── hooks/              useBiblioteca, useSesion, useNotificaciones, usePaginacion, useAhora
 ├── utils/fechas.ts     Fechas y horas (zona America/Caracas, formato de 12 horas)
-├── components/         Una carpeta por componente (RegistroForm, Informes, Historial…)
+├── components/         Una carpeta por componente (RegistroForm, Informes, Historial, Salas…)
 ├── styles/global.css   Estilos; colores en variables al inicio
 └── App.tsx
 ```
 
-Los dos módulos funcionan igual: lo que cambia entre Laptops y Cubículos está en
+Laptops y Cubículos funcionan igual: lo que cambia entre ellos está en
 `src/config/modulos.ts` (por ejemplo `conHoraFin`, `conUsuarios`, `condiciones`, `motivos`). Un
 cambio pedido "en ambos módulos" normalmente se hace una sola vez en el código común.
+
+**Salas especiales** es aparte (no es un `Modulo`): tiene sus propios datos (`ReservaSala`, tabla
+`reservas_salas`, creada con `supabase/salas-especiales.sql`), reglas en `salaService.ts` y la
+vista de calendario semanal en `src/components/Salas/`.
 
 ## Convenciones
 

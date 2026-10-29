@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ActividadDiaria } from './components/ActividadDiaria';
-import { Encabezado, type Pestana } from './components/Encabezado';
+import { Encabezado, type Pestana, type Vista } from './components/Encabezado';
 import { ErrorPantalla } from './components/ErrorPantalla';
 import { Historial } from './components/Historial';
 import { Informes } from './components/Informes';
@@ -9,6 +9,7 @@ import { AvisosDestacados, CentroNotificaciones } from './components/Notificacio
 import { RecursoList } from './components/RecursoList';
 import { RegistroForm } from './components/RegistroForm';
 import { RegistrosActivos } from './components/RegistrosActivos';
+import { Salas } from './components/Salas';
 import { Resumen } from './components/Resumen';
 import type { EjecutarAccion } from './components/tipos';
 import { MODULOS, type Modulo } from './config/modulos';
@@ -36,12 +37,12 @@ export default function App() {
 function Principal({ correo, cerrarSesion }: { correo?: string; cerrarSesion?: () => void }) {
   const [modulo, setModulo] = useState<Modulo>(MODULOS[0]);
   const [pestana, setPestana] = useState<Pestana>('registro');
-  const [enInformes, setEnInformes] = useState(false);
+  const [vista, setVista] = useState<Vista>('modulo');
   const { notificaciones, sinLeer, leidas, marcarLeidas, permiso, pedirPermiso } = useNotificaciones();
 
   const abrirNotificacion = (n: Notificacion) => {
     setModulo(n.modulo);
-    setEnInformes(false);
+    setVista('modulo');
     setPestana('registro');
     marcarLeidas([n.clave]);
   };
@@ -51,9 +52,9 @@ function Principal({ correo, cerrarSesion }: { correo?: string; cerrarSesion?: (
       <Encabezado
         modulos={MODULOS}
         modulo={modulo}
-        onCambiarModulo={(m) => { setModulo(m); setEnInformes(false); }}
-        enInformes={enInformes}
-        onInformes={() => setEnInformes(true)}
+        onCambiarModulo={(m) => { setModulo(m); setVista('modulo'); }}
+        vista={vista}
+        onVista={setVista}
         activa={pestana}
         onCambiar={setPestana}
         correo={correo}
@@ -71,7 +72,9 @@ function Principal({ correo, cerrarSesion }: { correo?: string; cerrarSesion?: (
       />
       <AvisosDestacados notificaciones={sinLeer} onAbrir={abrirNotificacion} onCerrar={(n) => marcarLeidas([n.clave])} />
       {/* `key` hace que cada módulo empiece con su propio estado. */}
-      {enInformes ? <Informes /> : <VistaModulo key={modulo.id} modulo={modulo} pestana={pestana} />}
+      {vista === 'informes' ? <Informes />
+        : vista === 'salas' ? <Salas />
+        : <VistaModulo key={modulo.id} modulo={modulo} pestana={pestana} />}
     </div>
   );
 }

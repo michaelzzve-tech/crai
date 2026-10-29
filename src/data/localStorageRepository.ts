@@ -1,4 +1,5 @@
-import type { Recurso, Registro } from '../types';
+import { TABLA_RESERVAS_SALAS } from '../config/salas';
+import type { Recurso, Registro, ReservaSala } from '../types';
 import type { Repositorio } from './repository';
 
 const clave = (tabla: string) => `biblioteca.v3.${tabla}`;
@@ -49,5 +50,17 @@ export class LocalStorageRepositorio implements Repositorio {
 
   async borrarRegistros(tabla: string) {
     escribir(tabla, []);
+  }
+
+  async listarReservasSalas() {
+    return leer<ReservaSala>(TABLA_RESERVAS_SALAS);
+  }
+
+  async guardarReservaSala(reserva: ReservaSala) {
+    escribir(TABLA_RESERVAS_SALAS, upsert(leer<ReservaSala>(TABLA_RESERVAS_SALAS), reserva));
+  }
+
+  async borrarReservaSala(id: string) {
+    escribir(TABLA_RESERVAS_SALAS, leer<ReservaSala>(TABLA_RESERVAS_SALAS).filter((r) => r.id !== id));
   }
 }
