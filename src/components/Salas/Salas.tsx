@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { SALAS, salaPorId } from '../../config/salas';
-import { cancelarReservaSala, guardarReservaSala, listarReservasSalas, moverReservaSala } from '../../services/salaService';
+import { cancelarReservaSala, cancelarSerieDesde, DIAS_RECURRENCIA, guardarReservaSala, guardarSerieSala, listarReservasSalas, moverReservaSala } from '../../services/salaService';
 import type { NuevaReservaSala, ReservaSala } from '../../types';
-import { diaDe, formatearDiaLargo, formatearFecha, formatearHora, formatearSemana, horaActual, lunesDe, sumarDias } from '../../utils/fechas';
-import { FormularioSala, type InicioFormulario } from './FormularioSala';
+import { diaDe, formatearDia, formatearDiaLargo, formatearFecha, formatearHora, formatearSemana, horaActual, lunesDe, sumarDias } from '../../utils/fechas';
+import { FormularioSala, type InicioFormulario, type Recurrencia } from './FormularioSala';
 import { NavegadorFecha } from './NavegadorFecha';
 import { PlannerSemanal } from './PlannerSemanal';
 
@@ -61,7 +61,17 @@ export function Salas() {
     setFormulario({ salaId: soloUna.length === 1 ? soloUna[0].id : '', fecha, horaInicio: horaInicio ?? proxima });
   };
 
-  async function guardar(datos: NuevaReservaSala, anterior?: ReservaSala) {
+  async function guardar(datos: NuevaReservaSala, anterior?: ReservaSala, recurrencia?: Recurrencia) {
+    if (recurrencia) {
+      const serie = await guardarSerieSala(datos, recurrencia.dias, recurrencia.hasta);
+      await recargar();
+      setElegido(diaDe(serie[0].inicio));
+      const nombres = DIAS_RECURRENCIA.filter((d) => recurrencia.dias.includes(d.numero)).map((d) => d.largo);
+      const losDias = nombres.length > 1 ? `${nombres.slice(0, -1).join(', ')} y ${nombres[nombres.length - 1]}` : nombres[0];
+      const total = serie.length === 1 ? '1 reserva' : `${serie.length} reservas`;
+      setAviso(`Se ${serie.length === 1 ? 'creó' : 'crearon'} ${total} de ${salaPorId(datos.salaId)?.nombre}: los ${losDias}, ${formatearHora(serie[0].inicio)} – ${formatearHora(serie[0].fin)}, del ${formatearDia(diaDe(serie[0].inicio))} al ${formatearDia(diaDe(serie[serie.length - 1].inicio))}`);
+      return;
+    }
     const r = await guardarReservaSala(datos, anterior);
     await recargar();
     setElegido(diaDe(r.inicio)); // Muestra el día de la reserva
@@ -81,12 +91,13 @@ export function Salas() {
     }
   }
 
-  async function cancelar(r: ReservaSala) {
+  async function cancelar(r: ReservaSala, siguientes = false) {
     try {
-      await cancelarReservaSala(r);
+      const cuantas = siguientes ? await cancelarSerieDesde(r) : (await cancelarReservaSala(r), 1);
       await recargar();
       setDetalle(null);
-      setAviso(`Se canceló la reserva de ${salaPorId(r.salaId)?.nombre ?? r.salaId}.`);
+      const nombre = salaPorId(r.salaId)?.nombre ?? r.salaId;
+      setAviso(cuantas === 1 ? `Se canceló la reserva de ${nombre}.` : `Se cancelaron ${cuantas} reservas de ${nombre} (desde el ${formatearDia(diaDe(r.inicio))}).`);
     } catch (e) {
       await recargar();
       setError(e instanceof Error ? e.message : String(e));
@@ -162,7 +173,7 @@ export function Salas() {
           reserva={detalle}
           onCerrar={() => setDetalle(null)}
           onModificar={() => { setFormulario({ reserva: detalle }); setDetalle(null); }}
-          onCancelar={() => cancelar(detalle)}
+          onCancelar={(siguientes) => cancelar(detalle, siguientes)}
         />
       )}
     </main>
@@ -174,7 +185,7 @@ function DetalleReserva({ reserva: r, onCerrar, onModificar, onCancelar }: {
   reserva: ReservaSala;
   onCerrar: () => void;
   onModificar: () => void;
-  onCancelar: () => void;
+  onCancelar: (siguientes: boolean) => void; // siguientes: también las próximas fechas de la serie
 }) {
   const ventana = useRef<HTMLDialogElement>(null);
   const [confirmando, setConfirmando] = useState(false);
@@ -195,6 +206,7 @@ function DetalleReserva({ reserva: r, onCerrar, onModificar, onCancelar }: {
     ['Profesor(a)', r.profesor],
     ['Registrada', formatearFecha(r.creada)],
   ];
+  if (r.serieId) filas.splice(2, 0, ['Reserva recurrente', 'Sí; al modificarla solo cambia esta fecha']);
   return (
     <dialog ref={ventana} className="ventana" onCancel={onCerrar} aria-labelledby="titulo-detalle-sala">
       <div className="panel-encabezado">
@@ -212,8 +224,9 @@ function DetalleReserva({ reserva: r, onCerrar, onModificar, onCancelar }: {
       <div className="botones-formulario">
         {confirmando ? (
           <>
-            <span>¿Cancelar esta reserva? No se puede deshacer.</span>
-            <button className="peligro" onClick={onCancelar}>Sí, cancelar</button>
+            <span>¿Cancelar {r.serieId ? 'la reserva' : 'esta reserva'}? No se puede deshacer.</span>
+            <button className="peligro" onClick={() => onCancelar(false)}>{r.serieId ? 'Solo esta fecha' : 'Sí, cancelar'}</button>
+            {r.serieId && <button className="peligro" onClick={() => onCancelar(true)}>Esta y las siguientes</button>}
             <button onClick={() => setConfirmando(false)}>No</button>
           </>
         ) : (

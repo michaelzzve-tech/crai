@@ -292,3 +292,13 @@ button.boton-peligro { background: var(--alerta); border-color: var(--alerta); c
 button.planner-dia-titulo { font: inherit; font-weight: 600; background: var(--superficie); border: none; border-left: 1px solid var(--borde); border-bottom: 1px solid var(--borde); border-radius: 0; color: inherit; }
 button.planner-dia-titulo:hover { background: var(--fondo); }
 .planner-dia-titulo.elegido:not(.hoy) { box-shadow: inset 0 -3px 0 var(--texto-suave); }
+/* Reserva recurrente de una sala */
+label.casilla { flex-direction: row; align-items: center; gap: 8px; font-size: .95rem; color: var(--texto); cursor: pointer; }
+label.casilla input { width: 18px; height: 18px; margin: 0; }
+.recurrencia { border: 1px solid var(--borde); border-radius: 10px; padding: 10px 14px 4px; margin: 0; }
+.recurrencia legend { font-size: .85rem; color: var(--texto-suave); padding: 0 4px; }
+.recurrencia .campos { margin: 12px 0 8px; }
+.recurrencia p { margin: 0 0 8px; }
+.dias-recurrencia { display: flex; flex-wrap: wrap; gap: 6px; }
+.dias-recurrencia button { border-radius: 999px; min-width: 52px; padding: 6px 12px; }
+.dias-recurrencia button.activo { background: var(--primario); border-color: var(--primario); color: #fff; }

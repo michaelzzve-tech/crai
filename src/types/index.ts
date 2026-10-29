@@ -57,6 +57,7 @@ export interface ReservaSala {
   inicio: string; // ISO 8601
   fin: string; // ISO 8601
   creada: string; // Cuándo se registró la reserva, ISO 8601
+  serieId?: string; // Igual en todas las fechas de una reserva recurrente; vacío si es única
 }
 
 /** Datos del formulario de reserva de sala. */
