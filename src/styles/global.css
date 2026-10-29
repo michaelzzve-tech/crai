@@ -280,3 +280,9 @@ button.boton-peligro { background: var(--alerta); border-color: var(--alerta); c
 .detalle-sala dd { margin: 0; }
 .formulario-sala .aviso { margin-bottom: 12px; }
 .botones-formulario > span { align-self: center; }
+/* Arrastrar una reserva de sala a otro día u hora */
+.reserva-sala { cursor: grab; touch-action: none; user-select: none; }
+.planner.arrastrando, .planner.arrastrando .reserva-sala { cursor: grabbing; }
+.reserva-sala.origen { opacity: .35; }
+.reserva-sala.fantasma { pointer-events: none; z-index: 3; outline: 2px dashed var(--color-sala); outline-offset: -1px; }
+.reserva-sala.fantasma.invalido { --color-sala: var(--alerta); }

@@ -104,7 +104,9 @@ y pegue los mismos dos valores.
   hora de inicio y de fin, actividad (con sugerencias o escrita), total de usuarios (hasta la
   capacidad de la sala), fecha de solicitud (el día en que se usará la sala), solicitado por y
   profesor(a). No deja reservar una sala ya ocupada a esa hora ni un día pasado. Con un clic en una
-  reserva se ven todos sus datos y se puede **Modificar** o **Cancelar reserva**.
+  reserva se ven todos sus datos y se puede **Modificar** o **Cancelar reserva**. Una reserva también se
+  puede **arrastrar** (con el mouse o el dedo) a otro día u hora, de 15 en 15 minutos y con la misma
+  duración; si la sala ya está ocupada a esa hora o el día ya pasó, vuelve a su lugar y se explica por qué.
 - **Informes** (ícono de gráfica en el extremo derecho del encabezado): informe de actividades con el formato
   del reporte mensual del CRAI, para un mes (campo **Mes**) o un rango de fechas (por defecto, el mes actual):
   - **Beneficiarios alcanzados por servicio prestado**: para cubículos y laptops, los totales (reservas o
