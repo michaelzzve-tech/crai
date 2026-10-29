@@ -1,7 +1,7 @@
 import { salaPorId } from '../config/salas';
 import { repositorio } from '../data';
 import type { NuevaReservaSala, ReservaSala } from '../types';
-import { diaALas, diaDe, formatearHora } from '../utils/fechas';
+import { diaALas, diaDe, formatearHora, horaActual } from '../utils/fechas';
 import { generarId } from '../utils/id';
 
 /**
@@ -70,6 +70,30 @@ export async function guardarReservaSala(datos: NuevaReservaSala, anterior?: Res
   };
   await repositorio.guardarReservaSala(reserva);
   return reserva;
+}
+
+/**
+ * Mueve una reserva a otro día u hora (por ejemplo, al arrastrarla en el calendario),
+ * con la misma duración y las mismas reglas que al modificarla, y sin ir a un día pasado.
+ */
+export async function moverReservaSala(reserva: ReservaSala, fecha: string, horaInicio: string): Promise<ReservaSala> {
+  if (fecha < diaDe()) throw new Error('No se puede mover una reserva a un día pasado.');
+  const duracion = new Date(reserva.fin).getTime() - new Date(reserva.inicio).getTime();
+  const fin = new Date(diaALas(fecha, horaInicio).getTime() + duracion);
+  if (diaDe(fin) !== fecha) throw new Error('La reserva terminaría otro día.');
+  return guardarReservaSala({
+    salaId: reserva.salaId,
+    instituto: reserva.instituto,
+    carrera: reserva.carrera,
+    semestre: reserva.semestre,
+    fecha,
+    horaInicio,
+    horaFin: horaActual(fin),
+    actividad: reserva.actividad,
+    usuarios: String(reserva.usuarios),
+    solicitante: reserva.solicitante,
+    profesor: reserva.profesor,
+  }, reserva);
 }
 
 export async function cancelarReservaSala(reserva: ReservaSala): Promise<void> {

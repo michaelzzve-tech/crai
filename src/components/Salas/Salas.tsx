@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { SALAS, salaPorId } from '../../config/salas';
-import { cancelarReservaSala, guardarReservaSala, listarReservasSalas } from '../../services/salaService';
+import { cancelarReservaSala, guardarReservaSala, listarReservasSalas, moverReservaSala } from '../../services/salaService';
 import type { NuevaReservaSala, ReservaSala } from '../../types';
 import { diaDe, formatearDiaLargo, formatearFecha, formatearHora, formatearSemana, horaActual, lunesDe, sumarDias } from '../../utils/fechas';
 import { FormularioSala, type InicioFormulario } from './FormularioSala';
@@ -66,20 +66,39 @@ export function Salas() {
     setAviso(`${salaPorId(r.salaId)?.nombre} ${anterior ? 'actualizada' : 'reservada'}: ${formatearDiaLargo(diaDe(r.inicio))}, ${formatearHora(r.inicio)} – ${formatearHora(r.fin)}`);
   }
 
+  async function moverA(r: ReservaSala, dia: string, hora: string) {
+    try {
+      const movida = await moverReservaSala(r, dia, hora);
+      await recargar();
+      setAviso(`${salaPorId(r.salaId)?.nombre} movida a ${formatearDiaLargo(diaDe(movida.inicio))}, ${formatearHora(movida.inicio)} – ${formatearHora(movida.fin)}`);
+    } catch (e) {
+      // No se movió: la reserva se queda donde estaba y se explica por qué.
+      await recargar();
+      setAviso('');
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
   async function cancelar(r: ReservaSala) {
     try {
       await cancelarReservaSala(r);
+      await recargar();
       setDetalle(null);
       setAviso(`Se canceló la reserva de ${salaPorId(r.salaId)?.nombre ?? r.salaId}.`);
     } catch (e) {
+      await recargar();
       setError(e instanceof Error ? e.message : String(e));
     }
-    await recargar();
   }
 
   return (
     <main>
-      {error && <div className="aviso aviso-error" role="alert">No se pudieron cargar o guardar las reservas. {error}</div>}
+      {error && (
+        <div className="aviso aviso-error" role="alert">
+          {error}
+          <button onClick={() => setError('')} aria-label="Cerrar">×</button>
+        </div>
+      )}
       {aviso && (
         <div className="aviso aviso-exito" role="status">
           {aviso}
@@ -126,9 +145,10 @@ export function Salas() {
             reservas={visibles}
             onNueva={(dia, hora) => nueva(dia, hora)}
             onAbrir={setDetalle}
+            onMover={moverA}
           />
         </div>
-        <p className="secundario">Haga clic en un espacio libre del calendario para reservar a esa hora, o en una reserva para ver sus datos.</p>
+        <p className="secundario">Haga clic en un espacio libre del calendario para reservar a esa hora, o en una reserva para ver sus datos. Arrastre una reserva para cambiarla de día u hora.</p>
       </section>
 
       {formulario && <FormularioSala key={JSON.stringify(formulario)} inicio={formulario} onGuardar={guardar} onCerrar={() => setFormulario(null)} />}
