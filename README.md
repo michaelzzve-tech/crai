@@ -165,6 +165,9 @@ src/
 
 ## Cambios comunes
 
+> Si trabaja con un asistente de código como Codex, este lee las instrucciones del proyecto en
+> [`AGENTS.md`](AGENTS.md).
+
 | Quiero… | Archivo |
 |---|---|
 | Cambiar las opciones de un menú (institutos, carreras, años, motivos…) | `src/config/opciones.ts` |
