@@ -4,6 +4,7 @@ import { cancelarReservaSala, guardarReservaSala, listarReservasSalas, moverRese
 import type { NuevaReservaSala, ReservaSala } from '../../types';
 import { diaDe, formatearDiaLargo, formatearFecha, formatearHora, formatearSemana, horaActual, lunesDe, sumarDias } from '../../utils/fechas';
 import { FormularioSala, type InicioFormulario } from './FormularioSala';
+import { NavegadorFecha } from './NavegadorFecha';
 import { PlannerSemanal } from './PlannerSemanal';
 
 /** Módulo Salas especiales: calendario semanal tipo planificador con las reservas de cada sala. */
@@ -11,20 +12,21 @@ export function Salas() {
   const [reservas, setReservas] = useState<ReservaSala[]>([]);
   const [error, setError] = useState('');
   const [aviso, setAviso] = useState('');
-  const [lunes, setLunes] = useState(() => lunesDe(diaDe()));
+  const [elegido, setElegido] = useState(() => diaDe()); // Día elegido; se muestra su semana
+  const lunes = lunesDe(elegido);
   const [ocultas, setOcultas] = useState<string[]>([]); // Salas que no se muestran en el calendario
   const [formulario, setFormulario] = useState<InicioFormulario | null>(null);
   const [detalle, setDetalle] = useState<ReservaSala | null>(null);
   const contenedor = useRef<HTMLDivElement>(null);
 
-  // En pantallas angostas el calendario se desliza de lado: se abre mostrando el día de hoy.
+  // En pantallas angostas el calendario se desliza de lado: se muestra el día elegido.
   useEffect(() => {
     const caja = contenedor.current;
-    const hoy = caja?.querySelector<HTMLElement>('.planner-dia-titulo.hoy');
+    const dia = caja?.querySelector<HTMLElement>('.planner-dia-titulo.elegido');
     if (!caja) return;
     // 64 px: ancho de la columna de horas, que queda fija a la izquierda.
-    caja.scrollLeft = hoy ? caja.scrollLeft + hoy.getBoundingClientRect().left - caja.getBoundingClientRect().left - 64 : 0;
-  }, [lunes]);
+    caja.scrollLeft = dia ? caja.scrollLeft + dia.getBoundingClientRect().left - caja.getBoundingClientRect().left - 64 : 0;
+  }, [elegido]);
 
   const recargar = useCallback(async () => {
     try {
@@ -62,7 +64,7 @@ export function Salas() {
   async function guardar(datos: NuevaReservaSala, anterior?: ReservaSala) {
     const r = await guardarReservaSala(datos, anterior);
     await recargar();
-    setLunes(lunesDe(diaDe(r.inicio))); // Muestra la semana de la reserva
+    setElegido(diaDe(r.inicio)); // Muestra el día de la reserva
     setAviso(`${salaPorId(r.salaId)?.nombre} ${anterior ? 'actualizada' : 'reservada'}: ${formatearDiaLargo(diaDe(r.inicio))}, ${formatearHora(r.inicio)} – ${formatearHora(r.fin)}`);
   }
 
@@ -110,10 +112,11 @@ export function Salas() {
         <div className="salas-barra">
           <div className="salas-navegacion">
             <h2>Salas especiales</h2>
-            <button onClick={() => setLunes(lunesDe(diaDe()))}>Hoy</button>
-            <button className="boton-icono" onClick={() => setLunes(sumarDias(lunes, -7))} aria-label="Semana anterior" title="Semana anterior">‹</button>
-            <button className="boton-icono" onClick={() => setLunes(sumarDias(lunes, 7))} aria-label="Semana siguiente" title="Semana siguiente">›</button>
+            <button onClick={() => setElegido(diaDe())}>Hoy</button>
+            <button className="boton-icono" onClick={() => setElegido(sumarDias(elegido, -7))} aria-label="Semana anterior" title="Semana anterior">‹</button>
+            <button className="boton-icono" onClick={() => setElegido(sumarDias(elegido, 7))} aria-label="Semana siguiente" title="Semana siguiente">›</button>
             <strong className="salas-semana">{formatearSemana(lunes)}</strong>
+            <NavegadorFecha dia={elegido} onCambiar={setElegido} />
           </div>
           <button className="primario" onClick={() => nueva()}>+ Nueva reserva</button>
         </div>
@@ -142,6 +145,8 @@ export function Salas() {
         <div className="planner-contenedor" ref={contenedor}>
           <PlannerSemanal
             lunes={lunes}
+            elegido={elegido}
+            onElegir={setElegido}
             reservas={visibles}
             onNueva={(dia, hora) => nueva(dia, hora)}
             onAbrir={setDetalle}

@@ -286,3 +286,9 @@ button.boton-peligro { background: var(--alerta); border-color: var(--alerta); c
 .reserva-sala.origen { opacity: .35; }
 .reserva-sala.fantasma { pointer-events: none; z-index: 3; outline: 2px dashed var(--color-sala); outline-offset: -1px; }
 .reserva-sala.fantasma.invalido { --color-sala: var(--alerta); }
+/* Menú de año, mes y día del calendario de salas */
+.navegador-fecha { display: flex; gap: 6px; flex-wrap: wrap; }
+.navegador-fecha select { padding: 6px 8px; }
+button.planner-dia-titulo { font: inherit; font-weight: 600; background: var(--superficie); border: none; border-left: 1px solid var(--borde); border-bottom: 1px solid var(--borde); border-radius: 0; color: inherit; }
+button.planner-dia-titulo:hover { background: var(--fondo); }
+.planner-dia-titulo.elegido:not(.hoy) { box-shadow: inset 0 -3px 0 var(--texto-suave); }

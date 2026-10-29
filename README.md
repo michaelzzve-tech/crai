@@ -98,7 +98,8 @@ y pegue los mismos dos valores.
   cambian en `MINUTOS_AVISO` (`src/services/registroService.ts`).
 - **Salas especiales**: calendario de la semana (lunes a domingo, de 7 a. m. a 9 p. m.) con las
   reservas de cada sala en su color, lado a lado si coinciden en horario. Las flechas cambian de
-  semana y **Hoy** vuelve a la actual; los botones de cada sala la muestran u ocultan y dicen cuántas
+  semana, **Hoy** vuelve a la actual y los menús de **año, mes y día** llevan a cualquier fecha (el día
+  elegido queda marcado; también se elige con un clic en el nombre del día); los botones de cada sala la muestran u ocultan y dicen cuántas
   reservas tiene esa semana. Se reserva con **+ Nueva reserva** o con un clic en un espacio libre
   (queda elegido ese día y esa hora). El formulario pide sala, institución, carrera o año, semestre,
   hora de inicio y de fin, actividad (con sugerencias o escrita), total de usuarios (hasta la
