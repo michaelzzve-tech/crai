@@ -15,11 +15,13 @@ create table if not exists reservas_salas (
   hora_inicio timestamptz not null,
   hora_fin timestamptz not null,
   creada timestamptz not null default now(), -- cuándo se registró la reserva
-  serie_id text -- mismo valor en todas las fechas de una reserva recurrente; vacío si es de una sola fecha
+  serie_id text, -- mismo valor en todas las fechas de una reserva recurrente; vacío si es de una sola fecha
+  fecha_solicitud date -- cuándo se pidió la sala (solo informativo); vacío en reservas viejas
 );
 
--- Columna de las reservas recurrentes (para tablas creadas antes de que existiera).
+-- Columnas agregadas después (para tablas creadas antes de que existieran).
 alter table reservas_salas add column if not exists serie_id text;
+alter table reservas_salas add column if not exists fecha_solicitud date;
 
 -- Seguridad: solo los administradores que inician sesión pueden leer y escribir.
 alter table reservas_salas enable row level security;

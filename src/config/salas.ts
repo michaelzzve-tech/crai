@@ -14,6 +14,7 @@ export const SALAS: Sala[] = [
   { id: 'loyola', nombre: 'Sala Loyola', capacidad: 32, color: '#eb6834' },
   { id: 'basabe', nombre: 'Sala Basabe', capacidad: 50, color: '#1baf7a' },
   { id: 'piedra', nombre: 'Sala Piedra', capacidad: 50, color: '#eda100' },
+  { id: 'crai', nombre: 'CRAI', capacidad: 50, color: '#c84a9c' },
 ];
 
 export const salaPorId = (id: string): Sala | undefined => SALAS.find((s) => s.id === id);
@@ -23,7 +24,7 @@ export const HORA_APERTURA = 7;
 export const HORA_CIERRE = 21;
 
 /** Sugerencias del campo "Actividad" (también se puede escribir otra). */
-export const ACTIVIDADES = ['Clase', 'Taller', 'Charla', 'Conferencia', 'Reunión', 'Proyección', 'Evaluación', 'Evento'];
+export const ACTIVIDADES = ['Clase Magistral', 'Taller', 'Charla', 'Conferencia', 'Reunión', 'Proyección', 'Evaluación', 'Evento'];
 
 /** Tabla de la base de datos con las reservas de salas. */
 export const TABLA_RESERVAS_SALAS = 'reservas_salas';

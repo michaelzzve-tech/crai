@@ -34,8 +34,11 @@ function prepararReserva(datos: NuevaReservaSala, existentes: ReservaSala[], ant
   const falta = textos.find(([valor]) => !valor.trim());
   if (falta) throw new Error(`Indique ${falta[1]}.`);
 
-  if (!datos.fecha) throw new Error('Indique la fecha de solicitud.');
-  if (!anterior && datos.fecha < diaDe()) throw new Error('La fecha de solicitud no puede ser anterior a hoy.');
+  if (!datos.fecha) throw new Error('Indique la fecha de la reserva.');
+  if (!anterior && datos.fecha < diaDe()) throw new Error('La fecha de la reserva no puede ser anterior a hoy.');
+  // La fecha de solicitud es solo informativa; las reservas viejas pueden no tenerla.
+  if (!anterior && !datos.fechaSolicitud) throw new Error('Indique la fecha de solicitud.');
+  if (datos.fechaSolicitud && datos.fechaSolicitud > diaDe()) throw new Error('La fecha de solicitud no puede ser posterior a hoy.');
   if (!datos.horaInicio || !datos.horaFin) throw new Error('Indique la hora de inicio y de fin.');
   const inicio = diaALas(datos.fecha, datos.horaInicio);
   const fin = diaALas(datos.fecha, datos.horaFin);
@@ -67,6 +70,7 @@ function prepararReserva(datos: NuevaReservaSala, existentes: ReservaSala[], ant
     inicio: inicio.toISOString(),
     fin: fin.toISOString(),
     creada: anterior?.creada ?? new Date().toISOString(),
+    ...(datos.fechaSolicitud ? { fechaSolicitud: datos.fechaSolicitud } : {}),
     ...(anterior?.serieId ?? serieId ? { serieId: anterior?.serieId ?? serieId } : {}),
   };
 }
@@ -115,7 +119,7 @@ export function fechasDeSerie(desde: string, hasta: string, dias: number[]): str
 export async function guardarSerieSala(datos: NuevaReservaSala, dias: number[], hasta: string): Promise<ReservaSala[]> {
   if (!dias.length) throw new Error('Elija al menos un día de la semana para repetir la reserva.');
   if (!hasta) throw new Error('Indique hasta qué día es válida la reserva recurrente.');
-  if (hasta < datos.fecha) throw new Error('La fecha "Hasta" debe ser igual o posterior a la fecha "Desde".');
+  if (hasta < datos.fecha) throw new Error('La fecha "Válida hasta" debe ser igual o posterior a "Válida desde".');
   const fechas = fechasDeSerie(datos.fecha, hasta, dias);
   if (!fechas.length) throw new Error('No hay ningún día elegido entre esas fechas.');
   if (fechas.length > MAXIMO_SERIE) throw new Error(`Son más de ${MAXIMO_SERIE} fechas; acorte el período.`);
@@ -161,6 +165,7 @@ export async function moverReservaSala(reserva: ReservaSala, fecha: string, hora
     usuarios: String(reserva.usuarios),
     solicitante: reserva.solicitante,
     profesor: reserva.profesor,
+    fechaSolicitud: reserva.fechaSolicitud ?? '',
   }, reserva);
 }
 

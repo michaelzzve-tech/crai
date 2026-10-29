@@ -195,7 +195,7 @@ function DetalleReserva({ reserva: r, onCerrar, onModificar, onCancelar }: {
   }, []);
   const sala = salaPorId(r.salaId);
   const filas: [string, string][] = [
-    ['Fecha de solicitud', formatearDiaLargo(diaDe(r.inicio))],
+    ['Fecha de la reserva', formatearDiaLargo(diaDe(r.inicio))],
     ['Hora', `${formatearHora(r.inicio)} – ${formatearHora(r.fin)}`],
     ['Institución', r.instituto],
     ['Carrera o año', r.carrera],
@@ -204,6 +204,7 @@ function DetalleReserva({ reserva: r, onCerrar, onModificar, onCancelar }: {
     ['Total usuarios', `${r.usuarios} de ${sala?.capacidad ?? '?'}`],
     ['Solicitado por', r.solicitante],
     ['Profesor(a)', r.profesor],
+    ['Fecha de solicitud', r.fechaSolicitud ? formatearDia(r.fechaSolicitud) : 'No registrada'],
     ['Registrada', formatearFecha(r.creada)],
   ];
   if (r.serieId) filas.splice(2, 0, ['Reserva recurrente', 'Sí; al modificarla solo cambia esta fecha']);

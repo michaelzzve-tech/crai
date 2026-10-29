@@ -57,6 +57,7 @@ export interface ReservaSala {
   inicio: string; // ISO 8601
   fin: string; // ISO 8601
   creada: string; // Cuándo se registró la reserva, ISO 8601
+  fechaSolicitud?: string; // Día en que se pidió la sala, "AAAA-MM-DD"; solo informativo (vacío en reservas viejas)
   serieId?: string; // Igual en todas las fechas de una reserva recurrente; vacío si es única
 }
 
@@ -66,7 +67,8 @@ export interface NuevaReservaSala {
   instituto: string;
   carrera: string;
   semestre: string;
-  fecha: string; // "Fecha de solicitud": día en que se usará la sala, "AAAA-MM-DD"
+  fecha: string; // "Fecha de la reserva": día en que se usará la sala, "AAAA-MM-DD"
+  fechaSolicitud: string; // "Fecha de solicitud": día en que se pidió la sala, "AAAA-MM-DD"; solo informativo
   horaInicio: string; // "HH:MM"
   horaFin: string; // "HH:MM"
   actividad: string;

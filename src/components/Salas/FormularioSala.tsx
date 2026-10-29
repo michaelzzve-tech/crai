@@ -31,6 +31,7 @@ function datosDe(r: ReservaSala): NuevaReservaSala {
     usuarios: String(r.usuarios),
     solicitante: r.solicitante,
     profesor: r.profesor,
+    fechaSolicitud: r.fechaSolicitud ?? '',
   };
 }
 
@@ -66,6 +67,7 @@ export function FormularioSala({ inicio, onGuardar, onCerrar }: Props) {
     usuarios: '',
     solicitante: '',
     profesor: '',
+    fechaSolicitud: diaDe(),
   });
   // Reserva recurrente (solo al crear): se repite en los días elegidos, de "Válida desde" a "Válida hasta".
   const [recurrente, setRecurrente] = useState(false);
@@ -159,11 +161,17 @@ export function FormularioSala({ inicio, onGuardar, onCerrar }: Props) {
           </label>
           {!recurrente && (
             <label htmlFor="sala-fecha">
-              Fecha de solicitud
+              Fecha de la reserva
               <input id="sala-fecha" type="date" required min={anterior ? undefined : diaDe()} value={datos.fecha}
                 onChange={(e) => cambiar('fecha')(e.target.value)} />
             </label>
           )}
+          <label htmlFor="sala-solicitud">
+            Fecha de solicitud
+            <input id="sala-solicitud" type="date" required={!anterior || !!anterior.fechaSolicitud} max={diaDe()} value={datos.fechaSolicitud}
+              onChange={(e) => cambiar('fechaSolicitud')(e.target.value)} />
+            <span className="secundario">Cuándo se pidió la sala</span>
+          </label>
           <label htmlFor="sala-solicitante">
             Solicitado por
             <input id="sala-solicitante" required maxLength={80} placeholder="Nombre y apellido" value={datos.solicitante}
