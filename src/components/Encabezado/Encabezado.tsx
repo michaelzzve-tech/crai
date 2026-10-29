@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import logo from '../../assets/logo-crai.png';
+import logo from '../../assets/logo-crai-interno.png';
 import type { Modulo } from '../../config/modulos';
 
 export type Pestana = 'registro' | 'recursos' | 'historial';
