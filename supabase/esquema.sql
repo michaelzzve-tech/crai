@@ -8,6 +8,7 @@ drop table if exists prestamos;
 drop table if exists laptops;
 drop table if exists reservas;
 drop table if exists cubiculos;
+drop table if exists reservas_salas;
 
 -- Recursos: laptops del 1 al 25 y del 55 al 80, y cubículos del 1 al 6 más el Podcast (código "POD").
 -- La app los crea sola la primera vez.
@@ -43,14 +44,32 @@ create table reservas (
   foreign key (recurso_id) references cubiculos (id)
 );
 
+-- Reservas de las salas especiales (Sala Javier, Loyola, Basabe y Piedra).
+create table reservas_salas (
+  id text primary key,
+  sala_id text not null, -- javier, loyola, basabe o piedra (ver src/config/salas.ts)
+  instituto text not null,
+  carrera text not null,
+  semestre text not null,
+  actividad text not null,
+  usuarios integer not null check (usuarios > 0),
+  solicitante text not null, -- "Solicitado por"
+  profesor text not null, -- "Profesor(a)"
+  hora_inicio timestamptz not null,
+  hora_fin timestamptz not null,
+  creada timestamptz not null default now() -- cuándo se registró la reserva
+);
+
 -- Seguridad: solo los bibliotecarios que inician sesión pueden leer y escribir.
 -- Los visitantes sin sesión no ven ningún dato.
 alter table laptops enable row level security;
 alter table cubiculos enable row level security;
 alter table prestamos enable row level security;
 alter table reservas enable row level security;
+alter table reservas_salas enable row level security;
 
 create policy "bibliotecarios" on laptops for all to authenticated using (true) with check (true);
 create policy "bibliotecarios" on cubiculos for all to authenticated using (true) with check (true);
 create policy "bibliotecarios" on prestamos for all to authenticated using (true) with check (true);
 create policy "bibliotecarios" on reservas for all to authenticated using (true) with check (true);
+create policy "bibliotecarios" on reservas_salas for all to authenticated using (true) with check (true);

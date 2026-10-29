@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Recurso, Registro } from '../types';
+import { TABLA_RESERVAS_SALAS } from '../config/salas';
+import type { Recurso, Registro, ReservaSala } from '../types';
 import type { Repositorio } from './repository';
 
 // La base de datos usa nombres en snake_case (ver supabase/esquema.sql);
@@ -78,6 +79,51 @@ const aFilaRegistro = (r: Registro): FilaRegistro => ({
   fin_real: r.finReal ?? null,
 });
 
+interface FilaReservaSala {
+  id: string;
+  sala_id: string;
+  instituto: string;
+  carrera: string;
+  semestre: string;
+  actividad: string;
+  usuarios: number;
+  solicitante: string;
+  profesor: string;
+  hora_inicio: string;
+  hora_fin: string;
+  creada: string;
+}
+
+const aReservaSala = (f: FilaReservaSala): ReservaSala => ({
+  id: f.id,
+  salaId: f.sala_id,
+  instituto: f.instituto,
+  carrera: f.carrera,
+  semestre: f.semestre,
+  actividad: f.actividad,
+  usuarios: f.usuarios,
+  solicitante: f.solicitante,
+  profesor: f.profesor,
+  inicio: iso(f.hora_inicio),
+  fin: iso(f.hora_fin),
+  creada: iso(f.creada),
+});
+
+const aFilaReservaSala = (r: ReservaSala): FilaReservaSala => ({
+  id: r.id,
+  sala_id: r.salaId,
+  instituto: r.instituto,
+  carrera: r.carrera,
+  semestre: r.semestre,
+  actividad: r.actividad,
+  usuarios: r.usuarios,
+  solicitante: r.solicitante,
+  profesor: r.profesor,
+  hora_inicio: r.inicio,
+  hora_fin: r.fin,
+  creada: r.creada,
+});
+
 function revisar(error: { message: string } | null): void {
   if (error) throw new Error(`Error de la base de datos: ${error.message}`);
 }
@@ -120,6 +166,22 @@ export class SupabaseRepositorio implements Repositorio {
   async borrarRegistros(tabla: string) {
     // Supabase exige un filtro para borrar; este incluye todas las filas.
     const { error } = await this.db.from(tabla).delete().not('id', 'is', null);
+    revisar(error);
+  }
+
+  async listarReservasSalas() {
+    const { data, error } = await this.db.from(TABLA_RESERVAS_SALAS).select('*');
+    revisar(error);
+    return (data as FilaReservaSala[]).map(aReservaSala);
+  }
+
+  async guardarReservaSala(reserva: ReservaSala) {
+    const { error } = await this.db.from(TABLA_RESERVAS_SALAS).upsert(aFilaReservaSala(reserva));
+    revisar(error);
+  }
+
+  async borrarReservaSala(id: string) {
+    const { error } = await this.db.from(TABLA_RESERVAS_SALAS).delete().eq('id', id);
     revisar(error);
   }
 }

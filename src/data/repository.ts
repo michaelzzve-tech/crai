@@ -1,4 +1,4 @@
-import type { Recurso, Registro } from '../types';
+import type { Recurso, Registro, ReservaSala } from '../types';
 
 /**
  * Contrato de acceso a datos. Cada método recibe el nombre de la tabla del
@@ -16,4 +16,9 @@ export interface Repositorio {
   borrarRegistro(tabla: string, id: string): Promise<void>;
   /** Borra todos los registros de la tabla. No se puede deshacer. */
   borrarRegistros(tabla: string): Promise<void>;
+
+  /** Reservas de las salas especiales (tabla "reservas_salas"). */
+  listarReservasSalas(): Promise<ReservaSala[]>;
+  guardarReservaSala(reserva: ReservaSala): Promise<void>;
+  borrarReservaSala(id: string): Promise<void>;
 }

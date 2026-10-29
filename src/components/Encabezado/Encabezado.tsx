@@ -3,13 +3,15 @@ import logo from '../../assets/logo-crai-interno.png';
 import type { Modulo } from '../../config/modulos';
 
 export type Pestana = 'registro' | 'recursos' | 'historial';
+/** Lo que se muestra debajo del encabezado: un módulo, las salas especiales o los informes. */
+export type Vista = 'modulo' | 'salas' | 'informes';
 
 interface Props {
   modulos: Modulo[];
   modulo: Modulo;
   onCambiarModulo: (modulo: Modulo) => void;
-  enInformes: boolean; // true si está abierta la sección Informes en vez de un módulo
-  onInformes: () => void;
+  vista: Vista;
+  onVista: (vista: Vista) => void;
   activa: Pestana;
   onCambiar: (pestana: Pestana) => void;
   correo?: string;
@@ -18,7 +20,7 @@ interface Props {
 }
 
 /** Título, selector de módulo (laptops, cubículos…) y pestañas del módulo. */
-export function Encabezado({ modulos, modulo, onCambiarModulo, enInformes, onInformes, activa, onCambiar, correo, onCerrarSesion, notificaciones }: Props) {
+export function Encabezado({ modulos, modulo, onCambiarModulo, vista, onVista, activa, onCambiar, correo, onCerrarSesion, notificaciones }: Props) {
   // Historial se muestra como un ícono de reloj; su nombre queda en la ayuda y para lectores de pantalla.
   const pestanas: { id: Pestana; titulo: string; icono?: ReactNode }[] = [
     { id: 'registro', titulo: modulo.registros },
@@ -47,22 +49,25 @@ export function Encabezado({ modulos, modulo, onCambiarModulo, enInformes, onInf
         {modulos.map((m) => (
           <button
             key={m.id}
-            className={!enInformes && m.id === modulo.id ? 'modulo activo' : 'modulo'}
+            className={vista === 'modulo' && m.id === modulo.id ? 'modulo activo' : 'modulo'}
             onClick={() => onCambiarModulo(m)}
           >
             {m.recursos}
           </button>
         ))}
+        <button className={vista === 'salas' ? 'modulo activo' : 'modulo'} onClick={() => onVista('salas')}>
+          Salas especiales
+        </button>
         <button
-          className={enInformes ? 'boton-informes activo' : 'boton-informes'}
-          onClick={onInformes}
+          className={vista === 'informes' ? 'boton-informes activo' : 'boton-informes'}
+          onClick={() => onVista('informes')}
           aria-label="Informes"
           title="Informes"
         >
           <IconoGrafica />
         </button>
       </nav>
-      {!enInformes && (
+      {vista === 'modulo' && (
         <nav className="pestanas" aria-label="Sección">
           {pestanas.map((p) => (
             <button

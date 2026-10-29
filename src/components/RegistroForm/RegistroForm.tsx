@@ -33,7 +33,7 @@ interface Props {
 }
 
 /** Menú desplegable con una opción vacía inicial. */
-function Desplegable({ id, titulo, valor, opciones, onCambiar }: {
+export function Desplegable({ id, titulo, valor, opciones, onCambiar }: {
   id: string;
   titulo: string;
   valor: string;
@@ -60,14 +60,15 @@ function carreraInicial(instituto: string): string {
 }
 
 /** "Carrera o año": su forma depende del instituto y la condición (ver campoCarreraDe), o solo "No aplica". */
-function CampoCarreraOAnio({ instituto, condicion, sinCarrera, valor, onCambiar }: {
+export function CampoCarreraOAnio({ instituto, condicion, sinCarrera, noAplica, valor, onCambiar }: {
   instituto: string;
   condicion: string;
   sinCarrera: boolean;
+  noAplica?: boolean; // Ofrecer siempre "No aplica" (salas especiales)
   valor: string;
   onCambiar: (valor: string) => void;
 }) {
-  const campo: CampoCarrera | undefined = sinCarrera ? { tipo: 'menu', opciones: [NO_APLICA] } : campoCarreraDe(instituto, condicion);
+  const campo: CampoCarrera | undefined = sinCarrera ? { tipo: 'menu', opciones: [NO_APLICA] } : campoCarreraDe(instituto, condicion, noAplica);
   if (campo?.tipo === 'menu') {
     return <Desplegable id="registro-carrera" titulo="Carrera o año" valor={valor} opciones={campo.opciones} onCambiar={onCambiar} />;
   }
