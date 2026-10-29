@@ -46,7 +46,8 @@ Sin Supabase, cada persona que la abre tiene sus propios datos, guardados en su 
    Y para el campo Semestre o nivel (tampoco borra datos):
    `alter table prestamos add column if not exists semestre text; alter table reservas add column if not exists semestre text;`
    Para el módulo Salas especiales ejecute [`supabase/salas-especiales.sql`](supabase/salas-especiales.sql),
-   que crea su tabla sin borrar datos.
+   que crea su tabla sin borrar datos. Si la tabla ya existía, para las reservas recurrentes basta
+   `alter table reservas_salas add column if not exists serie_id text;` (tampoco borra datos).
    Y para el campo Cantidad de usuarios de los cubículos (tampoco borra datos):
    `alter table prestamos add column if not exists usuarios integer; alter table reservas add column if not exists usuarios integer;`
 3. En **Authentication → Users → Add user → Create new user**, cree una cuenta (correo y
@@ -98,7 +99,8 @@ y pegue los mismos dos valores.
   cambian en `MINUTOS_AVISO` (`src/services/registroService.ts`).
 - **Salas especiales**: calendario de la semana (lunes a domingo, de 7 a. m. a 9 p. m.) con las
   reservas de cada sala en su color, lado a lado si coinciden en horario. Las flechas cambian de
-  semana y **Hoy** vuelve a la actual; los botones de cada sala la muestran u ocultan y dicen cuántas
+  semana, **Hoy** vuelve a la actual y los menús de **año, mes y día** llevan a cualquier fecha (el día
+  elegido queda marcado; también se elige con un clic en el nombre del día); los botones de cada sala la muestran u ocultan y dicen cuántas
   reservas tiene esa semana. Se reserva con **+ Nueva reserva** o con un clic en un espacio libre
   (queda elegido ese día y esa hora). El formulario pide sala, institución, carrera o año, semestre,
   hora de inicio y de fin, actividad (con sugerencias o escrita), total de usuarios (hasta la
@@ -107,6 +109,11 @@ y pegue los mismos dos valores.
   reserva se ven todos sus datos y se puede **Modificar** o **Cancelar reserva**. Una reserva también se
   puede **arrastrar** (con el mouse o el dedo) a otro día u hora, de 15 en 15 minutos y con la misma
   duración; si la sala ya está ocupada a esa hora o el día ya pasó, vuelve a su lugar y se explica por qué.
+  Al crear una reserva, la casilla **Reserva recurrente** la repite los días de la semana elegidos (de
+  lunes a sábado) entre **Válida desde** y **Válida hasta**; el formulario dice cuántas se crearán. Si
+  alguna de esas fechas choca con otra reserva no se crea ninguna y se indica qué fechas chocan. Cada
+  fecha de la serie se modifica o se mueve por separado, y al cancelar se elige **Solo esta fecha** o
+  **Esta y las siguientes**.
 - **Informes** (ícono de gráfica en el extremo derecho del encabezado): informe de actividades con el formato
   del reporte mensual del CRAI, para un mes (campo **Mes**) o un rango de fechas (por defecto, el mes actual):
   - **Beneficiarios alcanzados por servicio prestado**: para cubículos y laptops, los totales (reservas o

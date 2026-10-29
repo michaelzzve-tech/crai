@@ -57,7 +57,8 @@ create table reservas_salas (
   profesor text not null, -- "Profesor(a)"
   hora_inicio timestamptz not null,
   hora_fin timestamptz not null,
-  creada timestamptz not null default now() -- cuándo se registró la reserva
+  creada timestamptz not null default now(), -- cuándo se registró la reserva
+  serie_id text -- mismo valor en todas las fechas de una reserva recurrente; vacío si es de una sola fecha
 );
 
 -- Seguridad: solo los bibliotecarios que inician sesión pueden leer y escribir.

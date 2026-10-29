@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { SALAS, salaPorId } from '../../config/salas';
-import { cancelarReservaSala, guardarReservaSala, listarReservasSalas, moverReservaSala } from '../../services/salaService';
+import { cancelarReservaSala, cancelarSerieDesde, DIAS_RECURRENCIA, guardarReservaSala, guardarSerieSala, listarReservasSalas, moverReservaSala } from '../../services/salaService';
 import type { NuevaReservaSala, ReservaSala } from '../../types';
-import { diaDe, formatearDiaLargo, formatearFecha, formatearHora, formatearSemana, horaActual, lunesDe, sumarDias } from '../../utils/fechas';
-import { FormularioSala, type InicioFormulario } from './FormularioSala';
+import { diaDe, formatearDia, formatearDiaLargo, formatearFecha, formatearHora, formatearSemana, horaActual, lunesDe, sumarDias } from '../../utils/fechas';
+import { FormularioSala, type InicioFormulario, type Recurrencia } from './FormularioSala';
+import { NavegadorFecha } from './NavegadorFecha';
 import { PlannerSemanal } from './PlannerSemanal';
 
 /** Módulo Salas especiales: calendario semanal tipo planificador con las reservas de cada sala. */
@@ -11,20 +12,21 @@ export function Salas() {
   const [reservas, setReservas] = useState<ReservaSala[]>([]);
   const [error, setError] = useState('');
   const [aviso, setAviso] = useState('');
-  const [lunes, setLunes] = useState(() => lunesDe(diaDe()));
+  const [elegido, setElegido] = useState(() => diaDe()); // Día elegido; se muestra su semana
+  const lunes = lunesDe(elegido);
   const [ocultas, setOcultas] = useState<string[]>([]); // Salas que no se muestran en el calendario
   const [formulario, setFormulario] = useState<InicioFormulario | null>(null);
   const [detalle, setDetalle] = useState<ReservaSala | null>(null);
   const contenedor = useRef<HTMLDivElement>(null);
 
-  // En pantallas angostas el calendario se desliza de lado: se abre mostrando el día de hoy.
+  // En pantallas angostas el calendario se desliza de lado: se muestra el día elegido.
   useEffect(() => {
     const caja = contenedor.current;
-    const hoy = caja?.querySelector<HTMLElement>('.planner-dia-titulo.hoy');
+    const dia = caja?.querySelector<HTMLElement>('.planner-dia-titulo.elegido');
     if (!caja) return;
     // 64 px: ancho de la columna de horas, que queda fija a la izquierda.
-    caja.scrollLeft = hoy ? caja.scrollLeft + hoy.getBoundingClientRect().left - caja.getBoundingClientRect().left - 64 : 0;
-  }, [lunes]);
+    caja.scrollLeft = dia ? caja.scrollLeft + dia.getBoundingClientRect().left - caja.getBoundingClientRect().left - 64 : 0;
+  }, [elegido]);
 
   const recargar = useCallback(async () => {
     try {
@@ -59,10 +61,20 @@ export function Salas() {
     setFormulario({ salaId: soloUna.length === 1 ? soloUna[0].id : '', fecha, horaInicio: horaInicio ?? proxima });
   };
 
-  async function guardar(datos: NuevaReservaSala, anterior?: ReservaSala) {
+  async function guardar(datos: NuevaReservaSala, anterior?: ReservaSala, recurrencia?: Recurrencia) {
+    if (recurrencia) {
+      const serie = await guardarSerieSala(datos, recurrencia.dias, recurrencia.hasta);
+      await recargar();
+      setElegido(diaDe(serie[0].inicio));
+      const nombres = DIAS_RECURRENCIA.filter((d) => recurrencia.dias.includes(d.numero)).map((d) => d.largo);
+      const losDias = nombres.length > 1 ? `${nombres.slice(0, -1).join(', ')} y ${nombres[nombres.length - 1]}` : nombres[0];
+      const total = serie.length === 1 ? '1 reserva' : `${serie.length} reservas`;
+      setAviso(`Se ${serie.length === 1 ? 'creó' : 'crearon'} ${total} de ${salaPorId(datos.salaId)?.nombre}: los ${losDias}, ${formatearHora(serie[0].inicio)} – ${formatearHora(serie[0].fin)}, del ${formatearDia(diaDe(serie[0].inicio))} al ${formatearDia(diaDe(serie[serie.length - 1].inicio))}`);
+      return;
+    }
     const r = await guardarReservaSala(datos, anterior);
     await recargar();
-    setLunes(lunesDe(diaDe(r.inicio))); // Muestra la semana de la reserva
+    setElegido(diaDe(r.inicio)); // Muestra el día de la reserva
     setAviso(`${salaPorId(r.salaId)?.nombre} ${anterior ? 'actualizada' : 'reservada'}: ${formatearDiaLargo(diaDe(r.inicio))}, ${formatearHora(r.inicio)} – ${formatearHora(r.fin)}`);
   }
 
@@ -79,12 +91,13 @@ export function Salas() {
     }
   }
 
-  async function cancelar(r: ReservaSala) {
+  async function cancelar(r: ReservaSala, siguientes = false) {
     try {
-      await cancelarReservaSala(r);
+      const cuantas = siguientes ? await cancelarSerieDesde(r) : (await cancelarReservaSala(r), 1);
       await recargar();
       setDetalle(null);
-      setAviso(`Se canceló la reserva de ${salaPorId(r.salaId)?.nombre ?? r.salaId}.`);
+      const nombre = salaPorId(r.salaId)?.nombre ?? r.salaId;
+      setAviso(cuantas === 1 ? `Se canceló la reserva de ${nombre}.` : `Se cancelaron ${cuantas} reservas de ${nombre} (desde el ${formatearDia(diaDe(r.inicio))}).`);
     } catch (e) {
       await recargar();
       setError(e instanceof Error ? e.message : String(e));
@@ -110,10 +123,11 @@ export function Salas() {
         <div className="salas-barra">
           <div className="salas-navegacion">
             <h2>Salas especiales</h2>
-            <button onClick={() => setLunes(lunesDe(diaDe()))}>Hoy</button>
-            <button className="boton-icono" onClick={() => setLunes(sumarDias(lunes, -7))} aria-label="Semana anterior" title="Semana anterior">‹</button>
-            <button className="boton-icono" onClick={() => setLunes(sumarDias(lunes, 7))} aria-label="Semana siguiente" title="Semana siguiente">›</button>
+            <button onClick={() => setElegido(diaDe())}>Hoy</button>
+            <button className="boton-icono" onClick={() => setElegido(sumarDias(elegido, -7))} aria-label="Semana anterior" title="Semana anterior">‹</button>
+            <button className="boton-icono" onClick={() => setElegido(sumarDias(elegido, 7))} aria-label="Semana siguiente" title="Semana siguiente">›</button>
             <strong className="salas-semana">{formatearSemana(lunes)}</strong>
+            <NavegadorFecha dia={elegido} onCambiar={setElegido} />
           </div>
           <button className="primario" onClick={() => nueva()}>+ Nueva reserva</button>
         </div>
@@ -142,6 +156,8 @@ export function Salas() {
         <div className="planner-contenedor" ref={contenedor}>
           <PlannerSemanal
             lunes={lunes}
+            elegido={elegido}
+            onElegir={setElegido}
             reservas={visibles}
             onNueva={(dia, hora) => nueva(dia, hora)}
             onAbrir={setDetalle}
@@ -157,7 +173,7 @@ export function Salas() {
           reserva={detalle}
           onCerrar={() => setDetalle(null)}
           onModificar={() => { setFormulario({ reserva: detalle }); setDetalle(null); }}
-          onCancelar={() => cancelar(detalle)}
+          onCancelar={(siguientes) => cancelar(detalle, siguientes)}
         />
       )}
     </main>
@@ -169,7 +185,7 @@ function DetalleReserva({ reserva: r, onCerrar, onModificar, onCancelar }: {
   reserva: ReservaSala;
   onCerrar: () => void;
   onModificar: () => void;
-  onCancelar: () => void;
+  onCancelar: (siguientes: boolean) => void; // siguientes: también las próximas fechas de la serie
 }) {
   const ventana = useRef<HTMLDialogElement>(null);
   const [confirmando, setConfirmando] = useState(false);
@@ -190,6 +206,7 @@ function DetalleReserva({ reserva: r, onCerrar, onModificar, onCancelar }: {
     ['Profesor(a)', r.profesor],
     ['Registrada', formatearFecha(r.creada)],
   ];
+  if (r.serieId) filas.splice(2, 0, ['Reserva recurrente', 'Sí; al modificarla solo cambia esta fecha']);
   return (
     <dialog ref={ventana} className="ventana" onCancel={onCerrar} aria-labelledby="titulo-detalle-sala">
       <div className="panel-encabezado">
@@ -207,8 +224,9 @@ function DetalleReserva({ reserva: r, onCerrar, onModificar, onCancelar }: {
       <div className="botones-formulario">
         {confirmando ? (
           <>
-            <span>¿Cancelar esta reserva? No se puede deshacer.</span>
-            <button className="peligro" onClick={onCancelar}>Sí, cancelar</button>
+            <span>¿Cancelar {r.serieId ? 'la reserva' : 'esta reserva'}? No se puede deshacer.</span>
+            <button className="peligro" onClick={() => onCancelar(false)}>{r.serieId ? 'Solo esta fecha' : 'Sí, cancelar'}</button>
+            {r.serieId && <button className="peligro" onClick={() => onCancelar(true)}>Esta y las siguientes</button>}
             <button onClick={() => setConfirmando(false)}>No</button>
           </>
         ) : (

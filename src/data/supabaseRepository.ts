@@ -92,6 +92,7 @@ interface FilaReservaSala {
   hora_inicio: string;
   hora_fin: string;
   creada: string;
+  serie_id: string | null;
 }
 
 const aReservaSala = (f: FilaReservaSala): ReservaSala => ({
@@ -107,6 +108,7 @@ const aReservaSala = (f: FilaReservaSala): ReservaSala => ({
   inicio: iso(f.hora_inicio),
   fin: iso(f.hora_fin),
   creada: iso(f.creada),
+  serieId: f.serie_id ?? undefined,
 });
 
 const aFilaReservaSala = (r: ReservaSala): FilaReservaSala => ({
@@ -122,6 +124,7 @@ const aFilaReservaSala = (r: ReservaSala): FilaReservaSala => ({
   hora_inicio: r.inicio,
   hora_fin: r.fin,
   creada: r.creada,
+  serie_id: r.serieId ?? null,
 });
 
 function revisar(error: { message: string } | null): void {

@@ -66,6 +66,8 @@ function ubicar(reservas: ReservaSala[]): Ubicada[] {
 
 interface Props {
   lunes: string; // Primer día de la semana, "AAAA-MM-DD"
+  elegido: string; // Día elegido en el menú de fecha; se resalta
+  onElegir: (dia: string) => void;
   reservas: ReservaSala[];
   onNueva: (dia: string, hora: string) => void;
   onAbrir: (reserva: ReservaSala) => void;
@@ -85,7 +87,7 @@ interface Arrastre {
 }
 
 /** Calendario de la semana (lunes a domingo, por horas) con las reservas de las salas. */
-export function PlannerSemanal({ lunes, reservas, onNueva, onAbrir, onMover }: Props) {
+export function PlannerSemanal({ lunes, elegido, onElegir, reservas, onNueva, onAbrir, onMover }: Props) {
   const hoy = diaDe();
   const dias = Array.from({ length: 7 }, (_, i) => sumarDias(lunes, i));
   const [arrastre, setArrastre] = useState<Arrastre | null>(null);
@@ -138,7 +140,14 @@ export function PlannerSemanal({ lunes, reservas, onNueva, onAbrir, onMover }: P
     <div className={`planner${arrastre?.movido ? ' arrastrando' : ''}`} ref={grilla} style={{ '--alto-hora': `${ALTO_HORA}px` } as CSSProperties}>
       <div className="planner-esquina" />
       {dias.map((dia) => (
-        <div key={dia} className={`planner-dia-titulo${dia === hoy ? ' hoy' : ''}`}>{formatearDiaCorto(dia)}</div>
+        <button
+          key={dia}
+          type="button"
+          className={`planner-dia-titulo${dia === hoy ? ' hoy' : ''}${dia === elegido ? ' elegido' : ''}`}
+          onClick={() => onElegir(dia)}
+        >
+          {formatearDiaCorto(dia)}
+        </button>
       ))}
 
       <div className="planner-horas">
