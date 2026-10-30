@@ -10,10 +10,10 @@ export const PALABRA_CONFIRMACION = 'BORRAR';
 export const confirmaConClave = supabase !== null;
 
 /** Comprueba la contraseña del usuario con sesión iniciada (o la palabra, sin base de datos). */
-async function verificar(confirmacion: string): Promise<void> {
+export async function verificar(confirmacion: string, palabra = PALABRA_CONFIRMACION): Promise<void> {
   if (!supabase) {
-    if (confirmacion.trim().toUpperCase() !== PALABRA_CONFIRMACION) {
-      throw new Error(`Escriba ${PALABRA_CONFIRMACION} para confirmar.`);
+    if (confirmacion.trim().toUpperCase() !== palabra) {
+      throw new Error(`Escriba ${palabra} para confirmar.`);
     }
     return;
   }

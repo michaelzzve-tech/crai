@@ -1,0 +1,1 @@
+export { CopiaCompleta } from './CopiaCompleta';
