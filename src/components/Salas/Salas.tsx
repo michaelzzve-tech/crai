@@ -44,15 +44,28 @@ export function Salas() {
   });
   const visibles = deLaSemana.filter((r) => !ocultas.includes(r.salaId));
 
-  /** Cada reserva tal como se dibuja: nombre corto de la sala, horario y actividad. */
+  /** Cada reserva tal como se dibuja: nombre corto de la sala y todos sus datos (menos la fecha de solicitud). */
   const evento = (r: ReservaSala): EventoPlanner => {
     const sala = salaPorId(r.salaId);
     const horario = `${formatearHora(r.inicio)} – ${formatearHora(r.fin)}`;
     return {
       id: r.id, inicio: r.inicio, fin: r.fin, color: sala?.color ?? '#7b8794', movible: true,
       titulo: sala?.nombre.replace('Sala ', '') ?? r.salaId,
-      lineas: [horario, `${r.actividad} · ${r.usuarios} pers.`],
-      ayuda: `${sala?.nombre ?? r.salaId} · ${horario} · ${r.actividad}`,
+      lineas: [horario, `${r.actividad} · ${r.usuarios} pers.`, `${r.instituto} · ${r.carrera} · ${r.semestre}`,
+        `Solicita: ${r.solicitante}`, `Prof.: ${r.profesor}`],
+      datos: [
+        ['Sala', sala?.nombre ?? r.salaId],
+        ['Fecha', formatearDiaLargo(diaDe(r.inicio))],
+        ['Hora', horario],
+        ['Institución', r.instituto],
+        ['Carrera o año', r.carrera],
+        ['Semestre', r.semestre],
+        ['Actividad', r.actividad],
+        ['Total usuarios', String(r.usuarios)],
+        ['Solicitado por', r.solicitante],
+        ['Profesor(a)', r.profesor],
+        ...(r.serieId ? [['Recurrente', 'Sí'] as [string, string]] : []),
+      ],
     };
   };
   const reservaDe = (e: EventoPlanner) => reservas.find((r) => r.id === e.id);

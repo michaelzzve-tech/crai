@@ -98,7 +98,8 @@ y pegue los mismos dos valores.
   **Válida desde** y **Válida hasta**; si alguna fecha choca, no se crea ninguna. Con un clic en una
   reserva se ven sus datos y se puede **Modificar horario**, **Registrar salida** o, si aún no empieza,
   **Cancelar reserva** (en una serie: **Solo esta fecha** o **Esta y las siguientes**). Una reserva se
-  puede **arrastrar** a otro día u hora. Las ya terminadas se ven más claras y no se mueven.
+  puede **arrastrar** a otro día u hora. Las ya terminadas se ven más claras y no se mueven. Al pasar el
+  mouse sobre una reserva se ven todos sus datos (menos la fecha de registro).
 - **En curso**: préstamos o reservas activos; desde ahí se registra la devolución de la
   laptop o la salida del cubículo. En los cubículos, el botón del **lápiz** cambia la fecha, el
   horario y la cantidad de usuarios de una reserva (se revisa que no choque con otra; si queda para más tarde, el cubículo
@@ -122,7 +123,8 @@ y pegue los mismos dos valores.
   capacidad de la sala es solo de referencia), fecha de la reserva (el día en que se usará la sala, la que cuenta para el
   calendario y los choques), fecha de solicitud (cuándo se pidió la sala; solo informativa, no puede ser
   posterior a hoy), solicitado por y profesor(a). No deja reservar una sala ya ocupada a esa hora ni un día pasado. Con un clic en una
-  reserva se ven todos sus datos y se puede **Modificar** o **Cancelar reserva**. Una reserva también se
+  reserva se ven todos sus datos y se puede **Modificar** o **Cancelar reserva**; con solo pasar el mouse
+  aparece una vista previa con todos los datos (menos la fecha de solicitud). Una reserva también se
   puede **arrastrar** (con el mouse o el dedo) a otro día u hora, de 15 en 15 minutos y con la misma
   duración; si la sala ya está ocupada a esa hora o el día ya pasó, vuelve a su lugar y se explica por qué.
   Al crear una reserva, la casilla **Reserva recurrente** la repite los días de la semana elegidos (de

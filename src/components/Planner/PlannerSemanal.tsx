@@ -29,7 +29,7 @@ export interface EventoPlanner {
   color: string;
   titulo: string; // Primera línea: "Javier", "Cubículo 3"
   lineas: string[]; // Líneas siguientes, que se ocultan si no caben
-  ayuda: string; // Texto al pasar el mouse
+  datos: [string, string][]; // Todos los datos registrados, para la vista previa al pasar el mouse
   movible: boolean; // false: no se puede arrastrar (por ejemplo, una reserva ya terminada)
   atenuado?: boolean; // Se muestra más claro (terminada)
 }
@@ -103,6 +103,7 @@ export function PlannerSemanal({ lunes, elegido, onElegir, reservas, onNueva, on
   const hoy = diaDe();
   const dias = Array.from({ length: 7 }, (_, i) => sumarDias(lunes, i));
   const [arrastre, setArrastre] = useState<Arrastre | null>(null);
+  const [previa, setPrevia] = useState<string | null>(null); // Reserva bajo el mouse: se muestran todos sus datos
   const grilla = useRef<HTMLDivElement>(null);
 
   // Arrastrar una reserva (con el mouse o el dedo) la mueve a otro día u hora; la duración se mantiene.
@@ -191,18 +192,47 @@ export function PlannerSemanal({ lunes, elegido, onElegir, reservas, onNueva, on
                   width: `calc(${100 / u.carriles}% - 4px)`,
                   '--color-sala': u.reserva.color,
                 } as CSSProperties}
+                onPointerEnter={(e) => { if (e.pointerType === 'mouse') setPrevia(u.reserva.id); }}
+                onPointerLeave={() => setPrevia(null)}
+                onFocus={() => setPrevia(u.reserva.id)}
+                onBlur={() => setPrevia(null)}
                 onPointerDown={empezar(u)}
                 onPointerMove={mover}
                 onPointerUp={soltar}
                 onPointerCancel={() => setArrastre(null)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAbrir(u.reserva); } }}
-                title={u.reserva.movible ? `${u.reserva.ayuda}\nArrastre para cambiar de día u hora` : u.reserva.ayuda}
+                aria-label={u.reserva.datos.map(([t, v]) => `${t}: ${v}`).join('. ')}
               >
                 <strong>{u.reserva.titulo}</strong>
-                {u.reserva.lineas.map((l, i) => <span key={i}>{l}</span>)}
+                {/* Solo las líneas que caben enteras (unos 16 px cada una); el resto se ve en la vista previa. */}
+                {u.reserva.lineas.slice(0, Math.max(1, Math.floor((alto - 10) / 16) - 1)).map((l, i) => <span key={i}>{l}</span>)}
               </button>
             );
           })}
+          {(() => {
+            // Vista previa: a la derecha de la ficha (a la izquierda en sábado y domingo), hacia arriba si es tarde.
+            const u = !arrastre?.movido && ubicar(reservas.filter((r) => diaDe(r.inicio) === dia)).find((x) => x.reserva.id === previa);
+            if (!u) return null;
+            const columna = dias.indexOf(dia);
+            const abajo = u.desde > (FIN - INICIO) / 2;
+            return (
+              <div
+                className={`vista-previa${columna >= 5 ? ' izquierda' : ''}`}
+                style={{
+                  top: abajo ? undefined : (u.desde / 60) * ALTO_HORA,
+                  bottom: abajo ? HORAS.length * ALTO_HORA - (u.hasta / 60) * ALTO_HORA : undefined,
+                  '--color-sala': u.reserva.color,
+                } as CSSProperties}
+                role="tooltip"
+              >
+                <strong>{u.reserva.titulo}</strong>
+                <dl>
+                  {u.reserva.datos.map(([t, v]) => <div key={t}><dt>{t}</dt><dd>{v}</dd></div>)}
+                </dl>
+                {u.reserva.movible && <p>Arrastre para cambiar de día u hora; clic para ver o modificar.</p>}
+              </div>
+            );
+          })()}
           {arrastre?.movido && arrastre.dia === dia && (
             <div
               className={`reserva-sala fantasma${dia < hoy ? ' invalido' : ''}`}
