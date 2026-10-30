@@ -1,7 +1,8 @@
 import { salaPorId } from '../config/salas';
 import { repositorio } from '../data';
 import type { NuevaReservaSala, ReservaSala } from '../types';
-import { diaALas, diaDe, formatearDia, formatearHora, horaActual, sumarDias } from '../utils/fechas';
+import { diaALas, diaDe, formatearDia, formatearHora, horaActual } from '../utils/fechas';
+import { validarSerie, type Recurrencia } from './recurrencia';
 import { generarId } from '../utils/id';
 
 /**
@@ -82,44 +83,13 @@ export async function guardarReservaSala(datos: NuevaReservaSala, anterior?: Res
   return reserva;
 }
 
-/** Días de la semana de una reserva recurrente: 1 = lunes … 6 = sábado. */
-export const DIAS_RECURRENCIA = [
-  { numero: 1, corto: 'Lun', largo: 'lunes' },
-  { numero: 2, corto: 'Mar', largo: 'martes' },
-  { numero: 3, corto: 'Mié', largo: 'miércoles' },
-  { numero: 4, corto: 'Jue', largo: 'jueves' },
-  { numero: 5, corto: 'Vie', largo: 'viernes' },
-  { numero: 6, corto: 'Sáb', largo: 'sábado' },
-];
-
-/** Máximo de fechas de una serie, para no crear cientos por error. */
-const MAXIMO_SERIE = 200;
-
-/** Día de la semana de "AAAA-MM-DD": 0 = domingo … 6 = sábado. */
-export const diaDeLaSemana = (dia: string) => new Date(`${dia}T12:00:00Z`).getUTCDay();
-
-/** Fechas entre `desde` y `hasta` (inclusive) que caen en los días de la semana elegidos. */
-export function fechasDeSerie(desde: string, hasta: string, dias: number[]): string[] {
-  const fechas: string[] = [];
-  if (!desde || !hasta || desde > hasta) return fechas;
-  for (let f = desde; f <= hasta && fechas.length <= MAXIMO_SERIE; f = sumarDias(f, 1)) {
-    if (dias.includes(diaDeLaSemana(f))) fechas.push(f);
-  }
-  return fechas;
-}
-
 /**
- * Reserva recurrente: la misma reserva en cada fecha de `desde` (datos.fecha) a `hasta` que caiga
+ * Reserva recurrente: la misma reserva en cada fecha de datos.fecha a `recurrencia.hasta` que caiga
  * en los días elegidos. Se revisan todas antes de guardar: si alguna fecha choca, no se crea ninguna
  * y se dice cuáles chocan.
  */
-export async function guardarSerieSala(datos: NuevaReservaSala, dias: number[], hasta: string): Promise<ReservaSala[]> {
-  if (!dias.length) throw new Error('Elija al menos un día de la semana para repetir la reserva.');
-  if (!hasta) throw new Error('Indique hasta qué día es válida la reserva recurrente.');
-  if (hasta < datos.fecha) throw new Error('La fecha "Válida hasta" debe ser igual o posterior a "Válida desde".');
-  const fechas = fechasDeSerie(datos.fecha, hasta, dias);
-  if (!fechas.length) throw new Error('No hay ningún día elegido entre esas fechas.');
-  if (fechas.length > MAXIMO_SERIE) throw new Error(`Son más de ${MAXIMO_SERIE} fechas; acorte el período.`);
+export async function guardarSerieSala(datos: NuevaReservaSala, recurrencia: Recurrencia): Promise<ReservaSala[]> {
+  const fechas = validarSerie(datos.fecha, recurrencia);
 
   const serieId = generarId();
   const existentes = await repositorio.listarReservasSalas();

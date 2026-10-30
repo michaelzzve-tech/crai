@@ -43,6 +43,8 @@ create table reservas (
   like prestamos including all,
   foreign key (recurso_id) references cubiculos (id)
 );
+-- Reservas recurrentes de cubículos: mismo valor en todas las fechas de la serie.
+alter table reservas add column serie_id text;
 
 -- Reservas de las salas especiales (Sala Javier, Loyola, Basabe y Piedra).
 create table reservas_salas (

@@ -25,7 +25,7 @@ function IconoLapiz() {
 }
 
 /** Campos para cambiar la fecha, el horario y la cantidad de usuarios de una reserva, con Guardar y Cancelar. */
-function EditorHorario({ registro, conUsuarios, onGuardar, onCancelar }: {
+export function EditorHorario({ registro, conUsuarios, onGuardar, onCancelar }: {
   registro: Registro;
   conUsuarios: boolean;
   onGuardar: (horario: NuevoHorario) => void;

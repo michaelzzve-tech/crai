@@ -1,7 +1,6 @@
 import { useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from 'react';
-import { HORA_APERTURA, HORA_CIERRE, salaPorId } from '../../config/salas';
-import type { ReservaSala } from '../../types';
-import { diaDe, formatearDiaCorto, formatearHora, minutosDelDia, sumarDias } from '../../utils/fechas';
+import { HORA_APERTURA, HORA_CIERRE } from '../../config/salas';
+import { diaDe, formatearDiaCorto, minutosDelDia, sumarDias } from '../../utils/fechas';
 
 /** Alto en píxeles de una hora en el calendario. */
 const ALTO_HORA = 56;
@@ -22,8 +21,21 @@ const PASO = 15;
 /** "7 a. m.", "1 p. m." */
 const etiquetaHora = (h: number) => `${h % 12 || 12} ${h < 12 ? 'a. m.' : 'p. m.'}`;
 
+/** Una reserva tal como se dibuja en el calendario (de una sala, de un cubículo…). */
+export interface EventoPlanner {
+  id: string;
+  inicio: string; // ISO 8601
+  fin: string; // ISO 8601
+  color: string;
+  titulo: string; // Primera línea: "Javier", "Cubículo 3"
+  lineas: string[]; // Líneas siguientes, que se ocultan si no caben
+  ayuda: string; // Texto al pasar el mouse
+  movible: boolean; // false: no se puede arrastrar (por ejemplo, una reserva ya terminada)
+  atenuado?: boolean; // Se muestra más claro (terminada)
+}
+
 interface Ubicada {
-  reserva: ReservaSala;
+  reserva: EventoPlanner;
   desde: number; // Minutos desde la apertura
   hasta: number;
   carril: number; // Columna dentro del día cuando hay reservas a la misma hora
@@ -31,10 +43,10 @@ interface Ubicada {
 }
 
 /**
- * Coloca las reservas de un día. Las que se cruzan en horario (de salas distintas)
+ * Coloca las reservas de un día. Las que se cruzan en horario (de salas o cubículos distintos)
  * se reparten en carriles lado a lado, como en un planificador.
  */
-function ubicar(reservas: ReservaSala[]): Ubicada[] {
+function ubicar(reservas: EventoPlanner[]): Ubicada[] {
   const lista = reservas
     .map((reserva) => ({
       reserva,
@@ -68,15 +80,15 @@ interface Props {
   lunes: string; // Primer día de la semana, "AAAA-MM-DD"
   elegido: string; // Día elegido en el menú de fecha; se resalta
   onElegir: (dia: string) => void;
-  reservas: ReservaSala[];
+  reservas: EventoPlanner[];
   onNueva: (dia: string, hora: string) => void;
-  onAbrir: (reserva: ReservaSala) => void;
-  onMover: (reserva: ReservaSala, dia: string, hora: string) => void; // Al soltar una reserva arrastrada
+  onAbrir: (reserva: EventoPlanner) => void;
+  onMover: (reserva: EventoPlanner, dia: string, hora: string) => void; // Al soltar una reserva arrastrada
 }
 
 /** Reserva que se está arrastrando y adónde iría si se suelta ahora. */
 interface Arrastre {
-  reserva: ReservaSala;
+  reserva: EventoPlanner;
   x0: number;
   y0: number;
   desde0: number; // Minutos desde la apertura al empezar
@@ -86,7 +98,7 @@ interface Arrastre {
   movido: boolean; // false mientras el puntero no se aleja: entonces es un clic
 }
 
-/** Calendario de la semana (lunes a domingo, por horas) con las reservas de las salas. */
+/** Calendario de la semana (lunes a domingo, por horas) con reservas que se abren con un clic y se arrastran. */
 export function PlannerSemanal({ lunes, elegido, onElegir, reservas, onNueva, onAbrir, onMover }: Props) {
   const hoy = diaDe();
   const dias = Array.from({ length: 7 }, (_, i) => sumarDias(lunes, i));
@@ -96,6 +108,10 @@ export function PlannerSemanal({ lunes, elegido, onElegir, reservas, onNueva, on
   // Arrastrar una reserva (con el mouse o el dedo) la mueve a otro día u hora; la duración se mantiene.
   const empezar = (u: Ubicada) => (e: PointerEvent<HTMLButtonElement>) => {
     if (e.button !== 0) return;
+    if (!u.reserva.movible) {
+      onAbrir(u.reserva);
+      return;
+    }
     e.currentTarget.setPointerCapture(e.pointerId);
     setArrastre({
       reserva: u.reserva, x0: e.clientX, y0: e.clientY, desde0: u.desde,
@@ -162,30 +178,28 @@ export function PlannerSemanal({ lunes, elegido, onElegir, reservas, onNueva, on
           title={dia < hoy ? undefined : 'Clic en un espacio libre para reservar'}
         >
           {ubicar(reservas.filter((r) => diaDe(r.inicio) === dia)).map((u) => {
-            const sala = salaPorId(u.reserva.salaId);
             const alto = ((u.hasta - u.desde) / 60) * ALTO_HORA;
             return (
               <button
                 key={u.reserva.id}
                 type="button"
-                className={`reserva-sala${alto < 48 ? ' compacta' : ''}${arrastre?.movido && arrastre.reserva.id === u.reserva.id ? ' origen' : ''}`}
+                className={`reserva-sala${alto < 48 ? ' compacta' : ''}${u.carriles > 3 ? ' angosta' : ''}${u.reserva.atenuado ? ' atenuada' : ''}${u.reserva.movible ? '' : ' fija'}${arrastre?.movido && arrastre.reserva.id === u.reserva.id ? ' origen' : ''}`}
                 style={{
                   top: (u.desde / 60) * ALTO_HORA,
                   height: alto - 2,
                   left: `calc(${(u.carril / u.carriles) * 100}% + 2px)`,
                   width: `calc(${100 / u.carriles}% - 4px)`,
-                  '--color-sala': sala?.color ?? '#7b8794',
+                  '--color-sala': u.reserva.color,
                 } as CSSProperties}
                 onPointerDown={empezar(u)}
                 onPointerMove={mover}
                 onPointerUp={soltar}
                 onPointerCancel={() => setArrastre(null)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAbrir(u.reserva); } }}
-                title={`${sala?.nombre ?? u.reserva.salaId} · ${formatearHora(u.reserva.inicio)} – ${formatearHora(u.reserva.fin)} · ${u.reserva.actividad}\nArrastre para cambiar de día u hora`}
+                title={u.reserva.movible ? `${u.reserva.ayuda}\nArrastre para cambiar de día u hora` : u.reserva.ayuda}
               >
-                <strong>{sala?.nombre.replace('Sala ', '') ?? u.reserva.salaId}</strong>
-                <span>{formatearHora(u.reserva.inicio)} – {formatearHora(u.reserva.fin)}</span>
-                <span>{u.reserva.actividad} · {u.reserva.usuarios} pers.</span>
+                <strong>{u.reserva.titulo}</strong>
+                {u.reserva.lineas.map((l, i) => <span key={i}>{l}</span>)}
               </button>
             );
           })}
@@ -197,10 +211,10 @@ export function PlannerSemanal({ lunes, elegido, onElegir, reservas, onNueva, on
                 height: (arrastre.duracion / 60) * ALTO_HORA - 2,
                 left: 2,
                 width: 'calc(100% - 4px)',
-                '--color-sala': salaPorId(arrastre.reserva.salaId)?.color ?? '#7b8794',
+                '--color-sala': arrastre.reserva.color,
               } as CSSProperties}
             >
-              <strong>{dia < hoy ? 'Día pasado' : salaPorId(arrastre.reserva.salaId)?.nombre.replace('Sala ', '')}</strong>
+              <strong>{dia < hoy ? 'Día pasado' : arrastre.reserva.titulo}</strong>
               <span>{aHora12(INICIO + arrastre.desde)} – {aHora12(INICIO + arrastre.desde + arrastre.duracion)}</span>
             </div>
           )}

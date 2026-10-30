@@ -5,9 +5,11 @@ import {
 } from '../../config/opciones';
 import { nombreRecurso, type Modulo } from '../../config/modulos';
 import { useAhora } from '../../hooks/useAhora';
-import { registrar } from '../../services/registroService';
+import { fechasDeSerie, nombresDeDias, recurrenciaInicial, type Recurrencia } from '../../services/recurrencia';
+import { registrar, registrarSerie } from '../../services/registroService';
 import type { NuevoRegistro, Recurso, Registro } from '../../types';
-import { diaALas, diaDe, duracionEntreHoras, horaActual } from '../../utils/fechas';
+import { diaALas, diaDe, duracionEntreHoras, formatearDia, horaActual } from '../../utils/fechas';
+import { CampoRecurrencia } from '../Planner';
 import type { EjecutarAccion } from '../tipos';
 import { CampoNombre } from './CampoNombre';
 
@@ -30,6 +32,12 @@ interface Props {
   modulo: Modulo;
   recursos: Recurso[];
   ejecutar: EjecutarAccion;
+  // En la ventana del calendario de cubículos:
+  inicial?: Partial<NuevoRegistro>; // Cubículo, fecha y hora elegidos en el calendario
+  conRecurrencia?: boolean; // Muestra la casilla "Reserva recurrente"
+  error?: string; // Error que se muestra dentro del formulario
+  onListo?: () => void; // Tras registrar
+  onCerrar?: () => void; // Botón Cancelar (cierra la ventana)
 }
 
 /** Menú desplegable con una opción vacía inicial. */
@@ -156,10 +164,12 @@ function datosDe(r: Registro, modulo: Modulo): Partial<NuevoRegistro> {
 }
 
 /** Formulario de préstamo o reserva; el campo del recurso cambia según el módulo. */
-export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
-  const [datos, setDatos] = useState<NuevoRegistro>(vacio);
+export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrencia, error, onListo, onCerrar }: Props) {
+  const [datos, setDatos] = useState<NuevoRegistro>(() => ({ ...vacio(), ...inicial }));
   const [otroMotivo, setOtroMotivo] = useState(false); // "Otro" elegido en Motivo de uso
-  const limpiar = () => { setDatos(vacio()); setOtroMotivo(false); };
+  // Reserva recurrente: se repite en los días elegidos, de "Válida desde" a "Válida hasta".
+  const [recurrencia, setRecurrencia] = useState<Recurrencia | null>(null);
+  const limpiar = () => { setDatos({ ...vacio(), ...inicial }); setOtroMotivo(false); setRecurrencia(null); };
   const cambiar = (campo: keyof NuevoRegistro) => (valor: string) =>
     setDatos({ ...datos, [campo]: valor });
   // Con Psicólogo o DTI, carrera y semestre quedan en "No aplica"; con Docente se eligen, y "No aplica" es una opción más.
@@ -191,17 +201,27 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
   async function enviar(e: FormEvent) {
     e.preventDefault();
     const recurso = nombreRecurso(datos.recursoId);
+    if (recurrencia) {
+      const total = fechasDeSerie(datos.fecha, recurrencia.hasta, recurrencia.dias).length;
+      const mensaje = `Se ${total === 1 ? 'creó 1 reserva' : `crearon ${total} reservas`} del ${modulo.recurso.toLowerCase()} ${recurso} para ${datos.nombre}: `
+        + `los ${nombresDeDias(recurrencia.dias)}, del ${formatearDia(datos.fecha)} al ${formatearDia(recurrencia.hasta)}.`;
+      if (await ejecutar(() => registrarSerie(modulo, datos, recurrencia), mensaje)) { limpiar(); onListo?.(); }
+      return;
+    }
     // Una laptop para más tarde no se presta todavía: se avisa que quedó reservada.
     const mensaje = programado && !modulo.conHoraFin
       ? `${modulo.recurso} ${recurso} reservada para ${datos.nombre}.`
       : modulo.mensajeRegistrado(recurso, datos.nombre);
     const ok = await ejecutar(() => registrar(modulo, datos), mensaje);
-    if (ok) limpiar();
+    if (ok) { limpiar(); onListo?.(); }
   }
 
   return (
-    <form className="formulario" onSubmit={enviar}>
-      <h2>{modulo.nuevo}</h2>
+    <form className={onCerrar ? 'formulario formulario-ventana' : 'formulario'} onSubmit={enviar}>
+      <div className="panel-encabezado">
+        <h2 id="titulo-registro">{modulo.nuevo}</h2>
+        {onCerrar && <button type="button" className="boton-cerrar" onClick={onCerrar} aria-label="Cerrar">×</button>}
+      </div>
       <div className="campos">
         <CampoNombre valor={datos.nombre} onCambiar={cambiar('nombre')} onElegir={(r) => { setDatos({ ...datos, ...datosDe(r, modulo) }); setOtroMotivo(esMotivoPropio(r.motivo)); }} />
         <Desplegable id="registro-genero" titulo="Género" valor={datos.genero} opciones={GENEROS} onCambiar={cambiar('genero')} />
@@ -253,10 +273,12 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
           otro={otroMotivo}
           onCambiar={(motivo, otro) => { setDatos({ ...datos, motivo }); setOtroMotivo(otro); }}
         />
-        <label htmlFor="registro-fecha">
-          Fecha de la reserva
-          <input id="registro-fecha" type="date" required min={diaDe()} value={datos.fecha} onChange={(e) => cambiar('fecha')(e.target.value)} />
-        </label>
+        {!recurrencia && (
+          <label htmlFor="registro-fecha">
+            Fecha de la reserva
+            <input id="registro-fecha" type="date" required min={diaDe()} value={datos.fecha} onChange={(e) => cambiar('fecha')(e.target.value)} />
+          </label>
+        )}
         <label htmlFor="registro-inicio">
           Hora de inicio
           <input id="registro-inicio" type="time" required value={datos.horaInicio} onChange={(e) => cambiar('horaInicio')(e.target.value)} />
@@ -280,11 +302,22 @@ export function RegistroForm({ modulo, recursos, ejecutar }: Props) {
             </label>
           </>
         )}
+        {conRecurrencia && (
+          <label className="ancho casilla">
+            <input type="checkbox" checked={!!recurrencia} onChange={(e) => setRecurrencia(e.target.checked ? recurrenciaInicial(datos.fecha) : null)} />
+            Reserva recurrente
+          </label>
+        )}
+        {recurrencia && (
+          <CampoRecurrencia prefijo="registro" desde={datos.fecha} onDesde={cambiar('fecha')} recurrencia={recurrencia} onRecurrencia={setRecurrencia} />
+        )}
       </div>
+      {error && <div className="aviso aviso-error" role="alert">{error}</div>}
       <div className="botones-formulario">
         <button type="submit" className="primario">{modulo.registrar}</button>
         {/* Vacía los campos y vuelve a poner la hora de inicio en la hora actual. */}
         <button type="button" onClick={limpiar}>Limpiar</button>
+        {onCerrar && <button type="button" onClick={onCerrar}>Cancelar</button>}
       </div>
     </form>
   );

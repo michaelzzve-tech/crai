@@ -3,6 +3,7 @@ import { repositorio } from '../data';
 import type { NuevoRegistro, Recurso, Registro } from '../types';
 import { diaALas, diaDe, formatearDia, formatearHora } from '../utils/fechas';
 import { generarId } from '../utils/id';
+import { validarSerie, type Recurrencia } from './recurrencia';
 
 /**
  * Reglas del negocio, iguales para todos los módulos (préstamo de laptops,
@@ -81,27 +82,31 @@ export async function cambiarMantenimiento(modulo: Modulo, recurso: Recurso, enM
   });
 }
 
+/** Fin que se usa para los choques: sin hora de fin (laptops), el préstamo ocupa la laptop hasta el final de su día. */
+const finEstimado = (r: Registro) => (r.fin ? new Date(r.fin) : diaALas(diaDe(r.inicio), '23:59'));
+
+/** Error de un registro que choca con otro del mismo recurso. */
+class ChoqueDeHorario extends Error {}
+
 /**
- * Falla si el recurso ya tiene otro registro sin terminar que se cruce con ese horario.
- * Sin hora de fin (laptops), se cuenta que el préstamo ocupa la laptop hasta el final de su día.
+ * Falla si el recurso ya tiene otro registro sin terminar (de `existentes`) que se cruce con ese horario.
  * `excluirId` deja fuera el registro que se está editando.
  */
-async function revisarChoque(modulo: Modulo, recursoId: string, inicio: Date, fin?: Date, excluirId?: string) {
-  const finEstimado = (r: Registro) => (r.fin ? new Date(r.fin) : diaALas(diaDe(r.inicio), '23:59'));
+function revisarChoque(modulo: Modulo, existentes: Registro[], recursoId: string, inicio: Date, fin?: Date, excluirId?: string) {
   const hasta = fin ?? diaALas(diaDe(inicio), '23:59');
-  const choque = (await repositorio.listarRegistros(modulo.tablaRegistros)).find(
+  const choque = existentes.find(
     (r) => r.recursoId === recursoId && r.id !== excluirId && !r.finReal && new Date(r.inicio) < hasta && inicio < finEstimado(r),
   );
   if (choque) {
     const nombre = `${modulo.recurso} ${nombreRecurso(recursoId)}`;
-    throw new Error(choque.fin
+    throw new ChoqueDeHorario(choque.fin
       ? `${nombre} ya está reservado de ${formatearHora(choque.inicio)} a ${formatearHora(choque.fin)} el ${formatearDia(diaDe(choque.inicio))}.`
       : `${nombre} ya tiene un préstamo el ${formatearDia(diaDe(choque.inicio))} desde las ${formatearHora(choque.inicio)}.`);
   }
 }
 
-export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<Registro> {
-  const recursos = await repositorio.listarRecursos(modulo.tablaRecursos);
+/** Revisa los datos y arma el registro, sin guardarlo. `programado`: es para más tarde y aún no ocupa el recurso. */
+function prepararRegistro(modulo: Modulo, datos: NuevoRegistro, recursos: Recurso[], existentes: Registro[], serieId?: string) {
   const recurso = recursos.find((r) => r.id === datos.recursoId);
   if (!recurso) throw new Error(`Seleccione un ${modulo.recurso.toLowerCase()}.`);
 
@@ -125,7 +130,7 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
 
   if (!datos.motivo.trim()) throw new Error('Escriba el motivo de uso.');
 
-  await revisarChoque(modulo, recurso.id, inicio, fin);
+  revisarChoque(modulo, existentes, recurso.id, inicio, fin);
 
   const registro: Registro = {
     id: generarId(),
@@ -140,11 +145,53 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
     motivo: datos.motivo.trim(),
     inicio: inicio.toISOString(),
     fin: fin?.toISOString(),
+    ...(serieId ? { serieId } : {}),
   };
+  return { registro, recurso, programado };
+}
+
+export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<Registro> {
+  const [recursos, existentes] = await Promise.all([
+    repositorio.listarRecursos(modulo.tablaRecursos),
+    repositorio.listarRegistros(modulo.tablaRegistros),
+  ]);
+  const { registro, recurso, programado } = prepararRegistro(modulo, datos, recursos, existentes);
   await repositorio.guardarRegistro(modulo.tablaRegistros, registro);
   if (!programado) await repositorio.guardarRecurso(modulo.tablaRecursos, { ...recurso, estado: 'ocupado' });
   avisarCambio();
   return registro;
+}
+
+/**
+ * Reserva recurrente: el mismo registro en cada fecha de datos.fecha a `recurrencia.hasta` que caiga
+ * en los días elegidos. Se revisan todas antes de guardar: si alguna fecha choca, no se crea ninguna
+ * y se dice cuáles chocan.
+ */
+export async function registrarSerie(modulo: Modulo, datos: NuevoRegistro, recurrencia: Recurrencia): Promise<Registro[]> {
+  const fechas = validarSerie(datos.fecha, recurrencia);
+  const [recursos, existentes] = await Promise.all([
+    repositorio.listarRecursos(modulo.tablaRecursos),
+    repositorio.listarRegistros(modulo.tablaRegistros),
+  ]);
+  const serieId = generarId();
+  const nuevas: ReturnType<typeof prepararRegistro>[] = [];
+  const choques: string[] = [];
+  for (const fecha of fechas) {
+    try {
+      nuevas.push(prepararRegistro(modulo, { ...datos, fecha }, recursos, [...existentes, ...nuevas.map((n) => n.registro)], serieId));
+    } catch (e) {
+      if (!(e instanceof ChoqueDeHorario)) throw e; // Datos incompletos: el mismo error para todas
+      choques.push(formatearDia(fecha));
+    }
+  }
+  if (choques.length) {
+    throw new Error(`No se creó la reserva recurrente: ${modulo.recurso} ${nombreRecurso(datos.recursoId)} ya está ocupado a esa hora el ${choques.join(', ')}.`);
+  }
+  for (const n of nuevas) await repositorio.guardarRegistro(modulo.tablaRegistros, n.registro);
+  const ahora = nuevas.find((n) => !n.programado); // La primera fecha puede ser hoy y ya haber empezado
+  if (ahora) await repositorio.guardarRecurso(modulo.tablaRecursos, { ...ahora.recurso, estado: 'ocupado' });
+  avisarCambio();
+  return nuevas.map((n) => n.registro);
 }
 
 export interface NuevoHorario {
@@ -170,7 +217,7 @@ export async function editarHorario(modulo: Modulo, registro: Registro, horario:
   const inicio = diaALas(fecha, horaInicio);
   const fin = diaALas(fecha, horaFin);
   if (fin <= inicio) throw new Error('La hora de fin debe ser posterior a la hora de inicio.');
-  await revisarChoque(modulo, registro.recursoId, inicio, fin, registro.id);
+  revisarChoque(modulo, await repositorio.listarRegistros(modulo.tablaRegistros), registro.recursoId, inicio, fin, registro.id);
 
   await repositorio.guardarRegistro(modulo.tablaRegistros, { ...registro, inicio: inicio.toISOString(), fin: fin.toISOString(), usuarios });
 
@@ -194,6 +241,21 @@ export async function cancelarProgramado(modulo: Modulo, registro: Registro) {
   if (!estaProgramado(registro)) throw new Error('La reserva ya empezó; registre la salida.');
   await repositorio.borrarRegistro(modulo.tablaRegistros, registro.id);
   avisarCambio();
+}
+
+/**
+ * Cancela esta reserva programada y las siguientes de su serie que todavía no empiezan;
+ * las anteriores y las que ya empezaron quedan. Devuelve cuántas se cancelaron.
+ */
+export async function cancelarSerieDesde(modulo: Modulo, registro: Registro): Promise<number> {
+  if (!estaProgramado(registro)) throw new Error('La reserva ya empezó; registre la salida.');
+  const deLaSerie = registro.serieId
+    ? (await repositorio.listarRegistros(modulo.tablaRegistros))
+      .filter((r) => r.serieId === registro.serieId && r.inicio >= registro.inicio && estaProgramado(r))
+    : [registro];
+  for (const r of deLaSerie) await repositorio.borrarRegistro(modulo.tablaRegistros, r.id);
+  avisarCambio();
+  return deLaSerie.length;
 }
 
 /** Devuelve la laptop o libera el cubículo; la hora de fin real es la del momento. */

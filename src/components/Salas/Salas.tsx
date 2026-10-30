@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { SALAS, salaPorId } from '../../config/salas';
-import { cancelarReservaSala, cancelarSerieDesde, DIAS_RECURRENCIA, guardarReservaSala, guardarSerieSala, listarReservasSalas, moverReservaSala } from '../../services/salaService';
+import { nombresDeDias, type Recurrencia } from '../../services/recurrencia';
+import { cancelarReservaSala, cancelarSerieDesde, guardarReservaSala, guardarSerieSala, listarReservasSalas, moverReservaSala } from '../../services/salaService';
 import type { NuevaReservaSala, ReservaSala } from '../../types';
-import { diaDe, formatearDia, formatearDiaLargo, formatearFecha, formatearHora, formatearSemana, horaActual, lunesDe, sumarDias } from '../../utils/fechas';
-import { FormularioSala, type InicioFormulario, type Recurrencia } from './FormularioSala';
-import { NavegadorFecha } from './NavegadorFecha';
-import { PlannerSemanal } from './PlannerSemanal';
+import { diaDe, formatearDia, formatearDiaLargo, formatearFecha, formatearHora, horaActual, lunesDe, sumarDias } from '../../utils/fechas';
+import { useMostrarDiaElegido } from '../../hooks/useMostrarDiaElegido';
+import { BarraSemana, FiltrosPlanner, PlannerSemanal, type EventoPlanner } from '../Planner';
+import { FormularioSala, type InicioFormulario } from './FormularioSala';
 
 /** Módulo Salas especiales: calendario semanal tipo planificador con las reservas de cada sala. */
 export function Salas() {
@@ -17,16 +18,8 @@ export function Salas() {
   const [ocultas, setOcultas] = useState<string[]>([]); // Salas que no se muestran en el calendario
   const [formulario, setFormulario] = useState<InicioFormulario | null>(null);
   const [detalle, setDetalle] = useState<ReservaSala | null>(null);
-  const contenedor = useRef<HTMLDivElement>(null);
+  const contenedor = useMostrarDiaElegido(elegido);
 
-  // En pantallas angostas el calendario se desliza de lado: se muestra el día elegido.
-  useEffect(() => {
-    const caja = contenedor.current;
-    const dia = caja?.querySelector<HTMLElement>('.planner-dia-titulo.elegido');
-    if (!caja) return;
-    // 64 px: ancho de la columna de horas, que queda fija a la izquierda.
-    caja.scrollLeft = dia ? caja.scrollLeft + dia.getBoundingClientRect().left - caja.getBoundingClientRect().left - 64 : 0;
-  }, [elegido]);
 
   const recargar = useCallback(async () => {
     try {
@@ -51,8 +44,18 @@ export function Salas() {
   });
   const visibles = deLaSemana.filter((r) => !ocultas.includes(r.salaId));
 
-  const alternar = (id: string) =>
-    setOcultas(ocultas.includes(id) ? ocultas.filter((x) => x !== id) : [...ocultas, id]);
+  /** Cada reserva tal como se dibuja: nombre corto de la sala, horario y actividad. */
+  const evento = (r: ReservaSala): EventoPlanner => {
+    const sala = salaPorId(r.salaId);
+    const horario = `${formatearHora(r.inicio)} – ${formatearHora(r.fin)}`;
+    return {
+      id: r.id, inicio: r.inicio, fin: r.fin, color: sala?.color ?? '#7b8794', movible: true,
+      titulo: sala?.nombre.replace('Sala ', '') ?? r.salaId,
+      lineas: [horario, `${r.actividad} · ${r.usuarios} pers.`],
+      ayuda: `${sala?.nombre ?? r.salaId} · ${horario} · ${r.actividad}`,
+    };
+  };
+  const reservaDe = (e: EventoPlanner) => reservas.find((r) => r.id === e.id);
 
   /** Nueva reserva: con la sala si solo hay una visible, y en la próxima hora en punto si es hoy. */
   const nueva = (fecha = diaDe(), horaInicio?: string) => {
@@ -63,11 +66,10 @@ export function Salas() {
 
   async function guardar(datos: NuevaReservaSala, anterior?: ReservaSala, recurrencia?: Recurrencia) {
     if (recurrencia) {
-      const serie = await guardarSerieSala(datos, recurrencia.dias, recurrencia.hasta);
+      const serie = await guardarSerieSala(datos, recurrencia);
       await recargar();
       setElegido(diaDe(serie[0].inicio));
-      const nombres = DIAS_RECURRENCIA.filter((d) => recurrencia.dias.includes(d.numero)).map((d) => d.largo);
-      const losDias = nombres.length > 1 ? `${nombres.slice(0, -1).join(', ')} y ${nombres[nombres.length - 1]}` : nombres[0];
+      const losDias = nombresDeDias(recurrencia.dias);
       const total = serie.length === 1 ? '1 reserva' : `${serie.length} reservas`;
       setAviso(`Se ${serie.length === 1 ? 'creó' : 'crearon'} ${total} de ${salaPorId(datos.salaId)?.nombre}: los ${losDias}, ${formatearHora(serie[0].inicio)} – ${formatearHora(serie[0].fin)}, del ${formatearDia(diaDe(serie[0].inicio))} al ${formatearDia(diaDe(serie[serie.length - 1].inicio))}`);
       return;
@@ -120,48 +122,25 @@ export function Salas() {
       )}
 
       <section className="panel salas">
-        <div className="salas-barra">
-          <div className="salas-navegacion">
-            <h2>Salas especiales</h2>
-            <button onClick={() => setElegido(diaDe())}>Hoy</button>
-            <button className="boton-icono" onClick={() => setElegido(sumarDias(elegido, -7))} aria-label="Semana anterior" title="Semana anterior">‹</button>
-            <button className="boton-icono" onClick={() => setElegido(sumarDias(elegido, 7))} aria-label="Semana siguiente" title="Semana siguiente">›</button>
-            <strong className="salas-semana">{formatearSemana(lunes)}</strong>
-            <NavegadorFecha dia={elegido} onCambiar={setElegido} />
-          </div>
-          <button className="primario" onClick={() => nueva()}>+ Nueva reserva</button>
-        </div>
+        <BarraSemana titulo="Salas especiales" elegido={elegido} onElegir={setElegido} onNueva={() => nueva()} />
 
         {/* Cada sala es un filtro y a la vez la leyenda de colores del calendario. */}
-        <div className="salas-filtros" role="group" aria-label="Salas que se muestran">
-          {SALAS.map((s) => {
-            const activa = !ocultas.includes(s.id);
-            const cuantas = deLaSemana.filter((r) => r.salaId === s.id).length;
-            return (
-              <button
-                key={s.id}
-                className={`filtro-sala${activa ? ' activa' : ''}`}
-                aria-pressed={activa}
-                onClick={() => alternar(s.id)}
-                title={activa ? 'Ocultar del calendario' : 'Mostrar en el calendario'}
-              >
-                <span className="punto-sala" style={{ background: s.color }} />
-                {s.nombre}
-                <span className="secundario">{s.capacidad} pers. · {cuantas} esta semana</span>
-              </button>
-            );
-          })}
-        </div>
+        <FiltrosPlanner
+          grupo="Salas que se muestran"
+          items={SALAS.map((s) => ({ ...s, detalle: `${s.capacidad} pers. · ${deLaSemana.filter((r) => r.salaId === s.id).length} esta semana` }))}
+          ocultos={ocultas}
+          onOcultos={setOcultas}
+        />
 
         <div className="planner-contenedor" ref={contenedor}>
           <PlannerSemanal
             lunes={lunes}
             elegido={elegido}
             onElegir={setElegido}
-            reservas={visibles}
+            reservas={visibles.map(evento)}
             onNueva={(dia, hora) => nueva(dia, hora)}
-            onAbrir={setDetalle}
-            onMover={moverA}
+            onAbrir={(e) => setDetalle(reservaDe(e) ?? null)}
+            onMover={(e, dia, hora) => { const r = reservaDe(e); if (r) void moverA(r, dia, hora); }}
           />
         </div>
         <p className="secundario">Haga clic en un espacio libre del calendario para reservar a esa hora, o en una reserva para ver sus datos. Arrastre una reserva para cambiarla de día u hora.</p>
