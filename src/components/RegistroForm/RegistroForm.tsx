@@ -26,6 +26,7 @@ const vacio = (): NuevoRegistro => ({
   fecha: diaDe(),
   horaInicio: horaActual(),
   horaFin: '',
+  fechaRegistro: diaDe(),
 });
 
 interface Props {
@@ -273,6 +274,13 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
           otro={otroMotivo}
           onCambiar={(motivo, otro) => { setDatos({ ...datos, motivo }); setOtroMotivo(otro); }}
         />
+        {modulo.conFechaRegistro && (
+          <label htmlFor="registro-fecha-registro">
+            Fecha de registro
+            <input id="registro-fecha-registro" type="date" required max={diaDe()} value={datos.fechaRegistro}
+              onChange={(e) => cambiar('fechaRegistro')(e.target.value)} />
+          </label>
+        )}
         {!recurrencia && (
           <label htmlFor="registro-fecha">
             Fecha de la reserva

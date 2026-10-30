@@ -200,6 +200,7 @@ function DetalleRegistro({ modulo, registro: r, siguientes, ejecutar, onCerrar }
     ['Semestre, nivel o sección', r.semestre ?? ''],
     ...(modulo.conUsuarios ? [['Cantidad de usuarios', String(r.usuarios ?? '')] as [string, string]] : []),
     ['Motivo de uso', r.motivo],
+    ...(modulo.conFechaRegistro ? [['Fecha de registro', r.fechaRegistro ? formatearDia(r.fechaRegistro) : 'No registrada'] as [string, string]] : []),
     ...(r.finReal ? [[modulo.finalizado, `${formatearDia(diaDe(r.finReal))}, ${formatearHora(r.finReal)}${r.fin ? ` (${diferenciaConPrevisto(r.fin, r.finReal)})` : ''}`] as [string, string]] : []),
   ];
 

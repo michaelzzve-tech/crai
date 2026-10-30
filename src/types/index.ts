@@ -26,6 +26,7 @@ export interface Registro {
   fin?: string; // Hora de fin prevista, ISO 8601 (solo módulos con hora de fin)
   finReal?: string; // Cuándo se devolvió o liberó; vacío mientras está activo
   serieId?: string; // Igual en todas las fechas de una reserva recurrente (solo cubículos); vacío si es única
+  fechaRegistro?: string; // "Fecha de registro": cuándo se pidió la reserva, "AAAA-MM-DD"; solo informativa (solo cubículos)
 }
 
 /** Datos del formulario, en el mismo orden en que se muestran. */
@@ -42,6 +43,7 @@ export interface NuevoRegistro {
   fecha: string; // Día de la reserva, "AAAA-MM-DD" (solo módulos con hora de fin; si no, hoy)
   horaInicio: string; // "HH:MM"
   horaFin: string; // "HH:MM"; vacío en módulos sin hora de fin
+  fechaRegistro: string; // "AAAA-MM-DD"; solo en módulos con conFechaRegistro
 }
 
 /** Una reserva de una sala especial (Sala Javier, Loyola…). */

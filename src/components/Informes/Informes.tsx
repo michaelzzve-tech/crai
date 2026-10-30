@@ -10,7 +10,6 @@ import { GraficaLineas } from './GraficaLineas';
 
 /** Sección 3 del reporte: totales del servicio y el detalle por institución. */
 function BloqueServicio({ servicio, conDetalle }: { servicio: Servicio; conDetalle: boolean }) {
-  const conUsuarios = servicio.unidad === 'reservas';
   return (
     <section className="panel servicio-informe">
       <div className="servicio-totales">
@@ -24,11 +23,11 @@ function BloqueServicio({ servicio, conDetalle }: { servicio: Servicio; conDetal
           <div key={b.nombre}>
             <h4>{b.nombre}</h4>
             <ul>
-              {lineasInstitucion(b, servicio.unidad, conUsuarios).map((l) => <li key={l}>{l}</li>)}
+              {lineasInstitucion(b, servicio).map((l) => <li key={l}>{l}</li>)}
               {b.grupos.map((g) => (
                 <li key={g.titulo}>
                   {g.titulo}:
-                  <ul>{lineasGrupo(g, servicio.unidad).map((l) => <li key={l}>{l}</li>)}</ul>
+                  <ul>{lineasGrupo(g, servicio).map((l) => <li key={l}>{l}</li>)}</ul>
                 </li>
               ))}
             </ul>

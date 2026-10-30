@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { nombreRecurso, type Modulo } from '../../config/modulos';
 import type { Registro } from '../../types';
-import { diferenciaConPrevisto, duracionEntreFechas, formatearFecha, formatearHora } from '../../utils/fechas';
+import { diferenciaConPrevisto, duracionEntreFechas, formatearDia, formatearFecha, formatearHora } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 import { usePaginacion } from '../../hooks/usePaginacion';
 import { Paginador } from '../Paginador';
@@ -49,6 +49,7 @@ export function Historial({ modulo, registros }: Props) {
               <th>Semestre, nivel o sección</th>
               {modulo.conUsuarios && <th>Usuarios</th>}
               <th>Motivo</th>
+              {modulo.conFechaRegistro && <th>Fecha de registro</th>}
               <th>Inicio</th>
               {conFin && (
                 <>
@@ -74,6 +75,7 @@ export function Historial({ modulo, registros }: Props) {
                   <td>{r.semestre ?? '—'}</td>
                   {modulo.conUsuarios && <td>{r.usuarios ?? '—'}</td>}
                   <td>{r.motivo}</td>
+                  {modulo.conFechaRegistro && <td>{r.fechaRegistro ? formatearDia(r.fechaRegistro) : '—'}</td>}
                   <td>{formatearFecha(r.inicio)}</td>
                   {conFin && (
                     <>

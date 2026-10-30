@@ -45,6 +45,8 @@ create table reservas (
 );
 -- Reservas recurrentes de cubículos: mismo valor en todas las fechas de la serie.
 alter table reservas add column serie_id text;
+-- Fecha de registro de las reservas de cubículos (cuándo se pidió; solo informativa).
+alter table reservas add column fecha_registro date;
 
 -- Reservas de las salas especiales (Sala Javier, Loyola, Basabe y Piedra).
 create table reservas_salas (

@@ -1,12 +1,13 @@
 import { CUBICULOS, LAPTOPS, nombreRecurso, type Modulo } from '../config/modulos';
 import { repositorio } from '../data';
-import type { Registro } from '../types';
+import { salaPorId } from '../config/salas';
+import type { Registro, ReservaSala } from '../types';
 import { diaDe, diferenciaConPrevisto, duracionEntreFechas, formatearDia, formatearHora } from '../utils/fechas';
 
-export interface Columna {
+export interface Columna<T = Registro> {
   titulo: string;
   ancho: number;
-  valor: (r: Registro) => string;
+  valor: (r: T) => string;
 }
 
 const fecha = (iso?: string) => (iso ? formatearDia(diaDe(iso)) : '');
@@ -27,6 +28,7 @@ export function columnasDetalle(modulo: Modulo): Columna[] {
     { titulo: 'Semestre, nivel o sección', ancho: 16, valor: (r) => r.semestre ?? '' },
     ...(modulo.conUsuarios ? [{ titulo: 'Cantidad de usuarios', ancho: 12, valor: (r: Registro) => (r.usuarios ? String(r.usuarios) : '') }] : []),
     { titulo: 'Motivo de uso', ancho: 16, valor: (r) => r.motivo },
+    ...(modulo.conFechaRegistro ? [{ titulo: 'Fecha de registro', ancho: 12, valor: (r: Registro) => (r.fechaRegistro ? formatearDia(r.fechaRegistro) : '') }] : []),
     { titulo: 'Fecha', ancho: 12, valor: (r) => fecha(r.inicio) },
     { titulo: 'Hora de inicio', ancho: 14, valor: (r) => hora(r.inicio) },
   ];
@@ -46,6 +48,24 @@ export function columnasDetalle(modulo: Modulo): Columna[] {
 }
 
 /** Columnas de cada hoja del Excel: el detalle y el código interno. */
+/** Datos de cada reserva de sala especial, en el orden del formulario (en el detalle del PDF). */
+export function columnasSalas(): Columna<ReservaSala>[] {
+  return [
+    { titulo: 'Sala', ancho: 14, valor: (r) => salaPorId(r.salaId)?.nombre ?? r.salaId },
+    { titulo: 'Institución', ancho: 10, valor: (r) => r.instituto },
+    { titulo: 'Carrera o año', ancho: 16, valor: (r) => r.carrera },
+    { titulo: 'Semestre', ancho: 9, valor: (r) => r.semestre },
+    { titulo: 'Fecha de la reserva', ancho: 12, valor: (r) => fecha(r.inicio) },
+    { titulo: 'Hora de inicio', ancho: 12, valor: (r) => hora(r.inicio) },
+    { titulo: 'Hora de fin', ancho: 12, valor: (r) => hora(r.fin) },
+    { titulo: 'Actividad', ancho: 18, valor: (r) => r.actividad },
+    { titulo: 'Total usuarios', ancho: 9, valor: (r) => String(r.usuarios) },
+    { titulo: 'Fecha de solicitud', ancho: 12, valor: (r) => (r.fechaSolicitud ? formatearDia(r.fechaSolicitud) : '') },
+    { titulo: 'Solicitado por', ancho: 20, valor: (r) => r.solicitante },
+    { titulo: 'Profesor(a)', ancho: 20, valor: (r) => r.profesor },
+  ];
+}
+
 const columnas = (modulo: Modulo): Columna[] =>
   [...columnasDetalle(modulo), { titulo: 'Código interno', ancho: 26, valor: (r) => r.id }];
 
