@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { ActividadDiaria } from './components/ActividadDiaria';
 import { CalendarioReservas } from './components/CalendarioReservas';
 import { Encabezado, type Pestana, type Vista } from './components/Encabezado';
 import { ErrorPantalla } from './components/ErrorPantalla';
@@ -107,7 +106,6 @@ function VistaModulo({ modulo, pestana }: { modulo: Modulo; pestana: Pestana }) 
           <button onClick={() => setAviso(null)} aria-label="Cerrar">×</button>
         </div>
       )}
-      {pestana === 'registro' && <ActividadDiaria modulo={modulo} />}
       <Resumen modulo={modulo} recursos={recursos} registros={registros} />
 
       {pestana === 'registro' && (

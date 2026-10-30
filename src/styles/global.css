@@ -178,7 +178,7 @@ button:disabled { opacity: .6; cursor: default; }
 .botones-formulario { display: flex; gap: 8px; flex-wrap: wrap; }
 button.boton-peligro { background: var(--alerta); border-color: var(--alerta); color: #fff; }
 
-/* Actividad de hoy (gráfica de barras por hora) */
+/* Gráficas (clases que usa Informes) */
 .actividad { min-width: 0; max-width: 100%; overflow: hidden; }
 .actividad .panel-encabezado { margin-bottom: 8px; }
 .actividad h2 { font-size: 1.05rem; }

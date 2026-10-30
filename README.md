@@ -159,7 +159,6 @@ y pegue los mismos dos valores.
 - **Equipos / Espacios** (pestaña de laptops / cubículos): estado de cada uno y opción de enviarlo a mantenimiento.
 - **Historial** (ícono de reloj): todos los registros, con búsqueda. En los cubículos muestra la hora real de
   salida, cuánto antes o después de lo previsto fue y el tiempo real de uso (también en el Excel y el PDF).
-- **Actividad de hoy**: arriba de la pantalla principal, una gráfica de barras con la actividad de cada hora del día del módulo abierto (préstamos de laptops en Laptops, reservas de cubículos en Cubículos) (por la hora en que empiezan, en formato de 12 horas). Al pasar el mouse por una hora se ven las cantidades exactas; se actualiza sola.
 - **Resumen**: disponibles, en uso, en mantenimiento y (en cubículos) reservas vencidas. Al pasar el mouse por
   **Disponibles** se ven los números de las laptops o cubículos disponibles; si no queda ninguno, la tarjeta se pone roja.
 
@@ -189,7 +188,6 @@ src/
 ├── components/       Una carpeta por componente
 │   ├── Encabezado/        Título, módulos, pestañas y cerrar sesión
 │   ├── Login/             Pantalla de inicio de sesión
-│   ├── ActividadDiaria/   Gráfica de actividad de hoy por hora
 │   ├── Resumen/           Tarjetas con totales
 │   ├── EstadoBadge/       Etiqueta de color para estados
 │   ├── RecursoList/       Estado de las laptops o cubículos
