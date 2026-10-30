@@ -54,6 +54,8 @@ Sin Supabase, cada persona que la abre tiene sus propios datos, guardados en su 
    `alter table prestamos add column if not exists usuarios integer; alter table reservas add column if not exists usuarios integer;`
    Y para las reservas recurrentes de cubículos (tampoco borra datos):
    `alter table reservas add column if not exists serie_id text;`
+   Y para la fecha de registro de los cubículos (tampoco borra datos):
+   `alter table reservas add column if not exists fecha_registro date;`
 3. En **Authentication → Users → Add user → Create new user**, cree una cuenta (correo y
    contraseña) para cada bibliotecario. Marque "Auto Confirm User".
 4. En **Authentication → Sign In / Providers**, desactive **Allow new users to sign up**
@@ -79,7 +81,7 @@ y pegue los mismos dos valores.
   condición (estudiante, docente, psicólogo, otro; en laptops también DTI; con psicólogo o DTI, carrera y semestre quedan en "No aplica"; con docente se eligen según el instituto y sus menús también ofrecen "No aplica"), carrera o año (ITJO: año del 1 al 6; IUJO: carrera;
   CFJO: secretariado administrativo, asistente administrativo o analista contable;
   Otro: queda en "No aplica"),
-  semestre, nivel o sección (1 a 10 o "No aplica"; con ITJO, sección A a E), cantidad de usuarios (solo cubículos; se escribe el número),
+  semestre, nivel o sección (1 a 10 o "No aplica"; con ITJO, sección A a E), cantidad de usuarios (solo cubículos; se escribe el número), fecha de registro (solo cubículos: cuándo se pidió la reserva; viene con la fecha de hoy, no puede ser posterior a hoy y es solo informativa; también aparece en el Historial y el respaldo),
   laptop (1 a 25 y 59 a 80) o cubículo (1 a 6 o Podcast), motivo de uso
   (estudio, tarea, entretenimiento, TEG, didáctico; en laptops también soporte; con **Otro** aparece una casilla
   para escribir el motivo, y se guarda lo escrito), **fecha de la reserva** (un calendario; por

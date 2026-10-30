@@ -30,6 +30,7 @@ interface FilaRegistro {
   hora_fin: string | null;
   fin_real: string | null;
   serie_id?: string | null; // Solo existe en la tabla de reservas de cubículos
+  fecha_registro?: string | null; // Ídem
 }
 
 const iso = (fecha: string) => new Date(fecha).toISOString();
@@ -63,6 +64,7 @@ const aRegistro = (f: FilaRegistro): Registro => ({
   fin: f.hora_fin ? iso(f.hora_fin) : undefined,
   finReal: f.fin_real ? iso(f.fin_real) : undefined,
   serieId: f.serie_id ?? undefined,
+  fechaRegistro: f.fecha_registro ?? undefined,
 });
 
 const aFilaRegistro = (r: Registro): FilaRegistro => ({
@@ -81,6 +83,7 @@ const aFilaRegistro = (r: Registro): FilaRegistro => ({
   fin_real: r.finReal ?? null,
   // Se envía solo si hay serie, para no pedir esa columna a la tabla de préstamos de laptops.
   ...(r.serieId ? { serie_id: r.serieId } : {}),
+  ...(r.fechaRegistro ? { fecha_registro: r.fechaRegistro } : {}),
 });
 
 interface FilaReservaSala {

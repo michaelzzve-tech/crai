@@ -129,6 +129,10 @@ function prepararRegistro(modulo: Modulo, datos: NuevoRegistro, recursos: Recurs
   }
 
   if (!datos.motivo.trim()) throw new Error('Escriba el motivo de uso.');
+  if (modulo.conFechaRegistro) {
+    if (!datos.fechaRegistro) throw new Error('Indique la fecha de registro.');
+    if (datos.fechaRegistro > diaDe()) throw new Error('La fecha de registro no puede ser posterior a hoy.');
+  }
 
   revisarChoque(modulo, existentes, recurso.id, inicio, fin);
 
@@ -146,6 +150,7 @@ function prepararRegistro(modulo: Modulo, datos: NuevoRegistro, recursos: Recurs
     inicio: inicio.toISOString(),
     fin: fin?.toISOString(),
     ...(serieId ? { serieId } : {}),
+    ...(modulo.conFechaRegistro ? { fechaRegistro: datos.fechaRegistro } : {}),
   };
   return { registro, recurso, programado };
 }

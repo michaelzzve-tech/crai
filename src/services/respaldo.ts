@@ -27,6 +27,7 @@ export function columnasDetalle(modulo: Modulo): Columna[] {
     { titulo: 'Semestre, nivel o sección', ancho: 16, valor: (r) => r.semestre ?? '' },
     ...(modulo.conUsuarios ? [{ titulo: 'Cantidad de usuarios', ancho: 12, valor: (r: Registro) => (r.usuarios ? String(r.usuarios) : '') }] : []),
     { titulo: 'Motivo de uso', ancho: 16, valor: (r) => r.motivo },
+    ...(modulo.conFechaRegistro ? [{ titulo: 'Fecha de registro', ancho: 12, valor: (r: Registro) => (r.fechaRegistro ? formatearDia(r.fechaRegistro) : '') }] : []),
     { titulo: 'Fecha', ancho: 12, valor: (r) => fecha(r.inicio) },
     { titulo: 'Hora de inicio', ancho: 14, valor: (r) => hora(r.inicio) },
   ];

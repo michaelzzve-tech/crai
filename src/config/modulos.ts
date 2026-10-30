@@ -38,6 +38,7 @@ export interface Modulo {
   // formulario fijo, y se pueden hacer reservas recurrentes. Necesita conHoraFin.
   conCalendario: boolean;
   colores: string[]; // Color de cada recurso en el calendario, en el orden de `opciones`
+  conFechaRegistro: boolean; // true: el formulario pide "Fecha de registro" (cuándo se pidió; solo informativa)
   tablaRecursos: string; // Tabla de la base de datos con los recursos
   tablaRegistros: string; // Tabla de la base de datos con los préstamos o reservas
   registros: string; // "Préstamos"
@@ -62,6 +63,7 @@ export const LAPTOPS: Modulo = {
   conUsuarios: false,
   conCalendario: false,
   colores: [],
+  conFechaRegistro: false,
   condiciones: CONDICIONES_LAPTOPS,
   motivos: MOTIVOS_LAPTOPS,
   tablaRecursos: 'laptops',
@@ -89,6 +91,7 @@ export const CUBICULOS: Modulo = {
   conCalendario: true,
   // Colores probados para distinguirse entre sí; el número del cubículo va siempre escrito.
   colores: ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#6250d6'],
+  conFechaRegistro: true,
   condiciones: CONDICIONES,
   motivos: MOTIVOS,
   tablaRecursos: 'cubiculos',
