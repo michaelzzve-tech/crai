@@ -94,6 +94,9 @@ y pegue los mismos dos valores.
   7 a. m. a 9 p. m.) igual que Salas especiales: flechas, **Hoy**, menús de año, mes y día, y un botón de
   color por cubículo para mostrarlo u ocultarlo. Con **+ Nueva reserva** o un clic en un espacio libre se
   abre el formulario de siempre en una ventana (con el día, la hora y una hora de duración ya puestos).
+  La casilla **Préstamo de laptop** muestra un menú con las laptops disponibles; al registrar, se crea también
+  el préstamo de esa laptop en Laptops con los mismos datos, fecha y hora de inicio (si la laptop o el cubículo no
+  se pueden, no se guarda ninguno). No se ofrece junto con la reserva recurrente.
   La casilla **Reserva recurrente** repite la reserva los días elegidos (lunes a sábado) entre
   **Válida desde** y **Válida hasta**; si alguna fecha choca, no se crea ninguna. Con un clic en una
   reserva se ven sus datos y se puede **Modificar horario**, **Registrar salida** o, si aún no empieza,
