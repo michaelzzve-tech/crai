@@ -323,3 +323,9 @@ label.casilla input { width: 18px; height: 18px; margin: 0; }
 .vista-previa dt { color: var(--texto-suave); }
 .vista-previa dd { margin: 0; overflow-wrap: anywhere; }
 .vista-previa p { margin: 6px 0 0; color: var(--texto-suave); font-size: .72rem; }
+
+/* Copia completa: exportar e importar */
+.acciones-copia { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.acciones-copia label.boton { display: inline-block; font: inherit; padding: 7px 12px; border-radius: 6px; border: 1px solid var(--borde); background: #fff; cursor: pointer; color: inherit; }
+.acciones-copia label.boton:hover, .acciones-copia label.boton:focus-within { border-color: var(--primario); }
+.acciones-copia input.oculto { position: absolute; width: 1px; height: 1px; opacity: 0; }

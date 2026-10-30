@@ -5,6 +5,7 @@ import {
   type Cuadro, type Informe, type Periodo, type Servicio,
 } from '../../services/informeService';
 import { BorrarRegistros } from '../BorrarRegistros';
+import { CopiaCompleta } from '../CopiaCompleta';
 import { Respaldo } from '../Respaldo';
 import { GraficaLineas } from './GraficaLineas';
 
@@ -143,6 +144,7 @@ export function Informes() {
         <VistaInforme key={`${periodo.desde}-${periodo.hasta}-${version}`} informe={informe} />
       )}
 
+      <CopiaCompleta onImportado={() => setVersion((v) => v + 1)} />
       <BorrarRegistros onBorrado={() => setVersion((v) => v + 1)} />
     </main>
   );

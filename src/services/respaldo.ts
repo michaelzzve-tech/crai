@@ -47,7 +47,6 @@ export function columnasDetalle(modulo: Modulo): Columna[] {
   return [...comunes, ...finales];
 }
 
-/** Columnas de cada hoja del Excel: el detalle y el código interno. */
 /** Datos de cada reserva de sala especial, en el orden del formulario (en el detalle del PDF). */
 export function columnasSalas(): Columna<ReservaSala>[] {
   return [
@@ -66,8 +65,24 @@ export function columnasSalas(): Columna<ReservaSala>[] {
   ];
 }
 
+/** Columnas de cada hoja del Excel: el detalle y el código interno. */
 const columnas = (modulo: Modulo): Columna[] =>
   [...columnasDetalle(modulo), { titulo: 'Código interno', ancho: 26, valor: (r) => r.id }];
+
+/** En la hoja de salas, además del detalle: duración, si es recurrente y el código interno. */
+const columnasHojaSalas = (): Columna<ReservaSala>[] => [
+  ...columnasSalas(),
+  { titulo: 'Duración', ancho: 14, valor: (r) => duracionEntreFechas(r.inicio, r.fin) },
+  { titulo: 'Reserva recurrente', ancho: 12, valor: (r) => (r.serieId ? 'Sí' : 'No') },
+  { titulo: 'Código interno', ancho: 26, valor: (r) => r.id },
+];
+
+/** Una hoja del Excel: su nombre, sus columnas y sus filas. */
+interface Hoja<T> {
+  nombre: string;
+  columnas: Columna<T>[];
+  filas: T[];
+}
 
 /** Período del respaldo: todo, un año completo o un mes de un año (mes 1–12). */
 export interface PeriodoRespaldo {
@@ -87,33 +102,37 @@ function prefijo({ anio, mes }: PeriodoRespaldo): string {
 }
 
 /**
- * Descarga un Excel con los préstamos de laptops y las reservas de cubículos
- * (una hoja para cada uno) del período elegido; sin período, trae todo.
+ * Descarga un Excel con los préstamos de laptops, las reservas de cubículos y
+ * las de salas especiales (una hoja para cada uno) del período elegido; sin período, trae todo.
  * Los registros cuentan por la fecha de inicio, en hora de Caracas.
  * La librería se carga solo al pedirlo.
  */
 export async function descargarRespaldo(periodo: PeriodoRespaldo = {}): Promise<number> {
-  const [{ default: ExcelJS }, todosPrestamos, todasReservas] = await Promise.all([
+  const [{ default: ExcelJS }, todosPrestamos, todasReservas, todasSalas] = await Promise.all([
     import('exceljs'),
     repositorio.listarRegistros(LAPTOPS.tablaRegistros),
     repositorio.listarRegistros(CUBICULOS.tablaRegistros),
+    repositorio.listarReservasSalas(),
   ]);
   const filtro = prefijo(periodo);
-  const delPeriodo = (r: Registro) => diaDe(r.inicio).startsWith(filtro);
+  const delPeriodo = (r: { inicio: string }) => diaDe(r.inicio).startsWith(filtro);
   const prestamos = todosPrestamos.filter(delPeriodo);
   const reservas = todasReservas.filter(delPeriodo);
+  const salas = todasSalas.filter(delPeriodo);
 
   const libro = new ExcelJS.Workbook();
   libro.created = new Date();
-  for (const [modulo, registros] of [[LAPTOPS, prestamos], [CUBICULOS, reservas]] as const) {
-    const cols = columnas(modulo);
-    const hoja = libro.addWorksheet(modulo.registros, { views: [{ state: 'frozen', ySplit: 1 }] });
+  const agregarHoja = <T extends { inicio: string }>({ nombre, columnas: cols, filas }: Hoja<T>) => {
+    const hoja = libro.addWorksheet(nombre, { views: [{ state: 'frozen', ySplit: 1 }] });
     hoja.columns = cols.map((c) => ({ header: c.titulo, width: c.ancho }));
     hoja.getRow(1).font = { bold: true };
-    const ordenados = [...registros].sort((a, b) => a.inicio.localeCompare(b.inicio));
+    const ordenados = [...filas].sort((a, b) => a.inicio.localeCompare(b.inicio));
     for (const r of ordenados) hoja.addRow(cols.map((c) => c.valor(r)));
     hoja.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: cols.length } };
-  }
+  };
+  agregarHoja({ nombre: LAPTOPS.registros, columnas: columnas(LAPTOPS), filas: prestamos });
+  agregarHoja({ nombre: CUBICULOS.registros, columnas: columnas(CUBICULOS), filas: reservas });
+  agregarHoja({ nombre: 'Salas especiales', columnas: columnasHojaSalas(), filas: salas });
 
   const datos = await libro.xlsx.writeBuffer();
   const url = URL.createObjectURL(new Blob([datos], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
@@ -122,5 +141,5 @@ export async function descargarRespaldo(periodo: PeriodoRespaldo = {}): Promise<
   enlace.download = `respaldo-crai-${filtro || `completo-${diaDe()}`}.xlsx`;
   enlace.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  return prestamos.length + reservas.length;
+  return prestamos.length + reservas.length + salas.length;
 }
