@@ -6,7 +6,7 @@ import { diaDe } from '../../utils/fechas';
 const ANIO_ACTUAL = Number(diaDe().slice(0, 4));
 const ANIOS = Array.from({ length: 6 }, (_, i) => ANIO_ACTUAL - i);
 
-/** Botón para descargar en Excel los préstamos y reservas: todo, un año o un mes. */
+/** Botón para descargar en Excel los préstamos y reservas (laptops, cubículos y salas): todo, un año o un mes. */
 export function Respaldo() {
   const [estado, setEstado] = useState<{ texto: string; error?: boolean } | null>(null);
   const [descargando, setDescargando] = useState(false);
@@ -30,8 +30,8 @@ export function Respaldo() {
     <section className="panel">
       <h2>Respaldo de datos</h2>
       <p className="secundario">
-        Descarga un archivo Excel con los préstamos de laptops y las reservas de cubículos: todos, los de
-        un año o los de un mes. Guárdalo en un lugar seguro: contiene datos personales.
+        Descarga un archivo Excel con los préstamos de laptops, las reservas de cubículos y las de salas
+        especiales (una hoja para cada uno): todos, los de un año o los de un mes. Guárdalo en un lugar seguro: contiene datos personales.
       </p>
       <div className="campos">
         <label htmlFor="respaldo-anio">

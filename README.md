@@ -151,7 +151,8 @@ y pegue los mismos dos valores.
   final, el **detalle** de cada préstamo y cada reserva del período (también las de salas especiales). Los textos de logros, metas y
   conclusiones del reporte se escriben a mano; el sistema no los genera.
 - **Respaldo**: en Informes, el botón **Descargar respaldo (Excel)** guarda un archivo con
-  los préstamos y las reservas (una hoja para cada uno, una fila por registro con su fecha): todos, los de un año
+  los préstamos de laptops, las reservas de cubículos y las de salas especiales (una hoja para cada uno, una fila
+  por registro con su fecha; en salas, también la duración y si es recurrente): todos, los de un año
   o los de un mes (se cuentan por la fecha de inicio, en hora de Caracas). Si la devolución o salida fue otro día,
   su columna muestra también la fecha.
 - **Borrar todos los registros**: al final de Informes. Deja en 0 préstamos y reservas (y libera
