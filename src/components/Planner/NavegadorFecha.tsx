@@ -8,7 +8,7 @@ const diasDelMes = (anio: number, mes: number) => new Date(Date.UTC(anio, mes, 0
 const diaSemana = (anio: number, mes: number, dia: number) => DIAS_SEMANA[new Date(Date.UTC(anio, mes - 1, dia)).getUTCDay()];
 
 /**
- * Menú para ir a cualquier fecha del calendario de salas: año, mes y día.
+ * Menú para ir a cualquier fecha del calendario: año, mes y día.
  * Al cambiar de mes o de año, el día se ajusta si ese mes tiene menos días.
  */
 export function NavegadorFecha({ dia, onCambiar }: { dia: string; onCambiar: (dia: string) => void }) {

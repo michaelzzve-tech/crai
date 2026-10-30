@@ -1,12 +1,13 @@
 import { salaPorId } from '../config/salas';
 import { repositorio } from '../data';
 import type { NuevaReservaSala, ReservaSala } from '../types';
-import { diaALas, diaDe, formatearDia, formatearHora, horaActual, sumarDias } from '../utils/fechas';
+import { diaALas, diaDe, formatearDia, formatearHora, horaActual } from '../utils/fechas';
+import { validarSerie, type Recurrencia } from './recurrencia';
 import { generarId } from '../utils/id';
 
 /**
- * Reglas de las reservas de salas especiales: datos completos, capacidad de la
- * sala y sin choques de horario con otra reserva de la misma sala.
+ * Reglas de las reservas de salas especiales: datos completos y sin choques de
+ * horario con otra reserva de la misma sala. La capacidad es solo de referencia.
  */
 
 export async function listarReservasSalas(): Promise<ReservaSala[]> {
@@ -34,8 +35,11 @@ function prepararReserva(datos: NuevaReservaSala, existentes: ReservaSala[], ant
   const falta = textos.find(([valor]) => !valor.trim());
   if (falta) throw new Error(`Indique ${falta[1]}.`);
 
-  if (!datos.fecha) throw new Error('Indique la fecha de solicitud.');
-  if (!anterior && datos.fecha < diaDe()) throw new Error('La fecha de solicitud no puede ser anterior a hoy.');
+  if (!datos.fecha) throw new Error('Indique la fecha de la reserva.');
+  if (!anterior && datos.fecha < diaDe()) throw new Error('La fecha de la reserva no puede ser anterior a hoy.');
+  // La fecha de solicitud es solo informativa; las reservas viejas pueden no tenerla.
+  if (!anterior && !datos.fechaSolicitud) throw new Error('Indique la fecha de solicitud.');
+  if (datos.fechaSolicitud && datos.fechaSolicitud > diaDe()) throw new Error('La fecha de solicitud no puede ser posterior a hoy.');
   if (!datos.horaInicio || !datos.horaFin) throw new Error('Indique la hora de inicio y de fin.');
   const inicio = diaALas(datos.fecha, datos.horaInicio);
   const fin = diaALas(datos.fecha, datos.horaFin);
@@ -43,9 +47,6 @@ function prepararReserva(datos: NuevaReservaSala, existentes: ReservaSala[], ant
 
   const usuarios = Number(datos.usuarios);
   if (!Number.isInteger(usuarios) || usuarios < 1) throw new Error('El total de usuarios debe ser un número entero mayor que 0.');
-  if (usuarios > sala.capacidad) {
-    throw new Error(`${sala.nombre} es para ${sala.capacidad} personas como máximo.`);
-  }
 
   const choque = existentes.find((r) =>
     r.id !== anterior?.id && r.salaId === sala.id
@@ -67,6 +68,7 @@ function prepararReserva(datos: NuevaReservaSala, existentes: ReservaSala[], ant
     inicio: inicio.toISOString(),
     fin: fin.toISOString(),
     creada: anterior?.creada ?? new Date().toISOString(),
+    ...(datos.fechaSolicitud ? { fechaSolicitud: datos.fechaSolicitud } : {}),
     ...(anterior?.serieId ?? serieId ? { serieId: anterior?.serieId ?? serieId } : {}),
   };
 }
@@ -81,44 +83,13 @@ export async function guardarReservaSala(datos: NuevaReservaSala, anterior?: Res
   return reserva;
 }
 
-/** Días de la semana de una reserva recurrente: 1 = lunes … 6 = sábado. */
-export const DIAS_RECURRENCIA = [
-  { numero: 1, corto: 'Lun', largo: 'lunes' },
-  { numero: 2, corto: 'Mar', largo: 'martes' },
-  { numero: 3, corto: 'Mié', largo: 'miércoles' },
-  { numero: 4, corto: 'Jue', largo: 'jueves' },
-  { numero: 5, corto: 'Vie', largo: 'viernes' },
-  { numero: 6, corto: 'Sáb', largo: 'sábado' },
-];
-
-/** Máximo de fechas de una serie, para no crear cientos por error. */
-const MAXIMO_SERIE = 200;
-
-/** Día de la semana de "AAAA-MM-DD": 0 = domingo … 6 = sábado. */
-export const diaDeLaSemana = (dia: string) => new Date(`${dia}T12:00:00Z`).getUTCDay();
-
-/** Fechas entre `desde` y `hasta` (inclusive) que caen en los días de la semana elegidos. */
-export function fechasDeSerie(desde: string, hasta: string, dias: number[]): string[] {
-  const fechas: string[] = [];
-  if (!desde || !hasta || desde > hasta) return fechas;
-  for (let f = desde; f <= hasta && fechas.length <= MAXIMO_SERIE; f = sumarDias(f, 1)) {
-    if (dias.includes(diaDeLaSemana(f))) fechas.push(f);
-  }
-  return fechas;
-}
-
 /**
- * Reserva recurrente: la misma reserva en cada fecha de `desde` (datos.fecha) a `hasta` que caiga
+ * Reserva recurrente: la misma reserva en cada fecha de datos.fecha a `recurrencia.hasta` que caiga
  * en los días elegidos. Se revisan todas antes de guardar: si alguna fecha choca, no se crea ninguna
  * y se dice cuáles chocan.
  */
-export async function guardarSerieSala(datos: NuevaReservaSala, dias: number[], hasta: string): Promise<ReservaSala[]> {
-  if (!dias.length) throw new Error('Elija al menos un día de la semana para repetir la reserva.');
-  if (!hasta) throw new Error('Indique hasta qué día es válida la reserva recurrente.');
-  if (hasta < datos.fecha) throw new Error('La fecha "Hasta" debe ser igual o posterior a la fecha "Desde".');
-  const fechas = fechasDeSerie(datos.fecha, hasta, dias);
-  if (!fechas.length) throw new Error('No hay ningún día elegido entre esas fechas.');
-  if (fechas.length > MAXIMO_SERIE) throw new Error(`Son más de ${MAXIMO_SERIE} fechas; acorte el período.`);
+export async function guardarSerieSala(datos: NuevaReservaSala, recurrencia: Recurrencia): Promise<ReservaSala[]> {
+  const fechas = validarSerie(datos.fecha, recurrencia);
 
   const serieId = generarId();
   const existentes = await repositorio.listarReservasSalas();
@@ -161,6 +132,7 @@ export async function moverReservaSala(reserva: ReservaSala, fecha: string, hora
     usuarios: String(reserva.usuarios),
     solicitante: reserva.solicitante,
     profesor: reserva.profesor,
+    fechaSolicitud: reserva.fechaSolicitud ?? '',
   }, reserva);
 }
 

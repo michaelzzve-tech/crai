@@ -3,12 +3,13 @@
 Aplicación web con tres módulos:
 
 - **Laptops**: préstamo de las laptops 1 a 25 y 59 a 80.
-- **Cubículos**: reserva de los cubículos 1 a 6 y el Podcast.
-- **Salas especiales**: reserva de la Sala Javier (24 personas), Loyola (32), Basabe (50) y
-  Piedra (50) en un calendario semanal.
+- **Cubículos**: reserva de los cubículos 1 a 6 y el Podcast en un calendario semanal, como el de Salas especiales.
+- **Salas especiales**: reserva de la Sala Javier (24 personas), Loyola (32), Basabe (50),
+  Piedra (50) y CRAI (50) en un calendario semanal.
 
-Laptops y Cubículos funcionan igual: cada uno tiene su formulario, la lista de préstamos o
-reservas en curso (con alerta de vencidos), el estado de cada laptop o cubículo y el historial.
+Laptops y Cubículos usan los mismos campos de registro, la lista de préstamos o reservas en curso
+(con alerta de vencidos), el estado de cada laptop o cubículo y el historial. En Laptops el formulario
+está siempre a la vista; en Cubículos se abre desde el calendario.
 
 ![Pantalla de préstamos](docs/captura.png)
 
@@ -46,10 +47,13 @@ Sin Supabase, cada persona que la abre tiene sus propios datos, guardados en su 
    Y para el campo Semestre o nivel (tampoco borra datos):
    `alter table prestamos add column if not exists semestre text; alter table reservas add column if not exists semestre text;`
    Para el módulo Salas especiales ejecute [`supabase/salas-especiales.sql`](supabase/salas-especiales.sql),
-   que crea su tabla sin borrar datos. Si la tabla ya existía, para las reservas recurrentes basta
-   `alter table reservas_salas add column if not exists serie_id text;` (tampoco borra datos).
+   que crea su tabla sin borrar datos. Si la tabla ya existía, para las reservas recurrentes y la
+   fecha de solicitud basta (tampoco borra datos):
+   `alter table reservas_salas add column if not exists serie_id text; alter table reservas_salas add column if not exists fecha_solicitud date;`
    Y para el campo Cantidad de usuarios de los cubículos (tampoco borra datos):
    `alter table prestamos add column if not exists usuarios integer; alter table reservas add column if not exists usuarios integer;`
+   Y para las reservas recurrentes de cubículos (tampoco borra datos):
+   `alter table reservas add column if not exists serie_id text;`
 3. En **Authentication → Users → Add user → Create new user**, cree una cuenta (correo y
    contraseña) para cada bibliotecario. Marque "Auto Confirm User".
 4. En **Authentication → Sign In / Providers**, desactive **Allow new users to sign up**
@@ -84,6 +88,15 @@ y pegue los mismos dos valores.
   no ocupa la laptop o el cubículo hasta su hora de inicio y se puede cancelar; si choca con otra reserva
   del mismo recurso, no se guarda (una laptop sin devolver cuenta como ocupada hasta el final de su día). El botón **Limpiar** vacía los campos y pone
   la hora de inicio en la hora actual.
+- **Calendario de cubículos**: la pestaña Reservas de Cubículos muestra la semana (lunes a domingo, de
+  7 a. m. a 9 p. m.) igual que Salas especiales: flechas, **Hoy**, menús de año, mes y día, y un botón de
+  color por cubículo para mostrarlo u ocultarlo. Con **+ Nueva reserva** o un clic en un espacio libre se
+  abre el formulario de siempre en una ventana (con el día, la hora y una hora de duración ya puestos).
+  La casilla **Reserva recurrente** repite la reserva los días elegidos (lunes a sábado) entre
+  **Válida desde** y **Válida hasta**; si alguna fecha choca, no se crea ninguna. Con un clic en una
+  reserva se ven sus datos y se puede **Modificar horario**, **Registrar salida** o, si aún no empieza,
+  **Cancelar reserva** (en una serie: **Solo esta fecha** o **Esta y las siguientes**). Una reserva se
+  puede **arrastrar** a otro día u hora. Las ya terminadas se ven más claras y no se mueven.
 - **En curso**: préstamos o reservas activos; desde ahí se registra la devolución de la
   laptop o la salida del cubículo. En los cubículos, el botón del **lápiz** cambia la fecha, el
   horario y la cantidad de usuarios de una reserva (se revisa que no choque con otra; si queda para más tarde, el cubículo
@@ -103,9 +116,10 @@ y pegue los mismos dos valores.
   elegido queda marcado; también se elige con un clic en el nombre del día); los botones de cada sala la muestran u ocultan y dicen cuántas
   reservas tiene esa semana. Se reserva con **+ Nueva reserva** o con un clic en un espacio libre
   (queda elegido ese día y esa hora). El formulario pide sala, institución, carrera o año, semestre,
-  hora de inicio y de fin, actividad (con sugerencias o escrita), total de usuarios (hasta la
-  capacidad de la sala), fecha de solicitud (el día en que se usará la sala), solicitado por y
-  profesor(a). No deja reservar una sala ya ocupada a esa hora ni un día pasado. Con un clic en una
+  hora de inicio y de fin, actividad (con sugerencias o escrita), total de usuarios (libre; la
+  capacidad de la sala es solo de referencia), fecha de la reserva (el día en que se usará la sala, la que cuenta para el
+  calendario y los choques), fecha de solicitud (cuándo se pidió la sala; solo informativa, no puede ser
+  posterior a hoy), solicitado por y profesor(a). No deja reservar una sala ya ocupada a esa hora ni un día pasado. Con un clic en una
   reserva se ven todos sus datos y se puede **Modificar** o **Cancelar reserva**. Una reserva también se
   puede **arrastrar** (con el mouse o el dedo) a otro día u hora, de 15 en 15 minutos y con la misma
   duración; si la sala ya está ocupada a esa hora o el día ya pasó, vuelve a su lugar y se explica por qué.

@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { campoCarreraDe, INSTITUTOS, NO_APLICA, semestresDe } from '../../config/opciones';
 import { ACTIVIDADES, HORA_APERTURA, HORA_CIERRE, SALAS, salaPorId } from '../../config/salas';
-import { DIAS_RECURRENCIA, diaDeLaSemana, fechasDeSerie } from '../../services/salaService';
+import { recurrenciaInicial, type Recurrencia } from '../../services/recurrencia';
 import type { NuevaReservaSala, ReservaSala } from '../../types';
-import { diaDe, duracionEntreHoras, horaActual, sumarDias } from '../../utils/fechas';
+import { diaDe, duracionEntreHoras, horaActual } from '../../utils/fechas';
+import { CampoRecurrencia } from '../Planner';
 import { CampoCarreraOAnio, Desplegable } from '../RegistroForm';
 
 const dosDigitos = (n: number) => String(n).padStart(2, '0');
@@ -31,6 +32,7 @@ function datosDe(r: ReservaSala): NuevaReservaSala {
     usuarios: String(r.usuarios),
     solicitante: r.solicitante,
     profesor: r.profesor,
+    fechaSolicitud: r.fechaSolicitud ?? '',
   };
 }
 
@@ -38,12 +40,6 @@ function datosDe(r: ReservaSala): NuevaReservaSala {
 export type InicioFormulario =
   | { reserva: ReservaSala }
   | { salaId: string; fecha: string; horaInicio: string };
-
-/** Días de la semana (1 = lunes … 6 = sábado) y última fecha de una reserva recurrente. */
-export interface Recurrencia {
-  dias: number[];
-  hasta: string;
-}
 
 interface Props {
   inicio: InicioFormulario;
@@ -66,11 +62,11 @@ export function FormularioSala({ inicio, onGuardar, onCerrar }: Props) {
     usuarios: '',
     solicitante: '',
     profesor: '',
+    fechaSolicitud: diaDe(),
   });
   // Reserva recurrente (solo al crear): se repite en los días elegidos, de "Válida desde" a "Válida hasta".
-  const [recurrente, setRecurrente] = useState(false);
-  const [dias, setDias] = useState<number[]>([]);
-  const [hasta, setHasta] = useState('');
+  const [recurrencia, setRecurrencia] = useState<Recurrencia | null>(null);
+  const recurrente = !!recurrencia;
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
   const ventana = useRef<HTMLDialogElement>(null);
@@ -90,23 +86,11 @@ export function FormularioSala({ inicio, onGuardar, onCerrar }: Props) {
     setDatos({ ...datos, instituto, carrera: unica, semestre: unica === NO_APLICA ? NO_APLICA : '' });
   };
 
-  /** Al activarla se propone el día de la semana de la fecha elegida, durante cuatro semanas. */
-  const activarRecurrente = (activa: boolean) => {
-    setRecurrente(activa);
-    if (activa && !dias.length) {
-      const dia = diaDeLaSemana(datos.fecha);
-      if (dia >= 1 && dia <= 6) setDias([dia]);
-    }
-    if (activa && !hasta) setHasta(sumarDias(datos.fecha, 27));
-  };
-  const alternarDia = (n: number) => setDias(dias.includes(n) ? dias.filter((d) => d !== n) : [...dias, n].sort((x, y) => x - y));
-  const fechas = recurrente ? fechasDeSerie(datos.fecha, hasta, dias) : [];
-
   async function enviar(e: FormEvent) {
     e.preventDefault();
     setGuardando(true);
     try {
-      await onGuardar(datos, anterior, recurrente ? { dias, hasta } : undefined);
+      await onGuardar(datos, anterior, recurrencia ?? undefined);
       onCerrar();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -153,17 +137,23 @@ export function FormularioSala({ inicio, onGuardar, onCerrar }: Props) {
           </label>
           <label htmlFor="sala-usuarios">
             Total usuarios
-            <input id="sala-usuarios" type="number" required min={1} max={sala?.capacidad} step={1} placeholder="Escriba un número"
+            <input id="sala-usuarios" type="number" required min={1} step={1} placeholder="Escriba un número"
               value={datos.usuarios} onChange={(e) => cambiar('usuarios')(e.target.value)} />
-            {sala && <span className="secundario">Máximo {sala.capacidad} en {sala.nombre}</span>}
+            {sala && <span className="secundario">Capacidad de referencia: {sala.capacidad}</span>}
           </label>
           {!recurrente && (
             <label htmlFor="sala-fecha">
-              Fecha de solicitud
+              Fecha de la reserva
               <input id="sala-fecha" type="date" required min={anterior ? undefined : diaDe()} value={datos.fecha}
                 onChange={(e) => cambiar('fecha')(e.target.value)} />
             </label>
           )}
+          <label htmlFor="sala-solicitud">
+            Fecha de solicitud
+            <input id="sala-solicitud" type="date" required={!anterior || !!anterior.fechaSolicitud} max={diaDe()} value={datos.fechaSolicitud}
+              onChange={(e) => cambiar('fechaSolicitud')(e.target.value)} />
+            <span className="secundario">Cuándo se pidió la sala</span>
+          </label>
           <label htmlFor="sala-solicitante">
             Solicitado por
             <input id="sala-solicitante" required maxLength={80} placeholder="Nombre y apellido" value={datos.solicitante}
@@ -176,38 +166,12 @@ export function FormularioSala({ inicio, onGuardar, onCerrar }: Props) {
           </label>
           {!anterior && (
             <label className="ancho casilla">
-              <input type="checkbox" checked={recurrente} onChange={(e) => activarRecurrente(e.target.checked)} />
+              <input type="checkbox" checked={recurrente} onChange={(e) => setRecurrencia(e.target.checked ? recurrenciaInicial(datos.fecha) : null)} />
               Reserva recurrente
             </label>
           )}
-          {recurrente && (
-            <fieldset className="ancho recurrencia">
-              <legend>Se repite los días</legend>
-              <div className="dias-recurrencia" role="group" aria-label="Días de la semana">
-                {DIAS_RECURRENCIA.map((d) => (
-                  <button key={d.numero} type="button" className={dias.includes(d.numero) ? 'activo' : ''}
-                    aria-pressed={dias.includes(d.numero)} title={d.largo} onClick={() => alternarDia(d.numero)}>
-                    {d.corto}
-                  </button>
-                ))}
-              </div>
-              <div className="campos">
-                <label htmlFor="sala-desde">
-                  Válida desde
-                  <input id="sala-desde" type="date" required min={diaDe()} value={datos.fecha}
-                    onChange={(e) => cambiar('fecha')(e.target.value)} />
-                </label>
-                <label htmlFor="sala-hasta">
-                  Válida hasta
-                  <input id="sala-hasta" type="date" required min={datos.fecha} value={hasta}
-                    onChange={(e) => setHasta(e.target.value)} />
-                </label>
-              </div>
-              <p className="secundario">
-                {fechas.length === 0 ? 'Elija al menos un día que caiga entre esas fechas.'
-                  : fechas.length === 1 ? 'Se creará 1 reserva.' : `Se crearán ${fechas.length} reservas.`}
-              </p>
-            </fieldset>
+          {recurrencia && (
+            <CampoRecurrencia prefijo="sala" desde={datos.fecha} onDesde={cambiar('fecha')} recurrencia={recurrencia} onRecurrencia={setRecurrencia} />
           )}
         </div>
         {error && <div className="aviso aviso-error" role="alert">{error}</div>}

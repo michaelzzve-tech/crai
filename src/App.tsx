@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ActividadDiaria } from './components/ActividadDiaria';
+import { CalendarioReservas } from './components/CalendarioReservas';
 import { Encabezado, type Pestana, type Vista } from './components/Encabezado';
 import { ErrorPantalla } from './components/ErrorPantalla';
 import { Historial } from './components/Historial';
@@ -111,7 +112,9 @@ function VistaModulo({ modulo, pestana }: { modulo: Modulo; pestana: Pestana }) 
 
       {pestana === 'registro' && (
         <>
-          <RegistroForm modulo={modulo} recursos={recursos} ejecutar={ejecutar} />
+          {modulo.conCalendario
+            ? <CalendarioReservas modulo={modulo} recursos={recursos} registros={registros} ejecutar={ejecutar} />
+            : <RegistroForm modulo={modulo} recursos={recursos} ejecutar={ejecutar} />}
           <RegistrosActivos modulo={modulo} registros={registros} ejecutar={ejecutar} />
         </>
       )}

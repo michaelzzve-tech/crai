@@ -302,3 +302,12 @@ label.casilla input { width: 18px; height: 18px; margin: 0; }
 .dias-recurrencia { display: flex; flex-wrap: wrap; gap: 6px; }
 .dias-recurrencia button { border-radius: 999px; min-width: 52px; padding: 6px 12px; }
 .dias-recurrencia button.activo { background: var(--primario); border-color: var(--primario); color: #fff; }
+/* Calendario de reservas de cubículos (el mismo de salas especiales) */
+.reserva-sala.angosta { padding-inline: 4px; }
+.reserva-sala.angosta span { display: none; }
+.reserva-sala.atenuada { opacity: .55; background-image: repeating-linear-gradient(135deg, transparent 0 6px, rgba(255, 255, 255, .5) 6px 8px); }
+.reserva-sala.fija { cursor: pointer; }
+.formulario-ventana { margin: 0; }
+.ventana .formulario { box-shadow: none; padding: 0; border: none; }
+.titulo-sala .badge { font-size: .75rem; }
+.formulario-ventana .aviso { margin: 4px 0 12px; }

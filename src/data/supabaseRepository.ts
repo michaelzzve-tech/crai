@@ -29,6 +29,7 @@ interface FilaRegistro {
   hora_inicio: string;
   hora_fin: string | null;
   fin_real: string | null;
+  serie_id?: string | null; // Solo existe en la tabla de reservas de cubículos
 }
 
 const iso = (fecha: string) => new Date(fecha).toISOString();
@@ -61,6 +62,7 @@ const aRegistro = (f: FilaRegistro): Registro => ({
   inicio: iso(f.hora_inicio),
   fin: f.hora_fin ? iso(f.hora_fin) : undefined,
   finReal: f.fin_real ? iso(f.fin_real) : undefined,
+  serieId: f.serie_id ?? undefined,
 });
 
 const aFilaRegistro = (r: Registro): FilaRegistro => ({
@@ -77,6 +79,8 @@ const aFilaRegistro = (r: Registro): FilaRegistro => ({
   hora_inicio: r.inicio,
   hora_fin: r.fin ?? null,
   fin_real: r.finReal ?? null,
+  // Se envía solo si hay serie, para no pedir esa columna a la tabla de préstamos de laptops.
+  ...(r.serieId ? { serie_id: r.serieId } : {}),
 });
 
 interface FilaReservaSala {
@@ -92,6 +96,7 @@ interface FilaReservaSala {
   hora_inicio: string;
   hora_fin: string;
   creada: string;
+  fecha_solicitud: string | null;
   serie_id: string | null;
 }
 
@@ -108,6 +113,7 @@ const aReservaSala = (f: FilaReservaSala): ReservaSala => ({
   inicio: iso(f.hora_inicio),
   fin: iso(f.hora_fin),
   creada: iso(f.creada),
+  fechaSolicitud: f.fecha_solicitud ?? undefined,
   serieId: f.serie_id ?? undefined,
 });
 
@@ -124,6 +130,7 @@ const aFilaReservaSala = (r: ReservaSala): FilaReservaSala => ({
   hora_inicio: r.inicio,
   hora_fin: r.fin,
   creada: r.creada,
+  fecha_solicitud: r.fechaSolicitud || null,
   serie_id: r.serieId ?? null,
 });
 

@@ -46,7 +46,7 @@ src/
 ├── data/               Repositorio: Supabase o localStorage
 ├── services/
 │   ├── registroService.ts      Reglas: registrar, finalizar, validar, choques de horario
-│   ├── salaService.ts          Reglas de las salas: capacidad y choques de horario
+│   ├── salaService.ts          Reglas de las salas: datos completos y choques de horario
 │   ├── notificacionService.ts  Avisos de cubículos por vencer o vencidos
 │   ├── informeService.ts       Cálculo del informe mensual
 │   ├── informePdf.ts           PDF del informe (jsPDF, carga diferida)
@@ -64,8 +64,12 @@ Laptops y Cubículos funcionan igual: lo que cambia entre ellos está en
 cambio pedido "en ambos módulos" normalmente se hace una sola vez en el código común.
 
 **Salas especiales** es aparte (no es un `Modulo`): tiene sus propios datos (`ReservaSala`, tabla
-`reservas_salas`, creada con `supabase/salas-especiales.sql`), reglas en `salaService.ts` y la
-vista de calendario semanal en `src/components/Salas/`.
+`reservas_salas`, creada con `supabase/salas-especiales.sql`), reglas en `salaService.ts` y su
+vista en `src/components/Salas/`.
+
+El calendario semanal (`src/components/Planner/`) lo usan Salas especiales y los módulos con
+`conCalendario` (Cubículos, en `src/components/CalendarioReservas/`). Las reservas recurrentes
+(`src/services/recurrencia.ts`) guardan el mismo `serieId` en todas las fechas de la serie.
 
 ## Convenciones
 

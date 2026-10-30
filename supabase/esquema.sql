@@ -43,6 +43,8 @@ create table reservas (
   like prestamos including all,
   foreign key (recurso_id) references cubiculos (id)
 );
+-- Reservas recurrentes de cubículos: mismo valor en todas las fechas de la serie.
+alter table reservas add column serie_id text;
 
 -- Reservas de las salas especiales (Sala Javier, Loyola, Basabe y Piedra).
 create table reservas_salas (
@@ -58,7 +60,8 @@ create table reservas_salas (
   hora_inicio timestamptz not null,
   hora_fin timestamptz not null,
   creada timestamptz not null default now(), -- cuándo se registró la reserva
-  serie_id text -- mismo valor en todas las fechas de una reserva recurrente; vacío si es de una sola fecha
+  serie_id text, -- mismo valor en todas las fechas de una reserva recurrente; vacío si es de una sola fecha
+  fecha_solicitud date -- cuándo se pidió la sala (solo informativo); vacío en reservas viejas
 );
 
 -- Seguridad: solo los bibliotecarios que inician sesión pueden leer y escribir.
