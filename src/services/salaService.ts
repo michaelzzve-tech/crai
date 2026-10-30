@@ -5,8 +5,8 @@ import { diaALas, diaDe, formatearDia, formatearHora, horaActual, sumarDias } fr
 import { generarId } from '../utils/id';
 
 /**
- * Reglas de las reservas de salas especiales: datos completos, capacidad de la
- * sala y sin choques de horario con otra reserva de la misma sala.
+ * Reglas de las reservas de salas especiales: datos completos y sin choques de
+ * horario con otra reserva de la misma sala. La capacidad es solo de referencia.
  */
 
 export async function listarReservasSalas(): Promise<ReservaSala[]> {
@@ -46,9 +46,6 @@ function prepararReserva(datos: NuevaReservaSala, existentes: ReservaSala[], ant
 
   const usuarios = Number(datos.usuarios);
   if (!Number.isInteger(usuarios) || usuarios < 1) throw new Error('El total de usuarios debe ser un número entero mayor que 0.');
-  if (usuarios > sala.capacidad) {
-    throw new Error(`${sala.nombre} es para ${sala.capacidad} personas como máximo.`);
-  }
 
   const choque = existentes.find((r) =>
     r.id !== anterior?.id && r.salaId === sala.id

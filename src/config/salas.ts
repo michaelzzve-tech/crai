@@ -4,7 +4,7 @@
 export interface Sala {
   id: string; // Código que se guarda en la base de datos; no cambiarlo si ya hay reservas
   nombre: string;
-  capacidad: number; // Máximo de personas
+  capacidad: number; // Personas que caben; solo de referencia, no limita la reserva
   color: string; // Color de la sala en el calendario
 }
 

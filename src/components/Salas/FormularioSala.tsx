@@ -155,9 +155,9 @@ export function FormularioSala({ inicio, onGuardar, onCerrar }: Props) {
           </label>
           <label htmlFor="sala-usuarios">
             Total usuarios
-            <input id="sala-usuarios" type="number" required min={1} max={sala?.capacidad} step={1} placeholder="Escriba un número"
+            <input id="sala-usuarios" type="number" required min={1} step={1} placeholder="Escriba un número"
               value={datos.usuarios} onChange={(e) => cambiar('usuarios')(e.target.value)} />
-            {sala && <span className="secundario">Máximo {sala.capacidad} en {sala.nombre}</span>}
+            {sala && <span className="secundario">Capacidad de referencia: {sala.capacidad}</span>}
           </label>
           {!recurrente && (
             <label htmlFor="sala-fecha">

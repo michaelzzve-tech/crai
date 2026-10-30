@@ -46,7 +46,7 @@ src/
 ├── data/               Repositorio: Supabase o localStorage
 ├── services/
 │   ├── registroService.ts      Reglas: registrar, finalizar, validar, choques de horario
-│   ├── salaService.ts          Reglas de las salas: capacidad y choques de horario
+│   ├── salaService.ts          Reglas de las salas: datos completos y choques de horario
 │   ├── notificacionService.ts  Avisos de cubículos por vencer o vencidos
 │   ├── informeService.ts       Cálculo del informe mensual
 │   ├── informePdf.ts           PDF del informe (jsPDF, carga diferida)

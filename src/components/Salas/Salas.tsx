@@ -201,7 +201,7 @@ function DetalleReserva({ reserva: r, onCerrar, onModificar, onCancelar }: {
     ['Carrera o año', r.carrera],
     ['Semestre', r.semestre],
     ['Actividad', r.actividad],
-    ['Total usuarios', `${r.usuarios} de ${sala?.capacidad ?? '?'}`],
+    ['Total usuarios', sala ? `${r.usuarios} (capacidad de referencia: ${sala.capacidad})` : String(r.usuarios)],
     ['Solicitado por', r.solicitante],
     ['Profesor(a)', r.profesor],
     ['Fecha de solicitud', r.fechaSolicitud ? formatearDia(r.fechaSolicitud) : 'No registrada'],

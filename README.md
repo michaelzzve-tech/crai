@@ -104,8 +104,8 @@ y pegue los mismos dos valores.
   elegido queda marcado; también se elige con un clic en el nombre del día); los botones de cada sala la muestran u ocultan y dicen cuántas
   reservas tiene esa semana. Se reserva con **+ Nueva reserva** o con un clic en un espacio libre
   (queda elegido ese día y esa hora). El formulario pide sala, institución, carrera o año, semestre,
-  hora de inicio y de fin, actividad (con sugerencias o escrita), total de usuarios (hasta la
-  capacidad de la sala), fecha de la reserva (el día en que se usará la sala, la que cuenta para el
+  hora de inicio y de fin, actividad (con sugerencias o escrita), total de usuarios (libre; la
+  capacidad de la sala es solo de referencia), fecha de la reserva (el día en que se usará la sala, la que cuenta para el
   calendario y los choques), fecha de solicitud (cuándo se pidió la sala; solo informativa, no puede ser
   posterior a hoy), solicitado por y profesor(a). No deja reservar una sala ya ocupada a esa hora ni un día pasado. Con un clic en una
   reserva se ven todos sus datos y se puede **Modificar** o **Cancelar reserva**. Una reserva también se
