@@ -42,14 +42,30 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
   const color = (id: string) => modulo.colores[modulo.opciones.indexOf(id)] ?? '#7b8794';
   const nombre = (id: string) => `${modulo.recurso} ${nombreRecurso(id)}`;
 
-  /** Cada reserva tal como se dibuja: el cubículo, el horario y quién lo usa. Las terminadas no se mueven. */
+  /** Cada reserva tal como se dibuja: el cubículo y todos sus datos (menos la fecha de registro). Las terminadas no se mueven. */
   const evento = (r: Registro): EventoPlanner => {
     const horario = `${formatearHora(r.inicio)} – ${formatearHora(r.fin!)}`;
     return {
       id: r.id, inicio: r.inicio, fin: r.fin!, color: color(r.recursoId),
       titulo: nombreRecurso(r.recursoId) === r.recursoId ? `${modulo.recurso} ${r.recursoId}` : nombreRecurso(r.recursoId),
-      lineas: [horario, `${r.nombre}${r.usuarios ? ` · ${r.usuarios} usu.` : ''}`],
-      ayuda: `${nombre(r.recursoId)} · ${horario} · ${r.nombre}${r.finReal ? ` · ${modulo.finalizado}` : ''}`,
+      lineas: [horario, `${r.nombre}${r.usuarios ? ` · ${r.usuarios} usu.` : ''}`,
+        [r.genero, r.instituto, r.condicion].filter(Boolean).join(' · '),
+        [r.carrera, r.semestre].filter(Boolean).join(' · '), r.motivo],
+      datos: [
+        [modulo.recurso, nombreRecurso(r.recursoId)],
+        ['Fecha', formatearDiaLargo(diaDe(r.inicio))],
+        ['Hora', horario],
+        ['Nombre', r.nombre],
+        ['Género', r.genero ?? ''],
+        ['Instituto', r.instituto],
+        ['Condición', r.condicion],
+        ['Carrera o año', r.carrera],
+        ['Semestre, nivel o sección', r.semestre ?? ''],
+        ...(modulo.conUsuarios ? [['Cantidad de usuarios', String(r.usuarios ?? '')] as [string, string]] : []),
+        ['Motivo de uso', r.motivo],
+        ...(r.serieId ? [['Recurrente', 'Sí'] as [string, string]] : []),
+        ...(r.finReal ? [[modulo.finalizado, formatearHora(r.finReal)] as [string, string]] : []),
+      ],
       movible: !r.finReal,
       atenuado: !!r.finReal,
     };
