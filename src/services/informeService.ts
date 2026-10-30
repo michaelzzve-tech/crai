@@ -1,7 +1,8 @@
 import { CUBICULOS, LAPTOPS } from '../config/modulos';
 import { CARRERA_POR_INSTITUTO, CONDICIONES_LAPTOPS } from '../config/opciones';
+import { SALAS } from '../config/salas';
 import { repositorio } from '../data';
-import type { Registro } from '../types';
+import type { Registro, ReservaSala } from '../types';
 import { diaDe, formatearDia } from '../utils/fechas';
 
 // Informe con el formato del reporte mensual del CRAI: beneficiarios por servicio
@@ -19,7 +20,7 @@ export interface Conteo {
   cantidad: number;
 }
 
-/** Estudiantes, Docentes… de una institución. */
+/** Estudiantes, Docentes… de una institución (en salas especiales, cada sala). */
 export interface Grupo {
   titulo: string;
   cantidad: number;
@@ -27,7 +28,7 @@ export interface Grupo {
   usuarios: number;
   cursantes: Conteo[];
   motivos: Conteo[];
-  usuariosCubiculos?: number; // Solo cubículos: suma de "Cantidad de usuarios"
+  usuariosCubiculos?: number; // Cubículos y salas: suma de la cantidad de usuarios
   minutos: number;
 }
 
@@ -41,8 +42,9 @@ export interface BloqueInstitucion {
   grupos: Grupo[];
 }
 
-/** "Cubículos de Estudio" o "Préstamos de Laptops", como en la sección 3 del reporte. */
+/** "Cubículos de Estudio", "Préstamos de Laptops" o "Salas Especiales", como en la sección 3 del reporte. */
 export interface Servicio {
+  tipo: 'cubiculos' | 'laptops' | 'salas';
   titulo: string;
   unidad: string; // "reservas" o "solicitudes"
   totales: { etiqueta: string; valor: string }[];
@@ -71,10 +73,11 @@ export interface Informe {
   comparativos: SeccionCuadros[];
   detallePrestamos: Registro[]; // Cada préstamo del período, del más antiguo al más reciente
   detalleReservas: Registro[]; // Cada reserva del período, igual
+  detalleSalas: ReservaSala[]; // Cada reserva de sala especial del período, igual
 }
 
-/** Colores de las líneas de las gráficas, siempre en este orden (validados para daltonismo). */
-export const COLORES_SERIES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100'];
+/** Colores de las líneas de las gráficas, siempre en este orden (validados para daltonismo; la leyenda nombra cada línea). */
+export const COLORES_SERIES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4'];
 
 /** Cuántos meses muestran los cuadros comparativos (hasta el mes del período). */
 const MESES_COMPARATIVOS = 13;
@@ -133,7 +136,10 @@ const usoCubiculo = (r: Registro) => {
   return fin ? minutosEntre(r.inicio, fin) : 0;
 };
 
-function enPeriodo(registros: Registro[], { desde, hasta }: Periodo): Registro[] {
+/** Salas: de la hora de inicio a la de fin. */
+const usoSala = (r: ReservaSala) => minutosEntre(r.inicio, r.fin);
+
+function enPeriodo<T extends { inicio: string }>(registros: T[], { desde, hasta }: Periodo): T[] {
   return registros.filter((r) => {
     const dia = diaDe(r.inicio);
     return dia >= desde && dia <= hasta;
@@ -144,13 +150,13 @@ function enPeriodo(registros: Registro[], { desde, hasta }: Periodo): Registro[]
 const institucionDe = (r: Registro) => (r.condicion === 'DTI' ? OTROS_DTI : r.instituto === 'Otro' ? OTROS : r.instituto);
 
 /** "Año 3" para ITJO; la carrera para los demás; nada si no aplica. */
-function cursante(r: Registro): string {
+function cursante(r: { instituto: string; carrera: string }): string {
   if (!r.carrera || r.carrera === 'No aplica') return '';
   const campo = CARRERA_POR_INSTITUTO[r.instituto];
   return campo?.tipo === 'menu' && campo.opciones.every((o) => /^\d+$/.test(o)) ? `Año ${r.carrera}` : r.carrera;
 }
 
-function contar(registros: Registro[], clave: (r: Registro) => string): Conteo[] {
+function contar<T>(registros: T[], clave: (r: T) => string): Conteo[] {
   const conteo = new Map<string, number>();
   for (const r of registros) {
     const k = clave(r);
@@ -161,10 +167,11 @@ function contar(registros: Registro[], clave: (r: Registro) => string): Conteo[]
     .sort((a, b) => a.etiqueta.localeCompare(b.etiqueta, 'es', { numeric: true }));
 }
 
-const sumar = (registros: Registro[], valor: (r: Registro) => number) => registros.reduce((t, r) => t + valor(r), 0);
+const sumar = <T>(registros: T[], valor: (r: T) => number) => registros.reduce((t, r) => t + valor(r), 0);
 const deGenero = (registros: Registro[], genero: string) => registros.filter((r) => r.genero === genero).length;
 
 function servicio(
+  tipo: Servicio['tipo'],
   titulo: string,
   unidad: string,
   registros: Registro[],
@@ -232,7 +239,44 @@ function servicio(
     };
   });
 
-  return { titulo, unidad, totales, instituciones };
+  return { tipo, titulo, unidad, totales, instituciones };
+}
+
+/**
+ * Salas especiales, con la misma forma que los otros servicios. No piden género ni
+ * condición: el detalle de cada institución se separa por sala, y en vez de motivos
+ * de uso se cuentan las actividades.
+ */
+function servicioSalas(reservas: ReservaSala[]): Servicio {
+  const total = sumar(reservas, usoSala);
+  const usuarios = (lista: ReservaSala[]) => sumar(lista, (r) => r.usuarios);
+  const totales = [
+    { etiqueta: 'Total de reservas realizadas', valor: dosCifras(reservas.length) },
+    { etiqueta: 'Total de usuarios en salas', valor: dosCifras(usuarios(reservas)) },
+    ...SALAS.map((s) => ({ etiqueta: `Reservas de ${s.nombre}`, valor: dosCifras(reservas.filter((r) => r.salaId === s.id).length) })),
+    { etiqueta: 'Tiempo total de uso general', valor: `${Math.floor(total / 60)} horas con ${dosCifras(total % 60)} minutos` },
+  ];
+  const institucion = (r: ReservaSala) => (INSTITUCIONES.includes(r.instituto) ? r.instituto : OTROS);
+  const presentes = new Set(reservas.map(institucion));
+  const nombres = [...INSTITUCIONES, ...(presentes.has(OTROS) ? [OTROS] : [])];
+  const instituciones = nombres.map((nombre): BloqueInstitucion => {
+    const lista = reservas.filter((r) => institucion(r) === nombre);
+    const grupos = SALAS
+      .map((s) => ({ s, deSala: lista.filter((r) => r.salaId === s.id) }))
+      .filter(({ deSala }) => deSala.length > 0)
+      .map(({ s, deSala }): Grupo => ({
+        titulo: s.nombre,
+        cantidad: deSala.length,
+        usuarias: 0,
+        usuarios: 0,
+        cursantes: contar(deSala, cursante),
+        motivos: contar(deSala, (r) => r.actividad),
+        usuariosCubiculos: usuarios(deSala),
+        minutos: sumar(deSala, usoSala),
+      }));
+    return { nombre, cantidad: lista.length, usuarias: 0, usuarios: 0, usuariosCubiculos: usuarios(lista), minutos: sumar(lista, usoSala), grupos };
+  });
+  return { tipo: 'salas', titulo: 'Salas Especiales', unidad: 'reservas', totales, instituciones };
 }
 
 /** Los meses de los cuadros: "2025-09"… "2026-09". */
@@ -247,15 +291,15 @@ function mesesHasta(hasta: string): string[] {
 /** "2025-09" → "sep-25". */
 const etiquetaMes = (mes: string) => `${MESES[Number(mes.slice(5, 7)) - 1]}-${mes.slice(2, 4)}`;
 
-function cuadro(
+function cuadro<T extends { inicio: string }>(
   titulo: string,
   grafica: string,
   columna: string,
   meses: string[],
-  registros: Registro[],
+  registros: T[],
   filas: string[],
-  claveFila: (r: Registro) => string,
-  valor: (r: Registro) => number = () => 1,
+  claveFila: (r: T) => string,
+  valor: (r: T) => number = () => 1,
   horas = false,
 ): Cuadro {
   const valores = filas.map(() => meses.map(() => 0));
@@ -271,9 +315,11 @@ function cuadro(
   };
 }
 
-function comparativos(prestamos: Registro[], reservas: Registro[], hasta: string): SeccionCuadros[] {
+function comparativos(prestamos: Registro[], reservas: Registro[], salas: ReservaSala[], hasta: string): SeccionCuadros[] {
   const meses = mesesHasta(hasta);
   const institucion = (r: Registro) => (INSTITUCIONES.includes(r.instituto) && r.condicion !== 'DTI' ? r.instituto : OTROS);
+  const institucionSala = (r: ReservaSala) => (INSTITUCIONES.includes(r.instituto) ? r.instituto : OTROS);
+  const nombreSala = (r: ReservaSala) => SALAS.find((s) => s.id === r.salaId)?.nombre ?? '';
   const filasInstitucion = [...INSTITUCIONES, OTROS];
   return [
     {
@@ -288,6 +334,7 @@ function comparativos(prestamos: Registro[], reservas: Registro[], hasta: string
       cuadros: [
         cuadro('Reservas de CUBÍCULOS DE ESTUDIO', 'Reserva de cubículos de estudio por institución', 'INSTITUCIÓN', meses, reservas, filasInstitucion, institucion),
         cuadro('Solicitudes de LAPTOPS', 'Solicitud de laptops por institución', 'INSTITUCIÓN', meses, prestamos, filasInstitucion, institucion),
+        cuadro('Reservas de SALAS ESPECIALES', 'Reserva de salas especiales por institución', 'INSTITUCIÓN', meses, salas, filasInstitucion, institucionSala),
       ],
     },
     {
@@ -311,6 +358,27 @@ function comparativos(prestamos: Registro[], reservas: Registro[], hasta: string
           filasInstitucion, institucion, usoLaptop, true),
       ],
     },
+    {
+      titulo: 'RESERVAS POR SALA ESPECIAL',
+      cuadros: [
+        cuadro('Reservas por SALA ESPECIAL', 'Reservas de cada sala especial', 'SALA', meses, salas,
+          SALAS.map((s) => s.nombre), nombreSala),
+      ],
+    },
+    {
+      titulo: 'TOTAL USUARIOS DE SALAS ESPECIALES',
+      cuadros: [
+        cuadro('Usuarios en SALAS ESPECIALES', 'Usuarios de salas especiales por institución', 'INSTITUCIÓN', meses, salas,
+          filasInstitucion, institucionSala, (r) => r.usuarios),
+      ],
+    },
+    {
+      titulo: 'HORAS DE USO DE SALAS ESPECIALES',
+      cuadros: [
+        cuadro('Horas de uso SALAS ESPECIALES', 'Horas de uso de salas especiales por institución', 'INSTITUCIÓN', meses, salas,
+          filasInstitucion, institucionSala, usoSala, true),
+      ],
+    },
   ];
 }
 
@@ -325,45 +393,53 @@ function tituloPeriodo(periodo: Periodo): string {
 
 /** Arma el informe del período con el formato del reporte mensual. */
 export async function generarInforme(periodo: Periodo): Promise<Informe> {
-  const [prestamos, reservas] = await Promise.all([
+  const [prestamos, reservas, salas] = await Promise.all([
     repositorio.listarRegistros(LAPTOPS.tablaRegistros),
     repositorio.listarRegistros(CUBICULOS.tablaRegistros),
+    repositorio.listarReservasSalas(),
   ]);
-  const porInicio = (a: Registro, b: Registro) => a.inicio.localeCompare(b.inicio);
+  const porInicio = (a: { inicio: string }, b: { inicio: string }) => a.inicio.localeCompare(b.inicio);
   const p = enPeriodo(prestamos, periodo).sort(porInicio);
   const r = enPeriodo(reservas, periodo).sort(porInicio);
+  const s = enPeriodo(salas, periodo).sort(porInicio);
   return {
     periodo,
     titulo: tituloPeriodo(periodo),
     servicios: [
-      servicio('Cubículos de Estudio', 'reservas', r, usoCubiculo, true),
-      servicio('Préstamos de Laptops', 'solicitudes', p, usoLaptop, false),
+      servicio('cubiculos', 'Cubículos de Estudio', 'reservas', r, usoCubiculo, true),
+      servicio('laptops', 'Préstamos de Laptops', 'solicitudes', p, usoLaptop, false),
+      servicioSalas(s),
     ],
-    comparativos: comparativos(prestamos, reservas, periodo.hasta),
+    comparativos: comparativos(prestamos, reservas, salas, periodo.hasta),
     detallePrestamos: p,
     detalleReservas: r,
+    detalleSalas: s,
   };
 }
 
 /** Las líneas de un grupo o institución, iguales en pantalla y en el PDF. */
-export function lineasGrupo(g: Grupo, unidad: string): string[] {
-  const Unidad = unidad[0].toUpperCase() + unidad.slice(1);
+export function lineasGrupo(g: Grupo, servicio: Servicio): string[] {
+  const Unidad = servicio.unidad[0].toUpperCase() + servicio.unidad.slice(1);
   const lista = (c: Conteo[]) => c.map((x) => `${x.etiqueta} (${dosCifras(x.cantidad)})`).join(', ');
+  const salas = servicio.tipo === 'salas'; // Sin género; actividades en vez de motivos
   return [
-    `${Unidad}: ${dosCifras(g.cantidad)} (${dosCifras(g.usuarias)} usuarias, ${dosCifras(g.usuarios)} usuarios).`,
+    salas ? `${Unidad}: ${dosCifras(g.cantidad)}.` : `${Unidad}: ${dosCifras(g.cantidad)} (${dosCifras(g.usuarias)} usuarias, ${dosCifras(g.usuarios)} usuarios).`,
     ...(g.cursantes.length ? [`Cursantes de: ${lista(g.cursantes)}`] : []),
-    `Motivos de uso: ${lista(g.motivos)}`,
-    ...(g.usuariosCubiculos !== undefined ? [`Total usuarios en cubículos: ${dosCifras(g.usuariosCubiculos)}`] : []),
+    `${salas ? 'Actividades' : 'Motivos de uso'}: ${lista(g.motivos)}`,
+    ...(g.usuariosCubiculos !== undefined ? [`Total usuarios en ${salas ? 'salas' : 'cubículos'}: ${dosCifras(g.usuariosCubiculos)}`] : []),
     `Horas de uso: ${horasYMinutos(g.minutos)}.`,
   ];
 }
 
-export function lineasInstitucion(b: BloqueInstitucion, unidad: string, conUsuarios: boolean): string[] {
+const RECURSOS: Record<Servicio['tipo'], string> = { cubiculos: 'cubículos', laptops: 'laptops', salas: 'salas' };
+
+export function lineasInstitucion(b: BloqueInstitucion, servicio: Servicio): string[] {
+  const { unidad, tipo } = servicio;
   if (b.cantidad === 0) return [`Cantidad de ${unidad}: 00`];
   return [
     `Cantidad de ${unidad}: ${dosCifras(b.cantidad)}`,
-    `Usuarias: ${dosCifras(b.usuarias)} | Usuarios: ${dosCifras(b.usuarios)}`,
-    ...(b.usuariosCubiculos !== undefined ? [`Usuarios en cubículos: ${dosCifras(b.usuariosCubiculos)}`] : []),
-    `Uso total de ${conUsuarios ? 'cubículos' : 'laptops'}: ${horasYMinutos(b.minutos)}`,
+    ...(tipo === 'salas' ? [] : [`Usuarias: ${dosCifras(b.usuarias)} | Usuarios: ${dosCifras(b.usuarios)}`]),
+    ...(b.usuariosCubiculos !== undefined ? [`Usuarios en ${RECURSOS[tipo]}: ${dosCifras(b.usuariosCubiculos)}`] : []),
+    `Uso total de ${RECURSOS[tipo]}: ${horasYMinutos(b.minutos)}`,
   ];
 }

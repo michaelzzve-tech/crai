@@ -135,15 +135,18 @@ y pegue los mismos dos valores.
   - **Beneficiarios alcanzados por servicio prestado**: para cubículos y laptops, los totales (reservas o
     solicitudes, por estudiantes, docentes y otros, usuarias, usuarios, usuarios en cubículos y tiempo total)
     y el detalle por institución (ITJO, IUJO, CFJO, Otros y Otros (DTI)) y por condición: cantidad, cursantes
-    de cada carrera o año, motivos de uso, usuarios en cubículos y horas de uso.
+    de cada carrera o año, motivos de uso, usuarios en cubículos y horas de uso. Para **salas especiales**
+    (que no piden género ni condición): total de reservas, usuarios en salas, reservas de cada sala y tiempo
+    total, y por institución el detalle de cada sala: cantidad, cursantes, actividades, usuarios y horas de uso.
   - **Cuadros comparativos progresivos**: los últimos 13 meses hasta el mes del informe, por género, por
-    institución, usuarios de cubículos y horas de uso de cubículos y de laptops, cada cuadro con su gráfica.
+    institución, usuarios de cubículos y horas de uso de cubículos y de laptops, y para salas especiales: reservas
+    por institución, reservas de cada sala, usuarios y horas de uso; cada cuadro con su gráfica.
   En pantalla el informe empieza como **vista previa** (portada y totales de cada servicio); cada botón
   **Ver más** agrega una parte: primero el detalle por institución y luego cada grupo de cuadros comparativos.
   Al cambiar el mes o las fechas se vuelve a la vista previa.
   Las horas de laptops van de la hora de inicio a la devolución; las de cubículos, hasta la salida real (si
-  sigue activa, hasta la hora de fin). El botón **Descargar PDF** guarda siempre el informe completo con membrete y, al
-  final, el **detalle** de cada préstamo y cada reserva del período. Los textos de logros, metas y
+  sigue activa, hasta la hora de fin); las de salas, de la hora de inicio a la de fin. El botón **Descargar PDF** guarda siempre el informe completo con membrete y, al
+  final, el **detalle** de cada préstamo y cada reserva del período (también las de salas especiales). Los textos de logros, metas y
   conclusiones del reporte se escriben a mano; el sistema no los genera.
 - **Respaldo**: en Informes, el botón **Descargar respaldo (Excel)** guarda un archivo con
   los préstamos y las reservas (una hoja para cada uno, una fila por registro con su fecha): todos, los de un año

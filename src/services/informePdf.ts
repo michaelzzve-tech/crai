@@ -4,7 +4,11 @@ import { formatearFecha } from '../utils/fechas';
 import {
   COLORES_SERIES, horasCortas, lineasGrupo, lineasInstitucion, type Cuadro, type Informe, type Servicio,
 } from './informeService';
-import { columnasDetalle } from './respaldo';
+import { columnasDetalle, columnasSalas, type Columna } from './respaldo';
+
+/** Una tabla del detalle: sus columnas y el texto de cada celda, fila por fila. */
+const tabla = <T>(titulo: string, cols: Columna<T>[], registros: T[]) =>
+  ({ titulo, cols, filas: registros.map((r) => cols.map((c) => c.valor(r))) });
 
 type Color = [number, number, number];
 const AZUL: Color = [29, 78, 216];
@@ -117,18 +121,17 @@ export async function descargarInformePdf(informe: Informe): Promise<void> {
     doc.setDrawColor(...SUAVE);
     doc.line(margen, y, anchoPagina - margen, y);
     y += 8;
-    const conUsuarios = servicio.unidad === 'reservas';
     for (const b of servicio.instituciones) {
       espacio(16);
       color(TEXTO);
       fuente(11, true);
       doc.text(b.nombre, margen, y);
       y += 6;
-      for (const l of lineasInstitucion(b, servicio.unidad, conUsuarios)) vineta(l, 0);
+      for (const l of lineasInstitucion(b, servicio)) vineta(l, 0);
       for (const g of b.grupos) {
         espacio(14); // El título del grupo no queda solo al final de la página
         vineta(`${g.titulo}:`, 0);
-        for (const l of lineasGrupo(g, servicio.unidad)) vineta(l, 1);
+        for (const l of lineasGrupo(g, servicio)) vineta(l, 1);
       }
       y += 4;
     }
@@ -237,14 +240,14 @@ export async function descargarInformePdf(informe: Informe): Promise<void> {
 
   // Detalle: cada préstamo y cada reserva del período, en páginas horizontales.
   const detalles = [
-    { titulo: 'Detalle de préstamos de laptops', modulo: LAPTOPS, registros: informe.detallePrestamos },
-    { titulo: 'Detalle de reservas de cubículos', modulo: CUBICULOS, registros: informe.detalleReservas },
+    tabla('Detalle de préstamos de laptops', columnasDetalle(LAPTOPS), informe.detallePrestamos),
+    tabla('Detalle de reservas de cubículos', columnasDetalle(CUBICULOS), informe.detalleReservas),
+    tabla('Detalle de reservas de salas especiales', columnasSalas(), informe.detalleSalas),
   ];
-  for (const { titulo, modulo, registros } of detalles) {
+  for (const { titulo, cols, filas: registros } of detalles) {
     doc.addPage('letter', 'landscape');
     altoPagina = doc.internal.pageSize.getHeight();
     const anchoDetalle = doc.internal.pageSize.getWidth() - margen * 2;
-    const cols = columnasDetalle(modulo);
     const escala = anchoDetalle / cols.reduce((t, c) => t + c.ancho, 0);
     const xs = cols.map((_, i) => margen + cols.slice(0, i).reduce((t, c) => t + c.ancho, 0) * escala);
     /** Recorta el texto al ancho de su columna. */
@@ -285,7 +288,7 @@ export async function descargarInformePdf(informe: Informe): Promise<void> {
       }
       color(TEXTO);
       fuente(7);
-      cols.forEach((c, i) => doc.text(recortar(c.valor(r), i), xs[i], y));
+      r.forEach((texto, i) => doc.text(recortar(texto, i), xs[i], y));
       y += 5;
     }
   }
