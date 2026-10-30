@@ -1,4 +1,4 @@
-import { nombreRecurso, type Modulo } from '../config/modulos';
+import { LAPTOPS, nombreRecurso, type Modulo } from '../config/modulos';
 import { repositorio } from '../data';
 import type { NuevoRegistro, Recurso, Registro } from '../types';
 import { diaALas, diaDe, formatearDia, formatearHora } from '../utils/fechas';
@@ -101,7 +101,7 @@ function revisarChoque(modulo: Modulo, existentes: Registro[], recursoId: string
     const nombre = `${modulo.recurso} ${nombreRecurso(recursoId)}`;
     throw new ChoqueDeHorario(choque.fin
       ? `${nombre} ya está reservado de ${formatearHora(choque.inicio)} a ${formatearHora(choque.fin)} el ${formatearDia(diaDe(choque.inicio))}.`
-      : `${nombre} ya tiene un préstamo el ${formatearDia(diaDe(choque.inicio))} desde las ${formatearHora(choque.inicio)}.`);
+      : `${nombre} ya tiene un préstamo el ${formatearDia(diaDe(choque.inicio))} desde las ${formatearHora(choque.inicio)}`);
   }
 }
 
@@ -165,6 +165,29 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
   if (!programado) await repositorio.guardarRecurso(modulo.tablaRecursos, { ...recurso, estado: 'ocupado' });
   avisarCambio();
   return registro;
+}
+
+/**
+ * Reserva (de cubículo) con préstamo de laptop: con los mismos datos de la persona, la
+ * fecha y la hora de inicio se crea también el préstamo de `laptopId` en Laptops. Se revisan
+ * los dos antes de guardar: si la laptop o el cubículo no se pueden, no se guarda ninguno.
+ */
+export async function registrarConLaptop(modulo: Modulo, datos: NuevoRegistro, laptopId: string): Promise<[Registro, Registro]> {
+  if (!laptopId) throw new Error('Seleccione la laptop que se presta.');
+  const [recursos, existentes, laptops, prestamos] = await Promise.all([
+    repositorio.listarRecursos(modulo.tablaRecursos),
+    repositorio.listarRegistros(modulo.tablaRegistros),
+    repositorio.listarRecursos(LAPTOPS.tablaRecursos),
+    repositorio.listarRegistros(LAPTOPS.tablaRegistros),
+  ]);
+  const reserva = prepararRegistro(modulo, datos, recursos, existentes);
+  const prestamo = prepararRegistro(LAPTOPS, { ...datos, recursoId: laptopId, usuarios: '', horaFin: '', fechaRegistro: '' }, laptops, prestamos);
+  await repositorio.guardarRegistro(modulo.tablaRegistros, reserva.registro);
+  await repositorio.guardarRegistro(LAPTOPS.tablaRegistros, prestamo.registro);
+  if (!reserva.programado) await repositorio.guardarRecurso(modulo.tablaRecursos, { ...reserva.recurso, estado: 'ocupado' });
+  if (!prestamo.programado) await repositorio.guardarRecurso(LAPTOPS.tablaRecursos, { ...prestamo.recurso, estado: 'ocupado' });
+  avisarCambio();
+  return [reserva.registro, prestamo.registro];
 }
 
 /**

@@ -1,12 +1,13 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import {
   CARRERA_POR_INSTITUTO, campoCarreraDe, CONDICIONES_SIN_CARRERA, type CampoCarrera, GENEROS, INSTITUTOS, MOTIVOS_LAPTOPS,
   NO_APLICA, OTRO_MOTIVO, semestresDe,
 } from '../../config/opciones';
-import { nombreRecurso, type Modulo } from '../../config/modulos';
+import { LAPTOPS, nombreRecurso, type Modulo } from '../../config/modulos';
+import { repositorio } from '../../data';
 import { useAhora } from '../../hooks/useAhora';
 import { fechasDeSerie, nombresDeDias, recurrenciaInicial, type Recurrencia } from '../../services/recurrencia';
-import { registrar, registrarSerie } from '../../services/registroService';
+import { asegurarRecursos, registrar, registrarConLaptop, registrarSerie } from '../../services/registroService';
 import type { NuevoRegistro, Recurso, Registro } from '../../types';
 import { diaALas, diaDe, duracionEntreHoras, formatearDia, horaActual } from '../../utils/fechas';
 import { CampoRecurrencia } from '../Planner';
@@ -170,7 +171,10 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
   const [otroMotivo, setOtroMotivo] = useState(false); // "Otro" elegido en Motivo de uso
   // Reserva recurrente: se repite en los días elegidos, de "Válida desde" a "Válida hasta".
   const [recurrencia, setRecurrencia] = useState<Recurrencia | null>(null);
-  const limpiar = () => { setDatos({ ...vacio(), ...inicial }); setOtroMotivo(false); setRecurrencia(null); };
+  // Préstamo de laptop: null = casilla apagada; '' = encendida sin laptop elegida.
+  const [laptop, setLaptop] = useState<string | null>(null);
+  const laptops = useLaptops(modulo.conLaptop && laptop !== null);
+  const limpiar = () => { setDatos({ ...vacio(), ...inicial }); setOtroMotivo(false); setRecurrencia(null); setLaptop(null); };
   const cambiar = (campo: keyof NuevoRegistro) => (valor: string) =>
     setDatos({ ...datos, [campo]: valor });
   // Con Psicólogo o DTI, carrera y semestre quedan en "No aplica"; con Docente se eligen, y "No aplica" es una opción más.
@@ -213,6 +217,11 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
     const mensaje = programado && !modulo.conHoraFin
       ? `${modulo.recurso} ${recurso} reservada para ${datos.nombre}.`
       : modulo.mensajeRegistrado(recurso, datos.nombre);
+    if (laptop !== null) {
+      const conLaptop = `${mensaje.replace(/\.$/, '')}, con la laptop ${laptop} ${programado ? 'reservada' : 'prestada'} (ya aparece en Laptops).`;
+      if (await ejecutar(() => registrarConLaptop(modulo, datos, laptop), conLaptop)) { limpiar(); onListo?.(); }
+      return;
+    }
     const ok = await ejecutar(() => registrar(modulo, datos), mensaje);
     if (ok) { limpiar(); onListo?.(); }
   }
@@ -312,8 +321,26 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
         )}
         {conRecurrencia && (
           <label className="ancho casilla">
-            <input type="checkbox" checked={!!recurrencia} onChange={(e) => setRecurrencia(e.target.checked ? recurrenciaInicial(datos.fecha) : null)} />
+            <input type="checkbox" checked={!!recurrencia} onChange={(e) => { setRecurrencia(e.target.checked ? recurrenciaInicial(datos.fecha) : null); if (e.target.checked) setLaptop(null); }} />
             Reserva recurrente
+          </label>
+        )}
+        {/* El préstamo de laptop es para una sola fecha: no se ofrece con la reserva recurrente. */}
+        {modulo.conLaptop && !recurrencia && (
+          <label className="ancho casilla">
+            <input type="checkbox" checked={laptop !== null} onChange={(e) => setLaptop(e.target.checked ? '' : null)} />
+            Préstamo de laptop
+          </label>
+        )}
+        {laptop !== null && (
+          <label htmlFor="registro-laptop">
+            Laptop
+            <select id="registro-laptop" required value={laptop} onChange={(e) => setLaptop(e.target.value)}>
+              <option value="">{laptops ? (laptops.some(elegible) ? 'Seleccione…' : 'No hay laptops disponibles') : 'Cargando…'}</option>
+              {laptops?.filter(elegible).map((r) => (
+                <option key={r.id} value={r.id}>{nombreRecurso(r.id)}{textoLaptop(r)}</option>
+              ))}
+            </select>
           </label>
         )}
         {recurrencia && (
@@ -330,3 +357,21 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
     </form>
   );
 }
+
+/** Laptops para el "Préstamo de laptop" del formulario de cubículos; se cargan al encender la casilla. */
+function useLaptops(activo: boolean): Recurso[] | null {
+  const [laptops, setLaptops] = useState<Recurso[] | null>(null);
+  useEffect(() => {
+    if (!activo) return;
+    let vigente = true;
+    asegurarRecursos(LAPTOPS)
+      .then(() => repositorio.listarRecursos(LAPTOPS.tablaRecursos))
+      .then((l) => { if (vigente) setLaptops([...l].sort((a, b) => a.numero - b.numero)); })
+      .catch(() => { if (vigente) setLaptops([]); });
+    return () => { vigente = false; };
+  }, [activo]);
+  return laptops;
+}
+
+/** Para más tarde se ofrece también una laptop que hoy está prestada; se aclara en el menú. */
+const textoLaptop = (r: Recurso) => (r.estado === 'ocupado' ? ' (prestada ahora)' : '');
