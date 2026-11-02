@@ -307,6 +307,13 @@ label.casilla input { width: 18px; height: 18px; margin: 0; }
 .reserva-sala.angosta span { display: none; }
 .reserva-sala.atenuada { opacity: .55; background-image: repeating-linear-gradient(135deg, transparent 0 6px, rgba(255, 255, 255, .5) 6px 8px); }
 .reserva-sala.fija { cursor: pointer; }
+/* "EN USO": negro con letras blancas, para que resalte sobre cualquier color de cubículo */
+.etiqueta-ficha {
+  flex-shrink: 0; font-style: normal; font-weight: 800; font-size: .66rem; letter-spacing: .06em;
+  background: #111; color: #fff; border-radius: 4px; padding: 1px 6px; line-height: 1.4;
+}
+.vista-previa .etiqueta-ficha { display: inline-block; margin: 0 6px 4px 0; }
+.fila-titulo { display: flex; align-items: center; gap: 5px; max-width: 100%; min-width: 0; }
 .formulario-ventana { margin: 0; }
 .ventana .formulario { box-shadow: none; padding: 0; border: none; }
 .titulo-sala .badge { font-size: .75rem; }

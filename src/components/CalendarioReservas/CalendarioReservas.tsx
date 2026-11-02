@@ -3,11 +3,12 @@ import { HORA_CIERRE } from '../../config/salas';
 import { nombreRecurso, type Modulo } from '../../config/modulos';
 import { useAhora } from '../../hooks/useAhora';
 import { useMostrarDiaElegido } from '../../hooks/useMostrarDiaElegido';
+import { useVistaPlanner } from '../../hooks/useVistaPlanner';
 import {
   cancelarProgramado, cancelarSerieDesde, editarHorario, estaPorVencer, estaProgramado, estaVencido, finalizar, type NuevoHorario,
 } from '../../services/registroService';
 import type { NuevoRegistro, Recurso, Registro } from '../../types';
-import { diaALas, diaDe, diferenciaConPrevisto, formatearDia, formatearDiaLargo, formatearHora, horaActual, sumarDias } from '../../utils/fechas';
+import { diaALas, diaDe, diferenciaConPrevisto, formatearDia, formatearDiaLargo, formatearHora, horaActual } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 import { BarraSemana, FiltrosPlanner, PlannerSemanal, type EventoPlanner } from '../Planner';
 import { RegistroForm } from '../RegistroForm';
@@ -15,8 +16,6 @@ import { EditorHorario } from '../RegistrosActivos';
 import type { EjecutarAccion } from '../tipos';
 
 const dosDigitos = (n: number) => String(n).padStart(2, '0');
-/** Vistas del calendario de cubículos: el día en curso (al abrir) o 3 días. */
-const VISTAS = [1, 3];
 
 interface Props {
   modulo: Modulo;
@@ -31,37 +30,26 @@ interface Props {
  * y una reserva se abre con un clic o se arrastra a otro día u hora.
  */
 export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Props) {
-  const [elegido, setElegido] = useState(() => diaDe());
-  const [desde, setDesde] = useState(() => diaDe()); // Primer día que se ve
-  const [cantidad, setCantidad] = useState(VISTAS[0]); // Días a la vista
+  const { elegido, desde, hasta, cantidad, elegir, tramo, textoPeriodo } = useVistaPlanner();
   const [ocultos, setOcultos] = useState<string[]>([]);
   const [nuevo, setNuevo] = useState<Partial<NuevoRegistro> | null>(null); // Valores iniciales del formulario abierto
   const [errorVentana, setErrorVentana] = useState('');
   const [detalle, setDetalle] = useState<string | null>(null); // id del registro abierto
   const contenedor = useMostrarDiaElegido(elegido);
+  const ahora = useAhora(30_000); // Para marcar "EN USO" las reservas que ya empezaron
 
-  const hasta = sumarDias(desde, cantidad - 1);
   const aLaVista = registros.filter((r) => r.fin && diaDe(r.inicio) >= desde && diaDe(r.inicio) <= hasta);
-  /** Elige un día; si no está a la vista, el calendario empieza en él. */
-  const elegir = (dia: string) => {
-    setElegido(dia);
-    if (dia < desde || dia > hasta) setDesde(dia);
-  };
-  /** ‹ y ›: mueve los días a la vista y el día elegido juntos. */
-  const avanzar = (n: number) => {
-    setDesde(sumarDias(desde, n));
-    setElegido(sumarDias(elegido, n));
-  };
   const color = (id: string) => modulo.colores[modulo.opciones.indexOf(id)] ?? '#7b8794';
   const nombre = (id: string) => `${modulo.recurso} ${nombreRecurso(id)}`;
 
-  /** Cada reserva tal como se dibuja: el cubículo y todos sus datos (menos la fecha de registro). Las terminadas no se mueven. */
+  /** Cada reserva tal como se dibuja: el cubículo, quien reservó, el horario y todos sus datos (menos la fecha de registro). Las terminadas no se mueven. */
   const evento = (r: Registro): EventoPlanner => {
     const horario = `${formatearHora(r.inicio)} – ${formatearHora(r.fin!)}`;
     return {
       id: r.id, inicio: r.inicio, fin: r.fin!, color: color(r.recursoId),
-      titulo: nombreRecurso(r.recursoId) === r.recursoId ? `${modulo.recurso} ${r.recursoId}` : nombreRecurso(r.recursoId),
-      lineas: [horario, `${r.nombre}${r.usuarios ? ` · ${r.usuarios} usu.` : ''}`,
+      // En la ficha se ven siempre el cubículo, quien reservó y la hora de inicio y fin.
+      titulo: `${nombreRecurso(r.recursoId) === r.recursoId ? `${modulo.recurso} ${r.recursoId}` : nombreRecurso(r.recursoId)} · ${r.nombre}`,
+      lineas: [horario, ...(r.usuarios ? [`${r.usuarios} usu.`] : []),
         [r.genero, r.instituto, r.condicion].filter(Boolean).join(' · '),
         [r.carrera, r.semestre].filter(Boolean).join(' · '), r.motivo],
       datos: [
@@ -81,6 +69,7 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
       ],
       movible: !r.finReal,
       atenuado: !!r.finReal,
+      etiqueta: !r.finReal && new Date(r.inicio) <= ahora ? 'EN USO' : undefined,
     };
   };
   const registroDe = (e: EventoPlanner) => registros.find((r) => r.id === e.id);
@@ -136,7 +125,7 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
         elegido={elegido}
         onElegir={elegir}
         onNueva={() => abrirNuevo()}
-        tramo={{ desde, dias: cantidad, onPaso: avanzar, vistas: VISTAS, onDias: (n) => { setCantidad(n); setDesde(elegido); } }}
+        tramo={tramo}
       />
 
       {/* Cada cubículo es un filtro y a la vez la leyenda de colores del calendario. */}
@@ -146,7 +135,7 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
           id: r.id,
           nombre: nombreRecurso(r.id) === r.id ? `${modulo.recurso} ${r.id}` : nombreRecurso(r.id),
           color: color(r.id),
-          detalle: `${aLaVista.filter((x) => x.recursoId === r.id).length} ${cantidad === 1 ? "este día" : "en estos días"}`,
+          detalle: `${aLaVista.filter((x) => x.recursoId === r.id).length} ${textoPeriodo}`,
         }))}
         ocultos={ocultos}
         onOcultos={setOcultos}

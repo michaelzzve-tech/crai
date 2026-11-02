@@ -95,9 +95,8 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
   const ahora = useAhora(15_000);
   const conFin = modulo.conHoraFin;
 
-  // En los módulos con calendario (cubículos), primero las últimas en registrarse.
-  const sinTerminar = registros.filter((r) => !r.finReal);
-  const activos = modulo.conCalendario ? [...sinTerminar].sort(ultimasRegistradas) : sinTerminar;
+  // Ya vienen con las últimas en registrarse primero (useBiblioteca).
+  const activos = registros.filter((r) => !r.finReal);
   const paginacion = usePaginacion(activos);
 
   async function confirmar(registro: Registro) {
@@ -224,14 +223,4 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
       <Paginador paginacion={paginacion} />
     </section>
   );
-}
-
-/**
- * Orden de "las últimas en registrarse primero". Las anteriores a guardar la hora de registro
- * van después, por su fecha de registro; las de una misma serie, por fecha de la reserva.
- */
-function ultimasRegistradas(a: Registro, b: Registro): number {
-  return (b.creado ?? '').localeCompare(a.creado ?? '')
-    || (b.fechaRegistro ?? '').localeCompare(a.fechaRegistro ?? '')
-    || a.inicio.localeCompare(b.inicio);
 }
