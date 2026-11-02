@@ -31,6 +31,7 @@ interface FilaRegistro {
   fin_real: string | null;
   serie_id?: string | null; // Solo existe en la tabla de reservas de cubículos
   fecha_registro?: string | null; // Ídem
+  creado?: string | null; // Lo pone la base de datos (columna con valor por defecto now()); no se envía
 }
 
 const iso = (fecha: string) => new Date(fecha).toISOString();
@@ -65,6 +66,7 @@ const aRegistro = (f: FilaRegistro): Registro => ({
   finReal: f.fin_real ? iso(f.fin_real) : undefined,
   serieId: f.serie_id ?? undefined,
   fechaRegistro: f.fecha_registro ?? undefined,
+  creado: f.creado ? iso(f.creado) : undefined,
 });
 
 const aFilaRegistro = (r: Registro): FilaRegistro => ({

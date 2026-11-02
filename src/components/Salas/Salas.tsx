@@ -4,7 +4,10 @@ import { nombresDeDias, type Recurrencia } from '../../services/recurrencia';
 import { cancelarReservaSala, cancelarSerieDesde, guardarReservaSala, guardarSerieSala, listarReservasSalas, moverReservaSala } from '../../services/salaService';
 import type { NuevaReservaSala, ReservaSala } from '../../types';
 import { diaDe, formatearDia, formatearDiaLargo, formatearFecha, formatearHora, horaActual, lunesDe, sumarDias } from '../../utils/fechas';
+import { useAhora } from '../../hooks/useAhora';
 import { useMostrarDiaElegido } from '../../hooks/useMostrarDiaElegido';
+import { usePaginacion } from '../../hooks/usePaginacion';
+import { Paginador } from '../Paginador';
 import { BarraSemana, FiltrosPlanner, PlannerSemanal, type EventoPlanner } from '../Planner';
 import { FormularioSala, type InicioFormulario } from './FormularioSala';
 
@@ -159,6 +162,8 @@ export function Salas() {
         <p className="secundario">Haga clic en un espacio libre del calendario para reservar a esa hora, o en una reserva para ver sus datos. Arrastre una reserva para cambiarla de día u hora.</p>
       </section>
 
+      <ReservasActivas reservas={reservas} onAbrir={setDetalle} />
+
       {formulario && <FormularioSala key={JSON.stringify(formulario)} inicio={formulario} onGuardar={guardar} onCerrar={() => setFormulario(null)} />}
       {detalle && (
         <DetalleReserva
@@ -169,6 +174,61 @@ export function Salas() {
         />
       )}
     </main>
+  );
+}
+
+/**
+ * Reservas que todavía no terminan (en curso o por venir), con las últimas en registrarse
+ * primero. Un clic en "Ver" abre sus datos para modificarla o cancelarla.
+ */
+function ReservasActivas({ reservas, onAbrir }: { reservas: ReservaSala[]; onAbrir: (r: ReservaSala) => void }) {
+  const ahora = useAhora(60_000);
+  const activas = reservas
+    .filter((r) => new Date(r.fin) > ahora)
+    .sort((a, b) => b.creada.localeCompare(a.creada) || a.inicio.localeCompare(b.inicio));
+  const paginacion = usePaginacion(activas);
+  return (
+    <section className="panel">
+      <h2>Reservas activas ({activas.length})</h2>
+      {activas.length === 0 ? (
+        <p className="vacio">No hay reservas activas.</p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>Sala</th>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Actividad</th>
+              <th>Institución</th>
+              <th>Solicitado por</th>
+              <th>Registrada</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginacion.items.map((r) => {
+              const sala = salaPorId(r.salaId);
+              return (
+                <tr key={r.id}>
+                  <td>
+                    <span className="titulo-sala"><span className="punto-sala" style={{ background: sala?.color }} />{sala?.nombre ?? r.salaId}</span>
+                  </td>
+                  <td>{formatearDia(diaDe(r.inicio))}</td>
+                  <td>{formatearHora(r.inicio)} – {formatearHora(r.fin)}</td>
+                  <td>{r.actividad}<div className="secundario">{r.usuarios} {r.usuarios === 1 ? 'usuario' : 'usuarios'}</div></td>
+                  <td>{r.instituto}<div className="secundario">{[r.carrera, r.semestre].filter(Boolean).join(' · ')}</div></td>
+                  <td>{r.solicitante}<div className="secundario">Prof.: {r.profesor}</div></td>
+                  <td>{formatearFecha(r.creada)}</td>
+                  <td className="acciones"><button onClick={() => onAbrir(r)}>Ver</button></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+      <Paginador paginacion={paginacion} />
+    </section>
   );
 }
 

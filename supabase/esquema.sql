@@ -47,6 +47,8 @@ create table reservas (
 alter table reservas add column serie_id text;
 -- Fecha de registro de las reservas de cubículos (cuándo se pidió; solo informativa).
 alter table reservas add column fecha_registro date;
+-- Cuándo se registró cada reserva de cubículo en el sistema (para listar primero las últimas).
+alter table reservas add column creado timestamptz not null default now();
 
 -- Reservas de las salas especiales (Sala Javier, Loyola, Basabe y Piedra).
 create table reservas_salas (

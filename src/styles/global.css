@@ -329,3 +329,7 @@ label.casilla input { width: 18px; height: 18px; margin: 0; }
 .acciones-copia label.boton { display: inline-block; font: inherit; padding: 7px 12px; border-radius: 6px; border: 1px solid var(--borde); background: #fff; cursor: pointer; color: inherit; }
 .acciones-copia label.boton:hover, .acciones-copia label.boton:focus-within { border-color: var(--primario); }
 .acciones-copia input.oculto { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+/* Aviso de conexión: fijo arriba, encima de todo */
+.sin-conexion { position: sticky; top: 0; z-index: 50; padding: 10px 16px; text-align: center; background: var(--alerta); color: #fff; }
+.sin-conexion.restablecida { background: var(--exito); }

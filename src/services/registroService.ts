@@ -153,6 +153,7 @@ function prepararRegistro(modulo: Modulo, datos: NuevoRegistro, recursos: Recurs
     fin: fin?.toISOString(),
     ...(serieId ? { serieId } : {}),
     ...(modulo.conFechaRegistro ? { fechaRegistro: datos.fechaRegistro } : {}),
+    creado: new Date().toISOString(),
   };
   return { registro, recurso, programado };
 }

@@ -10,6 +10,7 @@ import { RecursoList } from './components/RecursoList';
 import { RegistroForm } from './components/RegistroForm';
 import { RegistrosActivos } from './components/RegistrosActivos';
 import { Salas } from './components/Salas';
+import { SinConexion } from './components/SinConexion';
 import { Resumen } from './components/Resumen';
 import type { EjecutarAccion } from './components/tipos';
 import { MODULOS, type Modulo } from './config/modulos';
@@ -25,6 +26,15 @@ interface Aviso {
 }
 
 export default function App() {
+  return (
+    <>
+      <SinConexion />
+      <Pantalla />
+    </>
+  );
+}
+
+function Pantalla() {
   const { requiereLogin, cargando, correo, cerrarSesion } = useSesion();
 
   if (errorConfiguracion) return <ErrorPantalla titulo="Falta configurar la base de datos" mensaje={errorConfiguracion} />;
