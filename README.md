@@ -116,6 +116,8 @@ y pegue los mismos dos valores.
   se marca en amarillo (por vencer) o en rojo (vencida). Desde la campana se pueden activar
   los avisos del sistema para verlos aunque la página esté en segundo plano. Los minutos se
   cambian en `MINUTOS_AVISO` (`src/services/registroService.ts`).
+- **Sin conexión a internet**: si el navegador pierde la conexión, aparece arriba una franja roja que lo
+  dice (en cualquier pantalla); al volver la conexión cambia a **Conexión restablecida** por unos segundos.
 - **Hora libre**: en Salas especiales y Cubículos la hora de inicio y de fin se escribe libremente (cualquier
   minuto, también antes de las 7 a. m. o después de las 9 p. m.). Solo se impide si choca con otra reserva del
   mismo cubículo o sala (o si la hora de fin no es posterior a la de inicio). Un cubículo en uso ahora se puede
