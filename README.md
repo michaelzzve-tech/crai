@@ -91,7 +91,7 @@ y pegue los mismos dos valores.
   del mismo recurso, no se guarda (una laptop sin devolver cuenta como ocupada hasta el final de su día). El botón **Limpiar** vacía los campos y pone
   la hora de inicio en la hora actual.
 - **Calendario de cubículos**: la pestaña Reservas de Cubículos muestra la semana (lunes a domingo, de
-  7 a. m. a 9 p. m.) igual que Salas especiales: flechas, **Hoy**, menús de año, mes y día, y un botón de
+  7 a. m. a 9 p. m., o más si alguna reserva de la semana queda fuera de ese horario) igual que Salas especiales: flechas, **Hoy**, menús de año, mes y día, y un botón de
   color por cubículo para mostrarlo u ocultarlo. Con **+ Nueva reserva** o un clic en un espacio libre se
   abre el formulario de siempre en una ventana (con el día, la hora y una hora de duración ya puestos).
   La casilla **Préstamo de laptop** muestra un menú con las laptops disponibles; al registrar, se crea también
@@ -116,7 +116,11 @@ y pegue los mismos dos valores.
   se marca en amarillo (por vencer) o en rojo (vencida). Desde la campana se pueden activar
   los avisos del sistema para verlos aunque la página esté en segundo plano. Los minutos se
   cambian en `MINUTOS_AVISO` (`src/services/registroService.ts`).
-- **Salas especiales**: calendario de la semana (lunes a domingo, de 7 a. m. a 9 p. m.) con las
+- **Hora libre**: en Salas especiales y Cubículos la hora de inicio y de fin se escribe libremente (cualquier
+  minuto, también antes de las 7 a. m. o después de las 9 p. m.). Solo se impide si choca con otra reserva del
+  mismo cubículo o sala (o si la hora de fin no es posterior a la de inicio). Un cubículo en uso ahora se puede
+  reservar para otro horario del mismo día que no se cruce.
+- **Salas especiales**: calendario de la semana (lunes a domingo, de 7 a. m. a 9 p. m., o más si hace falta) con las
   reservas de cada sala en su color, lado a lado si coinciden en horario. Las flechas cambian de
   semana, **Hoy** vuelve a la actual y los menús de **año, mes y día** llevan a cualquier fecha (el día
   elegido queda marcado; también se elige con un clic en el nombre del día); los botones de cada sala la muestran u ocultan y dicen cuántas

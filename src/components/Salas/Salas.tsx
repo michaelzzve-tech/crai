@@ -73,7 +73,7 @@ export function Salas() {
   /** Nueva reserva: con la sala si solo hay una visible, y en la próxima hora en punto si es hoy. */
   const nueva = (fecha = diaDe(), horaInicio?: string) => {
     const soloUna = SALAS.filter((s) => !ocultas.includes(s.id));
-    const proxima = `${String(Math.min(20, Math.max(7, Number(horaActual().slice(0, 2)) + 1))).padStart(2, '0')}:00`;
+    const proxima = `${String(Math.min(23, Math.max(7, Number(horaActual().slice(0, 2)) + 1))).padStart(2, '0')}:00`;
     setFormulario({ salaId: soloUna.length === 1 ? soloUna[0].id : '', fecha, horaInicio: horaInicio ?? proxima });
   };
 

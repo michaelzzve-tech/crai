@@ -4,9 +4,17 @@ import { diaDe, formatearDiaCorto, minutosDelDia, sumarDias } from '../../utils/
 
 /** Alto en píxeles de una hora en el calendario. */
 const ALTO_HORA = 56;
-const INICIO = HORA_APERTURA * 60;
-const FIN = HORA_CIERRE * 60;
-const HORAS = Array.from({ length: HORA_CIERRE - HORA_APERTURA }, (_, i) => HORA_APERTURA + i);
+
+/**
+ * Horas que muestra el calendario: de la apertura al cierre, o más si alguna reserva
+ * de la semana empieza antes o termina después (la hora de una reserva es libre).
+ */
+function rangoDeHoras(reservas: EventoPlanner[]): { desde: number; hasta: number } {
+  const desde = Math.min(HORA_APERTURA, ...reservas.map((r) => Math.floor(minutosDelDia(r.inicio) / 60)));
+  const hasta = Math.max(HORA_CIERRE, ...reservas.map((r) =>
+    diaDe(r.fin) !== diaDe(r.inicio) ? 24 : Math.ceil(minutosDelDia(r.fin) / 60)));
+  return { desde, hasta: Math.min(24, hasta) };
+}
 
 const dosDigitos = (n: number) => String(n).padStart(2, '0');
 /** "HH:MM" para los minutos desde la medianoche. */
@@ -46,7 +54,7 @@ interface Ubicada {
  * Coloca las reservas de un día. Las que se cruzan en horario (de salas o cubículos distintos)
  * se reparten en carriles lado a lado, como en un planificador.
  */
-function ubicar(reservas: EventoPlanner[]): Ubicada[] {
+function ubicar(reservas: EventoPlanner[], INICIO: number, FIN: number): Ubicada[] {
   const lista = reservas
     .map((reserva) => ({
       reserva,
@@ -102,6 +110,10 @@ interface Arrastre {
 export function PlannerSemanal({ lunes, elegido, onElegir, reservas, onNueva, onAbrir, onMover }: Props) {
   const hoy = diaDe();
   const dias = Array.from({ length: 7 }, (_, i) => sumarDias(lunes, i));
+  const rango = rangoDeHoras(reservas);
+  const INICIO = rango.desde * 60;
+  const FIN = rango.hasta * 60;
+  const HORAS = Array.from({ length: rango.hasta - rango.desde }, (_, i) => rango.desde + i);
   const [arrastre, setArrastre] = useState<Arrastre | null>(null);
   const [previa, setPrevia] = useState<string | null>(null); // Reserva bajo el mouse: se muestran todos sus datos
   const grilla = useRef<HTMLDivElement>(null);
@@ -168,7 +180,7 @@ export function PlannerSemanal({ lunes, elegido, onElegir, reservas, onNueva, on
       ))}
 
       <div className="planner-horas">
-        {HORAS.map((h) => <span key={h} style={{ top: (h - HORA_APERTURA) * ALTO_HORA }}>{etiquetaHora(h)}</span>)}
+        {HORAS.map((h) => <span key={h} style={{ top: (h - rango.desde) * ALTO_HORA }}>{etiquetaHora(h)}</span>)}
       </div>
       {dias.map((dia) => (
         <div
@@ -178,7 +190,7 @@ export function PlannerSemanal({ lunes, elegido, onElegir, reservas, onNueva, on
           onClick={dia < hoy ? undefined : clicEnDia(dia)}
           title={dia < hoy ? undefined : 'Clic en un espacio libre para reservar'}
         >
-          {ubicar(reservas.filter((r) => diaDe(r.inicio) === dia)).map((u) => {
+          {ubicar(reservas.filter((r) => diaDe(r.inicio) === dia), INICIO, FIN).map((u) => {
             const alto = ((u.hasta - u.desde) / 60) * ALTO_HORA;
             return (
               <button
@@ -211,7 +223,7 @@ export function PlannerSemanal({ lunes, elegido, onElegir, reservas, onNueva, on
           })}
           {(() => {
             // Vista previa: a la derecha de la ficha (a la izquierda en sábado y domingo), hacia arriba si es tarde.
-            const u = !arrastre?.movido && ubicar(reservas.filter((r) => diaDe(r.inicio) === dia)).find((x) => x.reserva.id === previa);
+            const u = !arrastre?.movido && ubicar(reservas.filter((r) => diaDe(r.inicio) === dia), INICIO, FIN).find((x) => x.reserva.id === previa);
             if (!u) return null;
             const columna = dias.indexOf(dia);
             const abajo = u.desde > (FIN - INICIO) / 2;

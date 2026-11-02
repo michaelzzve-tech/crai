@@ -82,7 +82,7 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
     setNuevo({
       fecha,
       horaInicio: inicio,
-      horaFin: `${dosDigitos(Math.min(h + 1, HORA_CIERRE))}:${dosDigitos(h + 1 >= HORA_CIERRE ? 0 : m)}`,
+      horaFin: h >= 23 ? '23:59' : `${dosDigitos(h + 1)}:${dosDigitos(m)}`, // La hora es libre; se puede cambiar
       recursoId: visibles.length === 1 ? visibles[0] : '',
     });
   };

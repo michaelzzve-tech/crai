@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { campoCarreraDe, INSTITUTOS, NO_APLICA, semestresDe } from '../../config/opciones';
-import { ACTIVIDADES, HORA_APERTURA, HORA_CIERRE, SALAS, salaPorId } from '../../config/salas';
+import { ACTIVIDADES, SALAS, salaPorId } from '../../config/salas';
 import { recurrenciaInicial, type Recurrencia } from '../../services/recurrencia';
 import type { NuevaReservaSala, ReservaSala } from '../../types';
 import { diaDe, duracionEntreHoras, horaActual } from '../../utils/fechas';
@@ -8,14 +8,10 @@ import { CampoRecurrencia } from '../Planner';
 import { CampoCarreraOAnio, Desplegable } from '../RegistroForm';
 
 const dosDigitos = (n: number) => String(n).padStart(2, '0');
-const APERTURA = `${dosDigitos(HORA_APERTURA)}:00`;
-const CIERRE = `${dosDigitos(HORA_CIERRE)}:00`;
-
-/** Una hora después de "HH:MM", sin pasar del cierre. */
+/** Una hora después de "HH:MM", sin pasar de la medianoche. */
 function unaHoraDespues(hora: string): string {
   const [h, m] = hora.split(':').map(Number);
-  const siguiente = `${dosDigitos(h + 1)}:${dosDigitos(m)}`;
-  return siguiente > CIERRE ? CIERRE : siguiente;
+  return h >= 23 ? '23:59' : `${dosDigitos(h + 1)}:${dosDigitos(m)}`;
 }
 
 /** Datos del formulario a partir de una reserva guardada (para modificarla). */
@@ -118,12 +114,12 @@ export function FormularioSala({ inicio, onGuardar, onCerrar }: Props) {
           <Desplegable id="sala-semestre" titulo="Semestre" valor={datos.semestre} opciones={semestresDe(datos.instituto, '', true)} onCambiar={cambiar('semestre')} />
           <label htmlFor="sala-inicio">
             Hora de inicio
-            <input id="sala-inicio" type="time" required min={APERTURA} max={CIERRE} step={900} value={datos.horaInicio}
+            <input id="sala-inicio" type="time" required value={datos.horaInicio}
               onChange={(e) => cambiar('horaInicio')(e.target.value)} />
           </label>
           <label htmlFor="sala-fin">
             Hora de fin
-            <input id="sala-fin" type="time" required min={APERTURA} max={CIERRE} step={900} value={datos.horaFin}
+            <input id="sala-fin" type="time" required value={datos.horaFin}
               onChange={(e) => cambiar('horaFin')(e.target.value)} />
             <span className="secundario">{duracionEntreHoras(datos.horaInicio, datos.horaFin) || ' '}</span>
           </label>
