@@ -55,13 +55,14 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
   const color = (id: string) => modulo.colores[modulo.opciones.indexOf(id)] ?? '#7b8794';
   const nombre = (id: string) => `${modulo.recurso} ${nombreRecurso(id)}`;
 
-  /** Cada reserva tal como se dibuja: el cubículo y todos sus datos (menos la fecha de registro). Las terminadas no se mueven. */
+  /** Cada reserva tal como se dibuja: el cubículo, quien reservó, el horario y todos sus datos (menos la fecha de registro). Las terminadas no se mueven. */
   const evento = (r: Registro): EventoPlanner => {
     const horario = `${formatearHora(r.inicio)} – ${formatearHora(r.fin!)}`;
     return {
       id: r.id, inicio: r.inicio, fin: r.fin!, color: color(r.recursoId),
-      titulo: nombreRecurso(r.recursoId) === r.recursoId ? `${modulo.recurso} ${r.recursoId}` : nombreRecurso(r.recursoId),
-      lineas: [horario, `${r.nombre}${r.usuarios ? ` · ${r.usuarios} usu.` : ''}`,
+      // En la ficha se ven siempre el cubículo, quien reservó y la hora de inicio y fin.
+      titulo: `${nombreRecurso(r.recursoId) === r.recursoId ? `${modulo.recurso} ${r.recursoId}` : nombreRecurso(r.recursoId)} · ${r.nombre}`,
+      lineas: [horario, ...(r.usuarios ? [`${r.usuarios} usu.`] : []),
         [r.genero, r.instituto, r.condicion].filter(Boolean).join(' · '),
         [r.carrera, r.semestre].filter(Boolean).join(' · '), r.motivo],
       datos: [
