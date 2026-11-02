@@ -1,4 +1,4 @@
-import { CUBICULOS, LAPTOPS } from '../config/modulos';
+import { CUBICULOS, LAPTOPS, nombreRecurso } from '../config/modulos';
 import { CARRERA_POR_INSTITUTO, CONDICIONES_LAPTOPS } from '../config/opciones';
 import { SALAS } from '../config/salas';
 import { repositorio } from '../data';
@@ -78,6 +78,8 @@ export interface MesHoras {
 export interface HorasLaptops {
   anio: string;
   meses: MesHoras[];
+  // Horas de cada laptop prestada en el año: minutos de cada mes (en el orden de `meses`) y su total.
+  porLaptop: { laptop: string; prestamos: number; minutos: number[]; total: number }[];
 }
 
 export interface Informe {
@@ -413,7 +415,18 @@ function horasLaptopsPorMes(prestamos: Registro[], hasta: string): HorasLaptops 
     const nombre = MESES_LARGOS[i];
     return { mes: nombre[0] + nombre.slice(1).toLowerCase(), prestamos: delMes.length, minutos, acumulado };
   });
-  return { anio, meses };
+  // Por laptop: solo las que se prestaron en el año, en el orden del menú de laptops.
+  const delAnio = prestamos.filter((r) => diaDe(r.inicio).slice(0, 7) >= `${anio}-01` && diaDe(r.inicio).slice(0, 7) <= `${anio}-${dosCifras(ultimo)}`);
+  const orden = (id: string) => { const i = LAPTOPS.opciones.indexOf(id); return i < 0 ? Infinity : i; };
+  const ids = [...new Set(delAnio.map((r) => r.recursoId))].sort((a, b) => orden(a) - orden(b) || a.localeCompare(b));
+  const porLaptop = ids.map((id) => {
+    const suyos = delAnio.filter((r) => r.recursoId === id);
+    const minutos = meses.map((_, i) => suyos
+      .filter((r) => Number(diaDe(r.inicio).slice(5, 7)) === i + 1)
+      .reduce((t, r) => t + usoLaptop(r), 0));
+    return { laptop: nombreRecurso(id), prestamos: suyos.length, minutos, total: minutos.reduce((a, b) => a + b, 0) };
+  });
+  return { anio, meses, porLaptop };
 }
 
 /** "SEPTIEMBRE, 2026" si el período es un mes completo; si no, "01/09/2026 al 15/09/2026". */

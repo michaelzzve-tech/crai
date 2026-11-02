@@ -194,6 +194,51 @@ export async function descargarInformePdf(informe: Informe): Promise<void> {
     color(SUAVE);
     fuente(8);
     doc.text('Horas:minutos, de la salida de cada laptop a su devolución. Los préstamos sin devolver todavía no suman.', x0, y);
+    y += 10;
+    dibujarHorasPorLaptop();
+  }
+
+  /** Horas de cada laptop prestada en el año: un mes por columna, con su total y sus préstamos. */
+  function dibujarHorasPorLaptop() {
+    const { meses, porLaptop, anio } = informe.horasLaptops;
+    tituloSeccion(`Horas por laptop (${anio})`);
+    if (porLaptop.length === 0) {
+      color(SUAVE);
+      fuente(9);
+      doc.text('No hubo préstamos de laptops en el año.', margen, y);
+      y += 6;
+      return;
+    }
+    const primera = 16;
+    const finales = 16; // Total y Préstamos
+    const col = (ancho - primera - finales * 2) / meses.length;
+    const alto = 5;
+    const celdas = (valores: string[], negrita: boolean, fondo?: Color) => {
+      valores.forEach((v, i) => {
+        const x = i === 0 ? margen : i <= meses.length ? margen + primera + (i - 1) * col : margen + primera + meses.length * col + (i - meses.length - 1) * finales;
+        const w = i === 0 ? primera : i <= meses.length ? col : finales;
+        if (fondo) doc.setFillColor(...fondo);
+        doc.rect(x, y, w, alto, fondo ? 'FD' : 'S');
+        color(TEXTO);
+        fuente(6.5, negrita || i === meses.length + 1);
+        doc.text(v, i === 0 ? x + 1.5 : x + w / 2, y + 3.4, { align: i === 0 ? 'left' : 'center' });
+      });
+      y += alto;
+    };
+    const encabezado = ['Laptop', ...meses.map((m) => m.mes.slice(0, 3)), 'Total', 'Préstamos'];
+    doc.setDrawColor(...TEXTO);
+    doc.setLineWidth(0.2);
+    celdas(encabezado, true, FONDO_CUADRO);
+    for (const l of porLaptop) {
+      // Si no cabe la fila, sigue en otra página repitiendo el encabezado.
+      if (y + alto > altoPagina - margen) {
+        nuevaPagina();
+        doc.setDrawColor(...TEXTO);
+        doc.setLineWidth(0.2);
+        celdas(encabezado, true, FONDO_CUADRO);
+      }
+      celdas([l.laptop, ...l.minutos.map((v) => (v ? horasCortas(v) : '-')), horasCortas(l.total), String(l.prestamos)], false);
+    }
     y += 6;
   }
 

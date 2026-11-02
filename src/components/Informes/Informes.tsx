@@ -74,7 +74,35 @@ function TablaHorasLaptops({ horas }: { horas: HorasLaptops }) {
           </tbody>
         </table>
       </div>
-      <p className="secundario">Horas:minutos, de la salida de cada laptop a su devolución. Los préstamos sin devolver todavía no suman.</p>
+      <h3>Horas por laptop ({horas.anio})</h3>
+      {horas.porLaptop.length === 0 ? (
+        <p className="vacio">No hubo préstamos de laptops en el año.</p>
+      ) : (
+        <div className="tabla-cuadro">
+          <table>
+            <thead>
+              <tr>
+                <th>Laptop</th>
+                {horas.meses.map((m) => <th key={m.mes} className="numero">{m.mes.slice(0, 3)}</th>)}
+                <th className="numero">Total</th>
+                <th className="numero">Préstamos</th>
+              </tr>
+            </thead>
+            <tbody>
+              {horas.porLaptop.map((l) => (
+                <tr key={l.laptop}>
+                  <td>{l.laptop}</td>
+                  {l.minutos.map((v, i) => <td key={i} className="numero">{v ? horasCortas(v) : '–'}</td>)}
+                  <td className="numero"><strong>{horasCortas(l.total)}</strong></td>
+                  <td className="numero">{l.prestamos}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <p className="secundario">Horas:minutos, de la salida de cada laptop a su devolución. Los préstamos sin devolver todavía no suman.
+        En "Horas por laptop" salen solo las laptops que se prestaron en el año.</p>
     </section>
   );
 }
