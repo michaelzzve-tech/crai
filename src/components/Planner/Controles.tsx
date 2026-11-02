@@ -1,22 +1,29 @@
 import { DIAS_RECURRENCIA, fechasDeSerie, type Recurrencia } from '../../services/recurrencia';
-import { diaDe, formatearSemana, lunesDe, sumarDias } from '../../utils/fechas';
+import { diaDe, formatearRango, formatearSemana, lunesDe, sumarDias } from '../../utils/fechas';
 import { NavegadorFecha } from './NavegadorFecha';
 
 /** Título, botones Hoy y ‹ ›, la semana, el menú de año, mes y día, y el botón para reservar. */
-export function BarraSemana({ titulo, elegido, onElegir, onNueva }: {
+export function BarraSemana({ titulo, elegido, onElegir, onNueva, tramo }: {
   titulo: string;
   elegido: string;
   onElegir: (dia: string) => void;
   onNueva: () => void;
+  /** Si el calendario muestra unos pocos días en vez de la semana: cuáles, y cómo avanzar o retroceder. */
+  tramo?: { desde: string; dias: number; onPaso: (dias: number) => void };
 }) {
+  const anterior = tramo ? `${tramo.dias} días anteriores` : 'Semana anterior';
+  const siguiente = tramo ? `${tramo.dias} días siguientes` : 'Semana siguiente';
+  const paso = (n: number) => (tramo ? tramo.onPaso(n * tramo.dias) : onElegir(sumarDias(elegido, n * 7)));
   return (
     <div className="salas-barra">
       <div className="salas-navegacion">
         <h2>{titulo}</h2>
         <button onClick={() => onElegir(diaDe())}>Hoy</button>
-        <button className="boton-icono" onClick={() => onElegir(sumarDias(elegido, -7))} aria-label="Semana anterior" title="Semana anterior">‹</button>
-        <button className="boton-icono" onClick={() => onElegir(sumarDias(elegido, 7))} aria-label="Semana siguiente" title="Semana siguiente">›</button>
-        <strong className="salas-semana">{formatearSemana(lunesDe(elegido))}</strong>
+        <button className="boton-icono" onClick={() => paso(-1)} aria-label={anterior} title={anterior}>‹</button>
+        <button className="boton-icono" onClick={() => paso(1)} aria-label={siguiente} title={siguiente}>›</button>
+        <strong className="salas-semana">
+          {tramo ? formatearRango(tramo.desde, sumarDias(tramo.desde, tramo.dias - 1)) : formatearSemana(lunesDe(elegido))}
+        </strong>
         <NavegadorFecha dia={elegido} onCambiar={onElegir} />
       </div>
       <button className="primario" onClick={onNueva}>+ Nueva reserva</button>

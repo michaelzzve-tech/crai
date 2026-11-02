@@ -7,7 +7,7 @@ import {
   cancelarProgramado, cancelarSerieDesde, editarHorario, estaPorVencer, estaProgramado, estaVencido, finalizar, type NuevoHorario,
 } from '../../services/registroService';
 import type { NuevoRegistro, Recurso, Registro } from '../../types';
-import { diaALas, diaDe, diferenciaConPrevisto, formatearDia, formatearDiaLargo, formatearHora, horaActual, lunesDe, sumarDias } from '../../utils/fechas';
+import { diaALas, diaDe, diferenciaConPrevisto, formatearDia, formatearDiaLargo, formatearHora, horaActual, sumarDias } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 import { BarraSemana, FiltrosPlanner, PlannerSemanal, type EventoPlanner } from '../Planner';
 import { RegistroForm } from '../RegistroForm';
@@ -15,6 +15,8 @@ import { EditorHorario } from '../RegistrosActivos';
 import type { EjecutarAccion } from '../tipos';
 
 const dosDigitos = (n: number) => String(n).padStart(2, '0');
+/** Días que muestra el calendario de cubículos en cada pantalla. */
+const DIAS_POR_PANTALLA = 3;
 
 interface Props {
   modulo: Modulo;
@@ -30,15 +32,25 @@ interface Props {
  */
 export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Props) {
   const [elegido, setElegido] = useState(() => diaDe());
+  const [desde, setDesde] = useState(() => diaDe()); // Primer día que se ve
   const [ocultos, setOcultos] = useState<string[]>([]);
   const [nuevo, setNuevo] = useState<Partial<NuevoRegistro> | null>(null); // Valores iniciales del formulario abierto
   const [errorVentana, setErrorVentana] = useState('');
   const [detalle, setDetalle] = useState<string | null>(null); // id del registro abierto
   const contenedor = useMostrarDiaElegido(elegido);
 
-  const lunes = lunesDe(elegido);
-  const domingo = sumarDias(lunes, 6);
-  const deLaSemana = registros.filter((r) => r.fin && diaDe(r.inicio) >= lunes && diaDe(r.inicio) <= domingo);
+  const hasta = sumarDias(desde, DIAS_POR_PANTALLA - 1);
+  const aLaVista = registros.filter((r) => r.fin && diaDe(r.inicio) >= desde && diaDe(r.inicio) <= hasta);
+  /** Elige un día; si no está a la vista, el calendario empieza en él. */
+  const elegir = (dia: string) => {
+    setElegido(dia);
+    if (dia < desde || dia > hasta) setDesde(dia);
+  };
+  /** ‹ y ›: mueve los días a la vista y el día elegido juntos. */
+  const avanzar = (n: number) => {
+    setDesde(sumarDias(desde, n));
+    setElegido(sumarDias(elegido, n));
+  };
   const color = (id: string) => modulo.colores[modulo.opciones.indexOf(id)] ?? '#7b8794';
   const nombre = (id: string) => `${modulo.recurso} ${nombreRecurso(id)}`;
 
@@ -118,7 +130,13 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
 
   return (
     <section className="panel salas">
-      <BarraSemana titulo={modulo.registros} elegido={elegido} onElegir={setElegido} onNueva={() => abrirNuevo()} />
+      <BarraSemana
+        titulo={modulo.registros}
+        elegido={elegido}
+        onElegir={elegir}
+        onNueva={() => abrirNuevo()}
+        tramo={{ desde, dias: DIAS_POR_PANTALLA, onPaso: avanzar }}
+      />
 
       {/* Cada cubículo es un filtro y a la vez la leyenda de colores del calendario. */}
       <FiltrosPlanner
@@ -127,7 +145,7 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
           id: r.id,
           nombre: nombreRecurso(r.id) === r.id ? `${modulo.recurso} ${r.id}` : nombreRecurso(r.id),
           color: color(r.id),
-          detalle: `${deLaSemana.filter((x) => x.recursoId === r.id).length} esta semana`,
+          detalle: `${aLaVista.filter((x) => x.recursoId === r.id).length} en estos días`,
         }))}
         ocultos={ocultos}
         onOcultos={setOcultos}
@@ -135,10 +153,11 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
 
       <div className="planner-contenedor" ref={contenedor}>
         <PlannerSemanal
-          lunes={lunes}
+          lunes={desde}
+          cantidadDias={DIAS_POR_PANTALLA}
           elegido={elegido}
-          onElegir={setElegido}
-          reservas={deLaSemana.filter((r) => !ocultos.includes(r.recursoId)).map(evento)}
+          onElegir={elegir}
+          reservas={aLaVista.filter((r) => !ocultos.includes(r.recursoId)).map(evento)}
           onNueva={(dia, hora) => abrirNuevo(dia, hora)}
           onAbrir={(e) => setDetalle(e.id)}
           onMover={(e, dia, hora) => { const r = registroDe(e); if (r) void mover(r, dia, hora); }}
@@ -158,7 +177,7 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
             inicial={nuevo}
             conRecurrencia
             error={errorVentana}
-            onListo={() => { setElegido(nuevo.fecha ?? elegido); setNuevo(null); }}
+            onListo={() => { elegir(nuevo.fecha ?? elegido); setNuevo(null); }}
             onCerrar={() => setNuevo(null)}
           />
         </Ventana>

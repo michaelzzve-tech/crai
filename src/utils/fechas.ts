@@ -98,10 +98,11 @@ export const formatearDiaCorto = (dia: string) => formatoDiaCorto.format(aMediod
 /** "lunes, 27 de octubre de 2026" */
 export const formatearDiaLargo = (dia: string) => formatoDiaLargo.format(aMediodia(dia));
 /** "27 oct – 2 nov 2026" */
-export function formatearSemana(lunes: string): string {
-  const domingo = sumarDias(lunes, 6);
-  return `${formatoMesCorto.format(aMediodia(lunes))} – ${formatoMesCorto.format(aMediodia(domingo))} ${domingo.slice(0, 4)}`;
+export function formatearRango(desde: string, hasta: string): string {
+  return `${formatoMesCorto.format(aMediodia(desde))} – ${formatoMesCorto.format(aMediodia(hasta))} ${hasta.slice(0, 4)}`;
 }
+/** "27 oct – 2 nov 2026": la semana que empieza en `lunes`. */
+export const formatearSemana = (lunes: string) => formatearRango(lunes, sumarDias(lunes, 6));
 
 /** Minutos desde la medianoche (hora de Caracas) de una fecha ISO. */
 export function minutosDelDia(iso: string): number {
