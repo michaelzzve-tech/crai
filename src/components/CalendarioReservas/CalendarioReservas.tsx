@@ -39,6 +39,7 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
   const [errorVentana, setErrorVentana] = useState('');
   const [detalle, setDetalle] = useState<string | null>(null); // id del registro abierto
   const contenedor = useMostrarDiaElegido(elegido);
+  const ahora = useAhora(30_000); // Para marcar "EN USO" las reservas que ya empezaron
 
   const hasta = sumarDias(desde, cantidad - 1);
   const aLaVista = registros.filter((r) => r.fin && diaDe(r.inicio) >= desde && diaDe(r.inicio) <= hasta);
@@ -82,6 +83,7 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
       ],
       movible: !r.finReal,
       atenuado: !!r.finReal,
+      etiqueta: !r.finReal && new Date(r.inicio) <= ahora ? 'EN USO' : undefined,
     };
   };
   const registroDe = (e: EventoPlanner) => registros.find((r) => r.id === e.id);
