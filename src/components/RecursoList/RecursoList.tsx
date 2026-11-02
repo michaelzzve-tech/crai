@@ -3,6 +3,7 @@ import { useAhora } from '../../hooks/useAhora';
 import { cambiarMantenimiento } from '../../services/registroService';
 import type { Recurso, Registro } from '../../types';
 import { diaDe, formatearDia, formatearDuracion, formatearHora } from '../../utils/fechas';
+import { minutosAbiertos } from '../../utils/horario';
 import { EstadoBadge } from '../EstadoBadge';
 import { usePaginacion } from '../../hooks/usePaginacion';
 import { Paginador } from '../Paginador';
@@ -13,14 +14,6 @@ interface Props {
   recursos: Recurso[];
   registros: Registro[];
   ejecutar: EjecutarAccion;
-}
-
-/** "45 min", "3 h 20 min" o, desde un día, "2 días 4 h". */
-function tiempo(minutos: number): string {
-  const dias = Math.floor(minutos / 1440);
-  if (dias === 0) return formatearDuracion(minutos);
-  const horas = Math.floor((minutos % 1440) / 60);
-  return `${dias} ${dias === 1 ? 'día' : 'días'}${horas ? ` ${horas} h` : ''}`;
 }
 
 /** Los recursos del módulo (laptops 1–25 y 59–80, cubículos 1–6 y Podcast…) con su estado. */
@@ -78,11 +71,12 @@ export function RecursoList({ modulo, recursos, registros, ejecutar }: Props) {
 
 /**
  * "Programada" y, si el recurso está libre ahora, cuánto tiempo lo seguirá hasta que empiece
- * su próxima reserva; si está en uso, cuándo es esa próxima reserva.
+ * su próxima reserva; si está en uso, cuándo es esa próxima reserva. El tiempo solo cuenta
+ * las horas en que la biblioteca está abierta (config/horario.ts).
  */
 function ProximaReserva({ reserva, libre, ahora }: { reserva?: Registro; libre: boolean; ahora: Date }) {
   if (!reserva) return null;
-  const minutos = Math.floor((new Date(reserva.inicio).getTime() - ahora.getTime()) / 60000);
+  const minutos = minutosAbiertos(ahora, new Date(reserva.inicio));
   const dia = diaDe(reserva.inicio);
   const cuando = `${dia === diaDe(ahora) ? 'hoy' : `el ${formatearDia(dia)}`} a las ${formatearHora(reserva.inicio)}`;
   return (
@@ -90,8 +84,8 @@ function ProximaReserva({ reserva, libre, ahora }: { reserva?: Registro; libre: 
       {' '}<EstadoBadge estado="programado" />
       <div className="secundario">
         {libre
-          ? <>Libre por <strong>{tiempo(minutos)}</strong>, hasta su reserva {cuando} ({reserva.nombre}).</>
-          : <>Próxima reserva {cuando} ({reserva.nombre}), en {tiempo(minutos)}.</>}
+          ? <>Libre por <strong>{formatearDuracion(minutos)}</strong>, hasta su reserva {cuando} ({reserva.nombre}).</>
+          : <>Próxima reserva {cuando} ({reserva.nombre}), en {formatearDuracion(minutos)}.</>}
       </div>
     </>
   );
