@@ -1,5 +1,5 @@
 import { DIAS_RECURRENCIA, fechasDeSerie, type Recurrencia } from '../../services/recurrencia';
-import { diaDe, formatearRango, formatearSemana, lunesDe, sumarDias } from '../../utils/fechas';
+import { diaDe, formatearDiaLargo, formatearRango, formatearSemana, lunesDe, sumarDias } from '../../utils/fechas';
 import { NavegadorFecha } from './NavegadorFecha';
 
 /** Título, botones Hoy y ‹ ›, la semana, el menú de año, mes y día, y el botón para reservar. */
@@ -9,10 +9,16 @@ export function BarraSemana({ titulo, elegido, onElegir, onNueva, tramo }: {
   onElegir: (dia: string) => void;
   onNueva: () => void;
   /** Si el calendario muestra unos pocos días en vez de la semana: cuáles, y cómo avanzar o retroceder. */
-  tramo?: { desde: string; dias: number; onPaso: (dias: number) => void };
+  tramo?: {
+    desde: string;
+    dias: number;
+    onPaso: (dias: number) => void;
+    vistas?: number[]; // Botones para cambiar cuántos días se ven (1 = "Día", 3 = "3 días")
+    onDias?: (dias: number) => void;
+  };
 }) {
-  const anterior = tramo ? `${tramo.dias} días anteriores` : 'Semana anterior';
-  const siguiente = tramo ? `${tramo.dias} días siguientes` : 'Semana siguiente';
+  const anterior = !tramo ? 'Semana anterior' : tramo.dias === 1 ? 'Día anterior' : `${tramo.dias} días anteriores`;
+  const siguiente = !tramo ? 'Semana siguiente' : tramo.dias === 1 ? 'Día siguiente' : `${tramo.dias} días siguientes`;
   const paso = (n: number) => (tramo ? tramo.onPaso(n * tramo.dias) : onElegir(sumarDias(elegido, n * 7)));
   return (
     <div className="salas-barra">
@@ -22,9 +28,20 @@ export function BarraSemana({ titulo, elegido, onElegir, onNueva, tramo }: {
         <button className="boton-icono" onClick={() => paso(-1)} aria-label={anterior} title={anterior}>‹</button>
         <button className="boton-icono" onClick={() => paso(1)} aria-label={siguiente} title={siguiente}>›</button>
         <strong className="salas-semana">
-          {tramo ? formatearRango(tramo.desde, sumarDias(tramo.desde, tramo.dias - 1)) : formatearSemana(lunesDe(elegido))}
+          {!tramo ? formatearSemana(lunesDe(elegido))
+            : tramo.dias === 1 ? formatearDiaLargo(tramo.desde)
+              : formatearRango(tramo.desde, sumarDias(tramo.desde, tramo.dias - 1))}
         </strong>
         <NavegadorFecha dia={elegido} onCambiar={onElegir} />
+        {tramo?.vistas && (
+          <div className="vistas-planner" role="group" aria-label="Días a la vista">
+            {tramo.vistas.map((n) => (
+              <button key={n} aria-pressed={tramo.dias === n} onClick={() => tramo.onDias?.(n)}>
+                {n === 1 ? 'Día' : `${n} días`}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       <button className="primario" onClick={onNueva}>+ Nueva reserva</button>
     </div>

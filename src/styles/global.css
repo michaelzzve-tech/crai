@@ -318,6 +318,11 @@ label.casilla input { width: 18px; height: 18px; margin: 0; }
   box-shadow: 0 8px 24px rgba(15, 23, 42, .18); padding: 8px 10px; font-size: .78rem; line-height: 1.3;
 }
 .vista-previa.izquierda { left: auto; right: calc(100% - 6px); }
+.vista-previa.dentro { left: auto; right: 8px; } /* Un solo día: la columna es ancha y la vista previa cabe dentro */
+.vistas-planner { display: inline-flex; border: 1px solid var(--borde); border-radius: 8px; overflow: hidden; }
+.vistas-planner button { border: none; border-radius: 0; padding: 6px 12px; background: var(--superficie); color: inherit; font: inherit; }
+.vistas-planner button + button { border-left: 1px solid var(--borde); }
+.vistas-planner button[aria-pressed="true"] { background: var(--primario); color: #fff; }
 .vista-previa dl { margin: 6px 0 0; display: grid; gap: 2px; }
 .vista-previa dl div { display: grid; grid-template-columns: 96px 1fr; gap: 6px; }
 .vista-previa dt { color: var(--texto-suave); }

@@ -15,8 +15,8 @@ import { EditorHorario } from '../RegistrosActivos';
 import type { EjecutarAccion } from '../tipos';
 
 const dosDigitos = (n: number) => String(n).padStart(2, '0');
-/** Días que muestra el calendario de cubículos en cada pantalla. */
-const DIAS_POR_PANTALLA = 3;
+/** Vistas del calendario de cubículos: el día en curso (al abrir) o 3 días. */
+const VISTAS = [1, 3];
 
 interface Props {
   modulo: Modulo;
@@ -33,13 +33,14 @@ interface Props {
 export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Props) {
   const [elegido, setElegido] = useState(() => diaDe());
   const [desde, setDesde] = useState(() => diaDe()); // Primer día que se ve
+  const [cantidad, setCantidad] = useState(VISTAS[0]); // Días a la vista
   const [ocultos, setOcultos] = useState<string[]>([]);
   const [nuevo, setNuevo] = useState<Partial<NuevoRegistro> | null>(null); // Valores iniciales del formulario abierto
   const [errorVentana, setErrorVentana] = useState('');
   const [detalle, setDetalle] = useState<string | null>(null); // id del registro abierto
   const contenedor = useMostrarDiaElegido(elegido);
 
-  const hasta = sumarDias(desde, DIAS_POR_PANTALLA - 1);
+  const hasta = sumarDias(desde, cantidad - 1);
   const aLaVista = registros.filter((r) => r.fin && diaDe(r.inicio) >= desde && diaDe(r.inicio) <= hasta);
   /** Elige un día; si no está a la vista, el calendario empieza en él. */
   const elegir = (dia: string) => {
@@ -135,7 +136,7 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
         elegido={elegido}
         onElegir={elegir}
         onNueva={() => abrirNuevo()}
-        tramo={{ desde, dias: DIAS_POR_PANTALLA, onPaso: avanzar }}
+        tramo={{ desde, dias: cantidad, onPaso: avanzar, vistas: VISTAS, onDias: (n) => { setCantidad(n); setDesde(elegido); } }}
       />
 
       {/* Cada cubículo es un filtro y a la vez la leyenda de colores del calendario. */}
@@ -145,7 +146,7 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
           id: r.id,
           nombre: nombreRecurso(r.id) === r.id ? `${modulo.recurso} ${r.id}` : nombreRecurso(r.id),
           color: color(r.id),
-          detalle: `${aLaVista.filter((x) => x.recursoId === r.id).length} en estos días`,
+          detalle: `${aLaVista.filter((x) => x.recursoId === r.id).length} ${cantidad === 1 ? "este día" : "en estos días"}`,
         }))}
         ocultos={ocultos}
         onOcultos={setOcultos}
@@ -154,7 +155,7 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
       <div className="planner-contenedor" ref={contenedor}>
         <PlannerSemanal
           lunes={desde}
-          cantidadDias={DIAS_POR_PANTALLA}
+          cantidadDias={cantidad}
           elegido={elegido}
           onElegir={elegir}
           reservas={aLaVista.filter((r) => !ocultos.includes(r.recursoId)).map(evento)}

@@ -233,7 +233,7 @@ export function PlannerSemanal({ lunes, cantidadDias = 7, elegido, onElegir, res
             const abajo = u.desde > (FIN - INICIO) / 2;
             return (
               <div
-                className={`vista-previa${columna >= dias.length - (dias.length > 3 ? 2 : 1) ? ' izquierda' : ''}`}
+                className={`vista-previa${dias.length === 1 ? ' dentro' : columna >= dias.length - (dias.length > 3 ? 2 : 1) ? ' izquierda' : ''}`}
                 style={{
                   top: abajo ? undefined : (u.desde / 60) * ALTO_HORA,
                   bottom: abajo ? HORAS.length * ALTO_HORA - (u.hasta / 60) * ALTO_HORA : undefined,
