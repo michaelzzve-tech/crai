@@ -259,8 +259,8 @@ button.boton-peligro { background: var(--alerta); border-color: var(--alerta); c
 .planner-columna.hoy { background-color: #f0fbfd; }
 .planner-columna.pasado { background-color: var(--fondo); cursor: default; }
 .reserva-sala {
-  position: absolute; display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
-  padding: 4px 6px; overflow: hidden; text-align: left; font-size: .75rem; line-height: 1.25; color: var(--texto);
+  position: absolute; display: flex; flex-direction: column; align-items: flex-start; gap: 0;
+  padding: 3px 6px; overflow: hidden; container-type: inline-size; text-align: left; font-size: .75rem; line-height: 1.25; color: var(--texto);
   border: none; border-left: 4px solid var(--color-sala); border-radius: 6px;
   background: color-mix(in srgb, var(--color-sala) 16%, #fff); box-shadow: 0 0 0 2px var(--superficie);
 }
@@ -303,8 +303,14 @@ label.casilla input { width: 18px; height: 18px; margin: 0; }
 .dias-recurrencia button { border-radius: 999px; min-width: 52px; padding: 6px 12px; }
 .dias-recurrencia button.activo { background: var(--primario); border-color: var(--primario); color: #fff; }
 /* Calendario de reservas de cubículos (el mismo de salas especiales) */
-.reserva-sala.angosta { padding-inline: 4px; }
-.reserva-sala.angosta span { display: none; }
+/* Fichas angostas (varias reservas a la misma hora): el texto pasa a la línea siguiente en vez de
+   cortarse; solo en las muy angostas se deja nada más el título (el resto, en la vista previa). */
+@container (max-width: 150px) {
+  .reserva-sala span, .reserva-sala strong { white-space: normal; overflow-wrap: break-word; flex-shrink: 0; }
+}
+@container (max-width: 64px) {
+  .reserva-sala span { display: none; }
+}
 .reserva-sala.atenuada { opacity: .55; background-image: repeating-linear-gradient(135deg, transparent 0 6px, rgba(255, 255, 255, .5) 6px 8px); }
 .reserva-sala.fija { cursor: pointer; }
 /* "EN USO": negro con letras blancas, para que resalte sobre cualquier color de cubículo */

@@ -53,8 +53,8 @@ export function Salas() {
     return {
       id: r.id, inicio: r.inicio, fin: r.fin, color: sala?.color ?? '#7b8794', movible: true,
       titulo: sala?.nombre.replace('Sala ', '') ?? r.salaId,
-      lineas: [horario, `${r.actividad} · ${r.usuarios} pers.`, `${r.instituto} · ${r.carrera} · ${r.semestre}`,
-        `Solicita: ${r.solicitante}`, `Prof.: ${r.profesor}`],
+      lineas: [horario, `${r.actividad} · ${r.usuarios} pers.`, `Solicita: ${r.solicitante}`, `Prof.: ${r.profesor}`,
+        `${r.instituto} · ${r.carrera} · ${r.semestre}`],
       datos: [
         ['Sala', sala?.nombre ?? r.salaId],
         ['Fecha', formatearDiaLargo(diaDe(r.inicio))],

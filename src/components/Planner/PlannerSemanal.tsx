@@ -201,7 +201,7 @@ export function PlannerSemanal({ lunes, cantidadDias = 7, elegido, onElegir, res
               <button
                 key={u.reserva.id}
                 type="button"
-                className={`reserva-sala${alto < 48 ? ' compacta' : ''}${u.carriles > 3 ? ' angosta' : ''}${u.reserva.atenuado ? ' atenuada' : ''}${u.reserva.movible ? '' : ' fija'}${arrastre?.movido && arrastre.reserva.id === u.reserva.id ? ' origen' : ''}`}
+                className={`reserva-sala${alto < 48 ? ' compacta' : ''}${u.reserva.atenuado ? ' atenuada' : ''}${u.reserva.movible ? '' : ' fija'}${arrastre?.movido && arrastre.reserva.id === u.reserva.id ? ' origen' : ''}`}
                 style={{
                   top: (u.desde / 60) * ALTO_HORA,
                   height: alto - 2,
@@ -223,8 +223,8 @@ export function PlannerSemanal({ lunes, cantidadDias = 7, elegido, onElegir, res
                 {u.reserva.etiqueta
                   ? <div className="fila-titulo"><em className="etiqueta-ficha">{u.reserva.etiqueta}</em><strong>{u.reserva.titulo}</strong></div>
                   : <strong>{u.reserva.titulo}</strong>}
-                {/* Solo las líneas que caben enteras (unos 16 px cada una); el resto se ve en la vista previa. */}
-                {u.reserva.lineas.slice(0, Math.max(1, Math.floor((alto - 10) / 16) - 1)).map((l, i) => <span key={i}>{l}</span>)}
+                {/* Las líneas que caben (15 px cada una, debajo del título); el resto se ve en la vista previa. */}
+                {u.reserva.lineas.slice(0, Math.max(1, Math.floor((alto - 8) / 15) - 1)).map((l, i) => <span key={i}>{l}</span>)}
               </button>
             );
           })}
