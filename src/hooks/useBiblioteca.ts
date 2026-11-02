@@ -3,6 +3,7 @@ import type { Modulo } from '../config/modulos';
 import { repositorio } from '../data';
 import { activarProgramados, asegurarRecursos } from '../services/registroService';
 import type { Recurso, Registro } from '../types';
+import { masRecientesPrimero } from '../utils/orden';
 
 /** Carga los recursos y registros del módulo, y expone `recargar` para refrescar tras cada acción. */
 export function useBiblioteca(modulo: Modulo) {
@@ -20,7 +21,7 @@ export function useBiblioteca(modulo: Modulo) {
     // 50 a 58) siguen guardados para no perder sus préstamos, pero no se muestran.
     const orden = (x: Recurso) => modulo.opciones.indexOf(x.id);
     setRecursos(r.filter((x) => orden(x) >= 0).sort((a, b) => orden(a) - orden(b)));
-    setRegistros(g.sort((a, b) => b.inicio.localeCompare(a.inicio)));
+    setRegistros(g.sort(masRecientesPrimero)); // Las últimas en registrarse, primero
   }, [modulo]);
 
   useEffect(() => {
