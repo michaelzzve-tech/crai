@@ -3,9 +3,10 @@ import { SALAS, salaPorId } from '../../config/salas';
 import { nombresDeDias, type Recurrencia } from '../../services/recurrencia';
 import { cancelarReservaSala, cancelarSerieDesde, guardarReservaSala, guardarSerieSala, listarReservasSalas, moverReservaSala } from '../../services/salaService';
 import type { NuevaReservaSala, ReservaSala } from '../../types';
-import { diaDe, formatearDia, formatearDiaLargo, formatearFecha, formatearHora, horaActual, lunesDe, sumarDias } from '../../utils/fechas';
+import { diaDe, formatearDia, formatearDiaLargo, formatearFecha, formatearHora, horaActual } from '../../utils/fechas';
 import { useAhora } from '../../hooks/useAhora';
 import { useMostrarDiaElegido } from '../../hooks/useMostrarDiaElegido';
+import { useVistaPlanner } from '../../hooks/useVistaPlanner';
 import { usePaginacion } from '../../hooks/usePaginacion';
 import { Paginador } from '../Paginador';
 import { BarraSemana, FiltrosPlanner, PlannerSemanal, type EventoPlanner } from '../Planner';
@@ -16,8 +17,7 @@ export function Salas() {
   const [reservas, setReservas] = useState<ReservaSala[]>([]);
   const [error, setError] = useState('');
   const [aviso, setAviso] = useState('');
-  const [elegido, setElegido] = useState(() => diaDe()); // Día elegido; se muestra su semana
-  const lunes = lunesDe(elegido);
+  const { elegido, desde, hasta, cantidad, elegir, tramo, textoPeriodo } = useVistaPlanner(); // Al abrir, solo el día en curso
   const [ocultas, setOcultas] = useState<string[]>([]); // Salas que no se muestran en el calendario
   const [formulario, setFormulario] = useState<InicioFormulario | null>(null);
   const [detalle, setDetalle] = useState<ReservaSala | null>(null);
@@ -40,12 +40,11 @@ export function Salas() {
     return () => { vigente = false; };
   }, []);
 
-  const domingo = sumarDias(lunes, 6);
-  const deLaSemana = reservas.filter((r) => {
+  const aLaVista = reservas.filter((r) => {
     const dia = diaDe(r.inicio);
-    return dia >= lunes && dia <= domingo;
+    return dia >= desde && dia <= hasta;
   });
-  const visibles = deLaSemana.filter((r) => !ocultas.includes(r.salaId));
+  const visibles = aLaVista.filter((r) => !ocultas.includes(r.salaId));
 
   /** Cada reserva tal como se dibuja: nombre corto de la sala y todos sus datos (menos la fecha de solicitud). */
   const evento = (r: ReservaSala): EventoPlanner => {
@@ -84,7 +83,7 @@ export function Salas() {
     if (recurrencia) {
       const serie = await guardarSerieSala(datos, recurrencia);
       await recargar();
-      setElegido(diaDe(serie[0].inicio));
+      elegir(diaDe(serie[0].inicio));
       const losDias = nombresDeDias(recurrencia.dias);
       const total = serie.length === 1 ? '1 reserva' : `${serie.length} reservas`;
       setAviso(`Se ${serie.length === 1 ? 'creó' : 'crearon'} ${total} de ${salaPorId(datos.salaId)?.nombre}: los ${losDias}, ${formatearHora(serie[0].inicio)} – ${formatearHora(serie[0].fin)}, del ${formatearDia(diaDe(serie[0].inicio))} al ${formatearDia(diaDe(serie[serie.length - 1].inicio))}`);
@@ -92,7 +91,7 @@ export function Salas() {
     }
     const r = await guardarReservaSala(datos, anterior);
     await recargar();
-    setElegido(diaDe(r.inicio)); // Muestra el día de la reserva
+    elegir(diaDe(r.inicio)); // Muestra el día de la reserva
     setAviso(`${salaPorId(r.salaId)?.nombre} ${anterior ? 'actualizada' : 'reservada'}: ${formatearDiaLargo(diaDe(r.inicio))}, ${formatearHora(r.inicio)} – ${formatearHora(r.fin)}`);
   }
 
@@ -138,21 +137,22 @@ export function Salas() {
       )}
 
       <section className="panel salas">
-        <BarraSemana titulo="Salas especiales" elegido={elegido} onElegir={setElegido} onNueva={() => nueva()} />
+        <BarraSemana titulo="Salas especiales" elegido={elegido} onElegir={elegir} onNueva={() => nueva()} tramo={tramo} />
 
         {/* Cada sala es un filtro y a la vez la leyenda de colores del calendario. */}
         <FiltrosPlanner
           grupo="Salas que se muestran"
-          items={SALAS.map((s) => ({ ...s, detalle: `${s.capacidad} pers. · ${deLaSemana.filter((r) => r.salaId === s.id).length} esta semana` }))}
+          items={SALAS.map((s) => ({ ...s, detalle: `${s.capacidad} pers. · ${aLaVista.filter((r) => r.salaId === s.id).length} ${textoPeriodo}` }))}
           ocultos={ocultas}
           onOcultos={setOcultas}
         />
 
         <div className="planner-contenedor" ref={contenedor}>
           <PlannerSemanal
-            lunes={lunes}
+            lunes={desde}
+            cantidadDias={cantidad}
             elegido={elegido}
-            onElegir={setElegido}
+            onElegir={elegir}
             reservas={visibles.map(evento)}
             onNueva={(dia, hora) => nueva(dia, hora)}
             onAbrir={(e) => setDetalle(reservaDe(e) ?? null)}
