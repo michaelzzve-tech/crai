@@ -137,6 +137,11 @@ export async function descargarInformePdf(informe: Informe): Promise<void> {
     }
   });
 
+  // Horas de préstamo de laptops por mes, con lo acumulado en el año
+  nuevaPagina();
+  tituloSeccion(`Horas de préstamo de laptops por mes (${informe.horasLaptops.anio})`);
+  dibujarHorasLaptops();
+
   // Cuadros comparativos
   nuevaPagina();
   tituloSeccion('Cuadros comparativos progresivos');
@@ -156,6 +161,40 @@ export async function descargarInformePdf(informe: Informe): Promise<void> {
       dibujarGrafica(cuadro);
       y += 10;
     }
+  }
+
+  /** Tabla de horas de préstamo de laptops: un mes por fila, con la fila TOTAL. */
+  function dibujarHorasLaptops() {
+    const { meses } = informe.horasLaptops;
+    const anchos = [40, 30, 40, 40];
+    const x0 = centro - anchos.reduce((a, b) => a + b, 0) / 2;
+    const alto = 6;
+    const total = meses[meses.length - 1]?.acumulado ?? 0;
+    const filas = [
+      ...meses.map((m) => [m.mes, String(m.prestamos), horasCortas(m.minutos), horasCortas(m.acumulado)]),
+      ['TOTAL', String(meses.reduce((s, m) => s + m.prestamos, 0)), horasCortas(total), horasCortas(total)],
+    ];
+    doc.setDrawColor(...TEXTO);
+    doc.setLineWidth(0.2);
+    const celdas = (valores: string[], negrita: boolean, fondo?: Color) => {
+      let x = x0;
+      valores.forEach((v, i) => {
+        if (fondo) doc.setFillColor(...fondo);
+        doc.rect(x, y, anchos[i], alto, fondo ? 'FD' : 'S');
+        color(TEXTO);
+        fuente(8.5, negrita);
+        doc.text(v, i === 0 ? x + 2 : x + anchos[i] / 2, y + 4.1, { align: i === 0 ? 'left' : 'center' });
+        x += anchos[i];
+      });
+      y += alto;
+    };
+    celdas(['Mes', 'Préstamos', 'Horas del mes', 'Acumulado del año'], true, FONDO_CUADRO);
+    filas.forEach((f, i) => celdas(f, i === filas.length - 1));
+    y += 4;
+    color(SUAVE);
+    fuente(8);
+    doc.text('Horas:minutos, de la salida de cada laptop a su devolución. Los préstamos sin devolver todavía no suman.', x0, y);
+    y += 6;
   }
 
   /** Tabla con un mes por columna, la fila de totales y la columna TOTAL. */

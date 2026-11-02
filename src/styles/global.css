@@ -333,3 +333,6 @@ label.casilla input { width: 18px; height: 18px; margin: 0; }
 /* Aviso de conexión: fijo arriba, encima de todo */
 .sin-conexion { position: sticky; top: 0; z-index: 50; padding: 10px 16px; text-align: center; background: var(--alerta); color: #fff; }
 .sin-conexion.restablecida { background: var(--exito); }
+
+/* Informes: horas de préstamo de laptops por mes */
+.tabla-horas { max-width: 560px; }
