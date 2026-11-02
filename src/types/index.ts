@@ -27,6 +27,7 @@ export interface Registro {
   finReal?: string; // Cuándo se devolvió o liberó; vacío mientras está activo
   serieId?: string; // Igual en todas las fechas de una reserva recurrente (solo cubículos); vacío si es única
   fechaRegistro?: string; // "Fecha de registro": cuándo se pidió la reserva, "AAAA-MM-DD"; solo informativa (solo cubículos)
+  creado?: string; // Cuándo se registró en el sistema, ISO 8601 (vacío en registros anteriores a este campo)
 }
 
 /** Datos del formulario, en el mismo orden en que se muestran. */
