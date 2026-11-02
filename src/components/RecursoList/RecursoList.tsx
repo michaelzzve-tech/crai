@@ -3,7 +3,7 @@ import { useAhora } from '../../hooks/useAhora';
 import { cambiarMantenimiento } from '../../services/registroService';
 import type { Recurso, Registro } from '../../types';
 import { diaDe, formatearDia, formatearDuracion, formatearHora } from '../../utils/fechas';
-import { minutosAbiertos } from '../../utils/horario';
+import { cierreDeHoy, minutosLibresHoy } from '../../utils/horario';
 import { EstadoBadge } from '../EstadoBadge';
 import { usePaginacion } from '../../hooks/usePaginacion';
 import { Paginador } from '../Paginador';
@@ -70,23 +70,31 @@ export function RecursoList({ modulo, recursos, registros, ejecutar }: Props) {
 }
 
 /**
- * "Programada" y, si el recurso está libre ahora, cuánto tiempo lo seguirá hasta que empiece
- * su próxima reserva; si está en uso, cuándo es esa próxima reserva. El tiempo solo cuenta
- * las horas en que la biblioteca está abierta (config/horario.ts).
+ * "Programada" y, si el recurso está libre ahora, cuánto tiempo lo seguirá hoy: hasta su
+ * próxima reserva o hasta el cierre (las horas libres no se suman de un día a otro;
+ * config/horario.ts). Si está en uso, cuándo es esa próxima reserva.
  */
 function ProximaReserva({ reserva, libre, ahora }: { reserva?: Registro; libre: boolean; ahora: Date }) {
   if (!reserva) return null;
-  const minutos = minutosAbiertos(ahora, new Date(reserva.inicio));
+  const inicio = new Date(reserva.inicio);
   const dia = diaDe(reserva.inicio);
-  const cuando = `${dia === diaDe(ahora) ? 'hoy' : `el ${formatearDia(dia)}`} a las ${formatearHora(reserva.inicio)}`;
+  const esHoy = dia === diaDe(ahora);
+  const cuando = `${esHoy ? 'hoy' : `el ${formatearDia(dia)}`} a las ${formatearHora(reserva.inicio)}`;
+  const libreHoy = minutosLibresHoy(ahora, inicio);
+  let texto;
+  if (!libre) {
+    texto = <>Próxima reserva {cuando} ({reserva.nombre}){esHoy ? <>, en {formatearDuracion(minutosLibresHoy(ahora, inicio) ?? 0)}</> : null}.</>;
+  } else if (libreHoy === null) {
+    texto = <>Biblioteca cerrada. Próxima reserva {cuando} ({reserva.nombre}).</>;
+  } else if (esHoy) {
+    texto = <>Libre por <strong>{formatearDuracion(libreHoy)}</strong>, hasta su reserva {cuando} ({reserva.nombre}).</>;
+  } else {
+    texto = <>Libre por <strong>{formatearDuracion(libreHoy)}</strong> hoy, hasta el cierre ({formatearHora(cierreDeHoy(ahora))}). Próxima reserva {cuando} ({reserva.nombre}).</>;
+  }
   return (
     <>
       {' '}<EstadoBadge estado="programado" />
-      <div className="secundario">
-        {libre
-          ? <>Libre por <strong>{formatearDuracion(minutos)}</strong>, hasta su reserva {cuando} ({reserva.nombre}).</>
-          : <>Próxima reserva {cuando} ({reserva.nombre}), en {formatearDuracion(minutos)}.</>}
-      </div>
+      <div className="secundario">{texto}</div>
     </>
   );
 }
