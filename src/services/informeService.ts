@@ -1,4 +1,4 @@
-import { CUBICULOS, LAPTOPS } from '../config/modulos';
+import { CUBICULOS, LAPTOPS, nombreRecurso } from '../config/modulos';
 import { CARRERA_POR_INSTITUTO, CONDICIONES_LAPTOPS } from '../config/opciones';
 import { SALAS } from '../config/salas';
 import { repositorio } from '../data';
@@ -66,10 +66,27 @@ export interface SeccionCuadros {
   cuadros: Cuadro[];
 }
 
+/** Un mes de la tabla de horas de préstamo de laptops. */
+export interface MesHoras {
+  mes: string; // "Enero"
+  prestamos: number;
+  minutos: number; // Horas de préstamo del mes, en minutos
+  acumulado: number; // Minutos sumados desde enero hasta este mes
+}
+
+/** Horas de préstamo de laptops de cada mes del año del informe, de enero al mes del período. */
+export interface HorasLaptops {
+  anio: string;
+  meses: MesHoras[];
+  // Horas de cada laptop prestada en el año: minutos de cada mes (en el orden de `meses`) y su total.
+  porLaptop: { laptop: string; prestamos: number; minutos: number[]; total: number }[];
+}
+
 export interface Informe {
   periodo: Periodo;
   titulo: string; // "SEPTIEMBRE, 2026" o "01/09/2026 al 15/09/2026"
   servicios: Servicio[];
+  horasLaptops: HorasLaptops;
   comparativos: SeccionCuadros[];
   detallePrestamos: Registro[]; // Cada préstamo del período, del más antiguo al más reciente
   detalleReservas: Registro[]; // Cada reserva del período, igual
@@ -382,6 +399,36 @@ function comparativos(prestamos: Registro[], reservas: Registro[], salas: Reserv
   ];
 }
 
+/**
+ * Suma las horas de préstamo de laptops (de la salida a la devolución) de cada mes del año,
+ * de enero al mes en que termina el período, y las va acumulando.
+ */
+function horasLaptopsPorMes(prestamos: Registro[], hasta: string): HorasLaptops {
+  const anio = hasta.slice(0, 4);
+  const ultimo = Number(hasta.slice(5, 7));
+  let acumulado = 0;
+  const meses = Array.from({ length: ultimo }, (_, i) => {
+    const clave = `${anio}-${dosCifras(i + 1)}`;
+    const delMes = prestamos.filter((r) => diaDe(r.inicio).startsWith(clave));
+    const minutos = delMes.reduce((t, r) => t + usoLaptop(r), 0);
+    acumulado += minutos;
+    const nombre = MESES_LARGOS[i];
+    return { mes: nombre[0] + nombre.slice(1).toLowerCase(), prestamos: delMes.length, minutos, acumulado };
+  });
+  // Por laptop: solo las que se prestaron en el año, en el orden del menú de laptops.
+  const delAnio = prestamos.filter((r) => diaDe(r.inicio).slice(0, 7) >= `${anio}-01` && diaDe(r.inicio).slice(0, 7) <= `${anio}-${dosCifras(ultimo)}`);
+  const orden = (id: string) => { const i = LAPTOPS.opciones.indexOf(id); return i < 0 ? Infinity : i; };
+  const ids = [...new Set(delAnio.map((r) => r.recursoId))].sort((a, b) => orden(a) - orden(b) || a.localeCompare(b));
+  const porLaptop = ids.map((id) => {
+    const suyos = delAnio.filter((r) => r.recursoId === id);
+    const minutos = meses.map((_, i) => suyos
+      .filter((r) => Number(diaDe(r.inicio).slice(5, 7)) === i + 1)
+      .reduce((t, r) => t + usoLaptop(r), 0));
+    return { laptop: nombreRecurso(id), prestamos: suyos.length, minutos, total: minutos.reduce((a, b) => a + b, 0) };
+  });
+  return { anio, meses, porLaptop };
+}
+
 /** "SEPTIEMBRE, 2026" si el período es un mes completo; si no, "01/09/2026 al 15/09/2026". */
 function tituloPeriodo(periodo: Periodo): string {
   const mes = periodo.desde.slice(0, 7);
@@ -410,6 +457,7 @@ export async function generarInforme(periodo: Periodo): Promise<Informe> {
       servicio('laptops', 'Préstamos de Laptops', 'solicitudes', p, usoLaptop, false),
       servicioSalas(s),
     ],
+    horasLaptops: horasLaptopsPorMes(prestamos, periodo.hasta),
     comparativos: comparativos(prestamos, reservas, salas, periodo.hasta),
     detallePrestamos: p,
     detalleReservas: r,

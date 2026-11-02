@@ -163,6 +163,13 @@ y pegue los mismos dos valores.
   sigue activa, hasta la hora de fin); las de salas, de la hora de inicio a la de fin. El botón **Descargar PDF** guarda siempre el informe completo con membrete y, al
   final, el **detalle** de cada préstamo y cada reserva del período (también las de salas especiales). Los textos de logros, metas y
   conclusiones del reporte se escriben a mano; el sistema no los genera.
+- **Espacios de Cubículos**: un cubículo con una reserva a futuro muestra **Programada**. Si está libre, dice cuánto
+  tiempo seguirá libre hasta esa reserva (por ejemplo, "Libre por 1 h 34 min, hasta su reserva hoy a las 6:08 p. m.");
+  si está en uso, cuándo es la próxima.
+- **Horas de préstamo de laptops por mes**: en Informes, debajo de los servicios, una tabla con cada mes del año
+  del informe (de enero al mes elegido): préstamos, horas del mes y horas acumuladas en el año, con la fila TOTAL.
+  Debajo, **Horas por laptop**: cada laptop prestada en el año, con sus horas de cada mes, su total y sus
+  préstamos. Las dos van también en el PDF. Las horas van de la salida a la devolución; un préstamo sin devolver aún no suma.
 - **Respaldo**: en Informes, el botón **Descargar respaldo (Excel)** guarda un archivo con
   los préstamos de laptops, las reservas de cubículos y las de salas especiales (una hoja para cada uno, una fila
   por registro con su fecha; en salas, también la duración y si es recurrente): todos, los de un año

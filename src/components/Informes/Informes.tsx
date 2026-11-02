@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { descargarInformePdf } from '../../services/informePdf';
 import {
   dosCifras, generarInforme, horasCortas, lineasGrupo, lineasInstitucion, periodoDelMes, periodoDeMes,
-  type Cuadro, type Informe, type Periodo, type Servicio,
+  type Cuadro, type HorasLaptops, type Informe, type Periodo, type Servicio,
 } from '../../services/informeService';
 import { BorrarRegistros } from '../BorrarRegistros';
 import { CopiaCompleta } from '../CopiaCompleta';
@@ -35,6 +35,74 @@ function BloqueServicio({ servicio, conDetalle }: { servicio: Servicio; conDetal
           </div>
         ))}
       </div>}
+    </section>
+  );
+}
+
+/** Horas de préstamo de laptops de cada mes del año, con lo acumulado hasta ese mes. */
+function TablaHorasLaptops({ horas }: { horas: HorasLaptops }) {
+  const total = horas.meses.reduce((t, m) => t + m.prestamos, 0);
+  const ultimo = horas.meses[horas.meses.length - 1];
+  return (
+    <section className="panel">
+      <h3>Horas de préstamo de laptops por mes ({horas.anio})</h3>
+      <div className="tabla-cuadro">
+        <table className="tabla-horas">
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th className="numero">Préstamos</th>
+              <th className="numero">Horas del mes</th>
+              <th className="numero">Acumulado del año</th>
+            </tr>
+          </thead>
+          <tbody>
+            {horas.meses.map((m) => (
+              <tr key={m.mes}>
+                <td>{m.mes}</td>
+                <td className="numero">{m.prestamos}</td>
+                <td className="numero">{horasCortas(m.minutos)}</td>
+                <td className="numero">{horasCortas(m.acumulado)}</td>
+              </tr>
+            ))}
+            <tr className="fila-total">
+              <td>TOTAL</td>
+              <td className="numero">{total}</td>
+              <td className="numero">{horasCortas(ultimo?.acumulado ?? 0)}</td>
+              <td className="numero">{horasCortas(ultimo?.acumulado ?? 0)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Horas por laptop ({horas.anio})</h3>
+      {horas.porLaptop.length === 0 ? (
+        <p className="vacio">No hubo préstamos de laptops en el año.</p>
+      ) : (
+        <div className="tabla-cuadro">
+          <table>
+            <thead>
+              <tr>
+                <th>Laptop</th>
+                {horas.meses.map((m) => <th key={m.mes} className="numero">{m.mes.slice(0, 3)}</th>)}
+                <th className="numero">Total</th>
+                <th className="numero">Préstamos</th>
+              </tr>
+            </thead>
+            <tbody>
+              {horas.porLaptop.map((l) => (
+                <tr key={l.laptop}>
+                  <td>{l.laptop}</td>
+                  {l.minutos.map((v, i) => <td key={i} className="numero">{v ? horasCortas(v) : '–'}</td>)}
+                  <td className="numero"><strong>{horasCortas(l.total)}</strong></td>
+                  <td className="numero">{l.prestamos}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <p className="secundario">Horas:minutos, de la salida de cada laptop a su devolución. Los préstamos sin devolver todavía no suman.
+        En "Horas por laptop" salen solo las laptops que se prestaron en el año.</p>
     </section>
   );
 }
@@ -171,6 +239,7 @@ function VistaInforme({ informe }: { informe: Informe }) {
 
       <h2 className="titulo-seccion-informe">Beneficiarios alcanzados por servicio prestado</h2>
       {informe.servicios.map((s) => <BloqueServicio key={s.titulo} servicio={s} conDetalle={conDetalle} />)}
+      <TablaHorasLaptops horas={informe.horasLaptops} />
 
       {cuadros.length > 0 && (
         <>

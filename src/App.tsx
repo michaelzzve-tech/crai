@@ -126,7 +126,7 @@ function VistaModulo({ modulo, pestana }: { modulo: Modulo; pestana: Pestana }) 
           <RegistrosActivos modulo={modulo} registros={registros} ejecutar={ejecutar} />
         </>
       )}
-      {pestana === 'recursos' && <RecursoList modulo={modulo} recursos={recursos} ejecutar={ejecutar} />}
+      {pestana === 'recursos' && <RecursoList modulo={modulo} recursos={recursos} registros={registros} ejecutar={ejecutar} />}
       {pestana === 'historial' && <Historial modulo={modulo} registros={registros} />}
     </main>
   );
