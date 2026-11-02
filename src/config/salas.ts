@@ -24,7 +24,7 @@ export const HORA_APERTURA = 7;
 export const HORA_CIERRE = 21;
 
 /** Sugerencias del campo "Actividad" (también se puede escribir otra). */
-export const ACTIVIDADES = ['Clase Magistral', 'Taller', 'Charla', 'Conferencia', 'Reunión', 'Proyección', 'Evaluación', 'Evento'];
+export const ACTIVIDADES = ['Clase Magistral', 'Taller', 'Charla', 'Conferencia', 'Reunión', 'Proyección', 'Evaluación', 'Sistematización', 'Evento'];
 
 /** Tabla de la base de datos con las reservas de salas. */
 export const TABLA_RESERVAS_SALAS = 'reservas_salas';
