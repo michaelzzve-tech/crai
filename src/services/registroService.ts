@@ -120,7 +120,9 @@ function prepararRegistro(modulo: Modulo, datos: NuevoRegistro, recursos: Recurs
 
   // Una reserva para más tarde no ocupa el recurso todavía: se marca en uso al llegar su hora.
   const programado = inicio > new Date();
-  if (recurso.estado === 'mantenimiento' || (!programado && recurso.estado !== 'disponible')) {
+  // Con hora de fin (cubículos), un recurso en uso solo impide la reserva si el horario choca
+  // (lo revisa revisarChoque); un préstamo sin hora de fin necesita el recurso libre ahora.
+  if (recurso.estado === 'mantenimiento' || (!programado && !modulo.conHoraFin && recurso.estado !== 'disponible')) {
     throw new Error(`${modulo.recurso} ${nombreRecurso(recurso.id)} no está disponible.`);
   }
   const usuarios = modulo.conUsuarios ? Number(datos.usuarios) : undefined;

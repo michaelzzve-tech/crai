@@ -197,7 +197,10 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
   // al registrar se revisa que no choque con otra reserva.
   const programado = !!datos.fecha && !!datos.horaInicio
     && diaALas(datos.fecha, datos.horaInicio) > ahora;
-  const elegible = (r: Recurso) => r.estado === 'disponible' || (programado && r.estado === 'ocupado');
+  // Con hora de fin (cubículos) también se puede elegir uno en uso: solo se impide si el horario choca.
+  const elegible = (r: Recurso) => r.estado === 'disponible' || ((programado || modulo.conHoraFin) && r.estado === 'ocupado');
+  // Una laptop (sin hora de fin) en uso solo se ofrece para más tarde.
+  const laptopElegible = (r: Recurso) => r.estado === 'disponible' || (programado && r.estado === 'ocupado');
 
   const textoEstado = (r: Recurso) =>
     r.estado === 'ocupado' ? ` (${modulo.ocupado.toLowerCase()})`
@@ -336,8 +339,8 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
           <label htmlFor="registro-laptop">
             Laptop
             <select id="registro-laptop" required value={laptop} onChange={(e) => setLaptop(e.target.value)}>
-              <option value="">{laptops ? (laptops.some(elegible) ? 'Seleccione…' : 'No hay laptops disponibles') : 'Cargando…'}</option>
-              {laptops?.filter(elegible).map((r) => (
+              <option value="">{laptops ? (laptops.some(laptopElegible) ? 'Seleccione…' : 'No hay laptops disponibles') : 'Cargando…'}</option>
+              {laptops?.filter(laptopElegible).map((r) => (
                 <option key={r.id} value={r.id}>{nombreRecurso(r.id)}{textoLaptop(r)}</option>
               ))}
             </select>
