@@ -85,7 +85,8 @@ function ubicar(reservas: EventoPlanner[], INICIO: number, FIN: number): Ubicada
 }
 
 interface Props {
-  lunes: string; // Primer día de la semana, "AAAA-MM-DD"
+  lunes: string; // Primer día que se muestra, "AAAA-MM-DD" (el lunes, si es la semana entera)
+  cantidadDias?: number; // Columnas de días: 7 (la semana) si no se indica
   elegido: string; // Día elegido en el menú de fecha; se resalta
   onElegir: (dia: string) => void;
   reservas: EventoPlanner[];
@@ -106,10 +107,13 @@ interface Arrastre {
   movido: boolean; // false mientras el puntero no se aleja: entonces es un clic
 }
 
-/** Calendario de la semana (lunes a domingo, por horas) con reservas que se abren con un clic y se arrastran. */
-export function PlannerSemanal({ lunes, elegido, onElegir, reservas, onNueva, onAbrir, onMover }: Props) {
+/**
+ * Calendario por horas de la semana (lunes a domingo) o de unos pocos días, con reservas
+ * que se abren con un clic y se arrastran.
+ */
+export function PlannerSemanal({ lunes, cantidadDias = 7, elegido, onElegir, reservas, onNueva, onAbrir, onMover }: Props) {
   const hoy = diaDe();
-  const dias = Array.from({ length: 7 }, (_, i) => sumarDias(lunes, i));
+  const dias = Array.from({ length: cantidadDias }, (_, i) => sumarDias(lunes, i));
   const rango = rangoDeHoras(reservas);
   const INICIO = rango.desde * 60;
   const FIN = rango.hasta * 60;
@@ -166,7 +170,7 @@ export function PlannerSemanal({ lunes, elegido, onElegir, reservas, onNueva, on
   };
 
   return (
-    <div className={`planner${arrastre?.movido ? ' arrastrando' : ''}`} ref={grilla} style={{ '--alto-hora': `${ALTO_HORA}px` } as CSSProperties}>
+    <div className={`planner${arrastre?.movido ? ' arrastrando' : ''}`} ref={grilla} style={{ '--alto-hora': `${ALTO_HORA}px`, '--dias': cantidadDias } as CSSProperties}>
       <div className="planner-esquina" />
       {dias.map((dia) => (
         <button
@@ -222,14 +226,14 @@ export function PlannerSemanal({ lunes, elegido, onElegir, reservas, onNueva, on
             );
           })}
           {(() => {
-            // Vista previa: a la derecha de la ficha (a la izquierda en sábado y domingo), hacia arriba si es tarde.
+            // Vista previa: a la derecha de la ficha (a la izquierda en las últimas columnas), hacia arriba si es tarde.
             const u = !arrastre?.movido && ubicar(reservas.filter((r) => diaDe(r.inicio) === dia), INICIO, FIN).find((x) => x.reserva.id === previa);
             if (!u) return null;
             const columna = dias.indexOf(dia);
             const abajo = u.desde > (FIN - INICIO) / 2;
             return (
               <div
-                className={`vista-previa${columna >= 5 ? ' izquierda' : ''}`}
+                className={`vista-previa${dias.length === 1 ? ' dentro' : columna >= dias.length - (dias.length > 3 ? 2 : 1) ? ' izquierda' : ''}`}
                 style={{
                   top: abajo ? undefined : (u.desde / 60) * ALTO_HORA,
                   bottom: abajo ? HORAS.length * ALTO_HORA - (u.hasta / 60) * ALTO_HORA : undefined,
