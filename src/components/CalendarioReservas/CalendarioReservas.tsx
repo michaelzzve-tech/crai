@@ -5,7 +5,7 @@ import { useAhora } from '../../hooks/useAhora';
 import { useMostrarDiaElegido } from '../../hooks/useMostrarDiaElegido';
 import { useVistaPlanner } from '../../hooks/useVistaPlanner';
 import {
-  cancelarProgramado, cancelarSerieDesde, editarHorario, estaPorVencer, estaProgramado, estaVencido, finalizar, type NuevoHorario,
+  cancelarReserva, cancelarSerieDesde, editarHorario, estaPorVencer, estaProgramado, estaVencido, finalizar, type NuevoHorario,
 } from '../../services/registroService';
 import type { NuevoRegistro, Recurso, Registro } from '../../types';
 import { diaALas, diaDe, diferenciaConPrevisto, formatearDia, formatearDiaLargo, formatearHora, horaActual } from '../../utils/fechas';
@@ -207,7 +207,7 @@ function DetalleRegistro({ modulo, registro: r, siguientes, ejecutar, onCerrar }
   ejecutar: EjecutarAccion;
   onCerrar: () => void;
 }) {
-  const [paso, setPaso] = useState<'ver' | 'editar' | 'confirmar'>('ver');
+  const [paso, setPaso] = useState<'ver' | 'editar' | 'confirmar' | 'cancelar'>('ver');
   const ahora = useAhora(15_000);
   const programado = estaProgramado(r, ahora);
   const nombre = `${modulo.recurso} ${nombreRecurso(r.recursoId)}`;
@@ -238,7 +238,7 @@ function DetalleRegistro({ modulo, registro: r, siguientes, ejecutar, onCerrar }
   const cancelar = async (todas: boolean) => {
     await (todas
       ? ejecutar(() => cancelarSerieDesde(modulo, r), `Se cancelaron ${siguientes} reservas del ${nombre.toLowerCase()} (desde el ${formatearDia(diaDe(r.inicio))}).`)
-      : ejecutar(() => cancelarProgramado(modulo, r), `Reserva del ${nombre.toLowerCase()} cancelada.`));
+      : ejecutar(() => cancelarReserva(modulo, r), `Reserva del ${nombre.toLowerCase()} cancelada y borrada.`));
     hecho();
   };
   const salida = async () => {
@@ -267,13 +267,11 @@ function DetalleRegistro({ modulo, registro: r, siguientes, ejecutar, onCerrar }
         <EditorHorario registro={r} conUsuarios={modulo.conUsuarios} onGuardar={guardarHorario} onCancelar={() => setPaso('ver')} />
       ) : (
         <div className="botones-formulario">
-          {r.finReal ? (
-            <button onClick={onCerrar}>Cerrar</button>
-          ) : paso === 'confirmar' && programado ? (
+          {paso === 'cancelar' ? (
             <>
-              <span>¿Cancelar {r.serieId ? 'la reserva' : 'esta reserva'}? No se puede deshacer.</span>
-              <button className="peligro" onClick={() => cancelar(false)}>{r.serieId ? 'Solo esta fecha' : 'Sí, cancelar'}</button>
-              {r.serieId && siguientes > 1 && <button className="peligro" onClick={() => cancelar(true)}>Esta y las siguientes ({siguientes})</button>}
+              <span>¿Cancelar {r.serieId ? 'la reserva' : 'esta reserva'}? Se borrará del sistema y no contará en las estadísticas.</span>
+              <button className="peligro" onClick={() => cancelar(false)}>{r.serieId && programado && siguientes > 1 ? 'Solo esta fecha' : 'Sí, cancelar'}</button>
+              {r.serieId && programado && siguientes > 1 && <button className="peligro" onClick={() => cancelar(true)}>Esta y las siguientes ({siguientes})</button>}
               <button onClick={() => setPaso('ver')}>No</button>
             </>
           ) : paso === 'confirmar' ? (
@@ -284,10 +282,10 @@ function DetalleRegistro({ modulo, registro: r, siguientes, ejecutar, onCerrar }
             </>
           ) : (
             <>
-              <button onClick={() => setPaso('editar')}>Modificar horario</button>
-              <button className={programado ? 'peligro' : 'primario'} onClick={() => setPaso('confirmar')}>
-                {programado ? 'Cancelar reserva' : modulo.finalizar}
-              </button>
+              {!r.finReal && <button onClick={() => setPaso('editar')}>Modificar horario</button>}
+              {/* Se puede cancelar en cualquier momento: la reserva se borra. */}
+              <button className="peligro" onClick={() => setPaso('cancelar')}>Cancelar reserva</button>
+              {!r.finReal && !programado && <button className="primario" onClick={() => setPaso('confirmar')}>{modulo.finalizar}</button>}
               <button onClick={onCerrar}>Cerrar</button>
             </>
           )}

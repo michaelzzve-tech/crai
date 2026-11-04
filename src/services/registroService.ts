@@ -278,25 +278,33 @@ export async function editarHorario(modulo: Modulo, registro: Registro, horario:
 
   await repositorio.guardarRegistro(modulo.tablaRegistros, { ...registro, inicio: inicio.toISOString(), fin: fin.toISOString(), usuarios });
 
-  // En uso si alguno de sus registros sin terminar ya empezó.
+  await actualizarEstadoRecurso(modulo, registro.recursoId);
+  avisarCambio();
+}
+
+/** Marca el recurso en uso si alguno de sus registros sin terminar ya empezó; si no, disponible (salvo mantenimiento). */
+async function actualizarEstadoRecurso(modulo: Modulo, recursoId: string) {
   const ahora = new Date();
   const [recursos, registros] = await Promise.all([
     repositorio.listarRecursos(modulo.tablaRecursos),
     repositorio.listarRegistros(modulo.tablaRegistros),
   ]);
-  const recurso = recursos.find((r) => r.id === registro.recursoId);
+  const recurso = recursos.find((r) => r.id === recursoId);
   if (recurso && recurso.estado !== 'mantenimiento') {
     const enUso = registros.some((r) => r.recursoId === recurso.id && !r.finReal && new Date(r.inicio) <= ahora);
     const estado = enUso ? 'ocupado' : 'disponible';
     if (recurso.estado !== estado) await repositorio.guardarRecurso(modulo.tablaRecursos, { ...recurso, estado });
   }
-  avisarCambio();
 }
 
-/** Cancela una reserva programada que todavía no empieza: se borra y el recurso no cambia. */
-export async function cancelarProgramado(modulo: Modulo, registro: Registro) {
-  if (!estaProgramado(registro)) throw new Error('La reserva ya empezó; registre la salida.');
+/**
+ * Cancela una reserva en cualquier momento (programada, en curso o ya terminada): se borra
+ * del sistema, así que no aparece en el historial ni cuenta en las estadísticas. Si estaba
+ * en uso, el recurso queda disponible.
+ */
+export async function cancelarReserva(modulo: Modulo, registro: Registro) {
   await repositorio.borrarRegistro(modulo.tablaRegistros, registro.id);
+  await actualizarEstadoRecurso(modulo, registro.recursoId);
   avisarCambio();
 }
 
