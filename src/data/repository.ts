@@ -1,4 +1,4 @@
-import type { Recurso, Registro, ReservaSala } from '../types';
+import type { MantenimientoSala, Recurso, Registro, ReservaSala } from '../types';
 
 /**
  * Contrato de acceso a datos. Cada método recibe el nombre de la tabla del
@@ -21,4 +21,9 @@ export interface Repositorio {
   listarReservasSalas(): Promise<ReservaSala[]>;
   guardarReservaSala(reserva: ReservaSala): Promise<void>;
   borrarReservaSala(id: string): Promise<void>;
+
+  /** Mantenimientos de las salas especiales (tabla "mantenimiento_salas"). */
+  listarMantenimientosSalas(): Promise<MantenimientoSala[]>;
+  guardarMantenimientoSala(mantenimiento: MantenimientoSala): Promise<void>;
+  borrarMantenimientoSala(id: string): Promise<void>;
 }

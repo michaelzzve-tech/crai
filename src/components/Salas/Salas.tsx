@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { SALAS, salaPorId } from '../../config/salas';
+import { SALAS, salaPorId, type Sala } from '../../config/salas';
+import { listarMantenimientosSalas, programarMantenimiento, terminarMantenimiento, textoMantenimiento, type NuevoMantenimiento } from '../../services/mantenimientoSalas';
 import { nombresDeDias, type Recurrencia } from '../../services/recurrencia';
 import { cancelarReservaSala, cancelarSerieDesde, guardarReservaSala, guardarSerieSala, listarReservasSalas, moverReservaSala } from '../../services/salaService';
-import type { NuevaReservaSala, ReservaSala } from '../../types';
+import type { MantenimientoSala, NuevaReservaSala, ReservaSala } from '../../types';
 import { diaDe, formatearDia, formatearDiaLargo, formatearFecha, formatearHora, horaActual } from '../../utils/fechas';
 import { useAhora } from '../../hooks/useAhora';
 import { useMostrarDiaElegido } from '../../hooks/useMostrarDiaElegido';
@@ -16,6 +17,7 @@ import { Paginador } from '../Paginador';
 import { BarraSemana, FiltrosPlanner, PlannerSemanal, type EventoPlanner } from '../Planner';
 import { estadoDeSalas } from '../../services/estadoSalas';
 import { EspaciosSalas, ResumenSalas } from './EspaciosSalas';
+import { FormularioMantenimiento } from './FormularioMantenimiento';
 import { FormularioSala, type InicioFormulario } from './FormularioSala';
 
 /**
@@ -24,6 +26,8 @@ import { FormularioSala, type InicioFormulario } from './FormularioSala';
  */
 export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espacios' }) {
   const [reservas, setReservas] = useState<ReservaSala[]>([]);
+  const [mantenimientos, setMantenimientos] = useState<MantenimientoSala[]>([]);
+  const [salaAMantenimiento, setSalaAMantenimiento] = useState<Sala | null>(null);
   const [error, setError] = useState('');
   const [aviso, setAviso] = useState('');
   const { elegido, desde, hasta, cantidad, elegir, tramo, textoPeriodo } = useVistaPlanner(); // Al abrir, solo el día en curso
@@ -32,11 +36,11 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
   const [detalle, setDetalle] = useState<ReservaSala | null>(null);
   const contenedor = useMostrarDiaElegido(elegido);
   const ahora = useAhora(30_000); // Para "EN USO" y el estado de cada sala
-  const estados = estadoDeSalas(reservas, ahora);
-
+  const estados = estadoDeSalas(reservas, ahora, mantenimientos);
 
   const recargar = useCallback(async () => {
     try {
+      setMantenimientos(await listarMantenimientosSalas());
       setReservas(await listarReservasSalas());
       setError('');
     } catch (e) {
@@ -48,6 +52,7 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
     listarReservasSalas()
       .then((r) => { if (vigente) setReservas(r); })
       .catch((e: unknown) => { if (vigente) setError(e instanceof Error ? e.message : String(e)); });
+    void listarMantenimientosSalas().then((m) => { if (vigente) setMantenimientos(m); });
     return () => { vigente = false; };
   }, []);
 
@@ -133,6 +138,28 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
     }
   }
 
+  async function mandarAMantenimiento(datos: NuevoMantenimiento) {
+    const m = await programarMantenimiento(datos);
+    await recargar();
+    setSalaAMantenimiento(null);
+    // Reservas que ya estaban en ese horario: se avisa para reubicarlas o cancelarlas.
+    const afectadas = reservas.filter((r) => r.salaId === m.salaId && new Date(r.fin) > new Date(m.inicio) && (!m.fin || new Date(r.inicio) < new Date(m.fin)));
+    const nota = afectadas.length ? ` Atención: ${afectadas.length === 1 ? 'hay 1 reserva' : `hay ${afectadas.length} reservas`} en ese horario; revíselas en la pestaña Reservas.` : '';
+    setAviso(`${salaPorId(m.salaId)?.nombre} en mantenimiento ${textoMantenimiento(m)}${m.nota ? ` (${m.nota})` : ''}.${nota}`.replace('m..', 'm.'));
+  }
+
+  async function terminar(m: MantenimientoSala) {
+    try {
+      // Con la misma hora que la pantalla, para que la sala se vea disponible al instante.
+      const yaEmpezo = new Date(m.inicio) < ahora;
+      await terminarMantenimiento(m, ahora);
+      await recargar();
+      setAviso(`${salaPorId(m.salaId)?.nombre}: ${yaEmpezo ? 'disponible de nuevo' : 'se canceló el mantenimiento programado'}.`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
   return (
     <main>
       {error && (
@@ -150,7 +177,12 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
 
       <ResumenSalas estados={estados} />
 
-      {pestana === 'espacios' && <EspaciosSalas estados={estados} ahora={ahora} onAbrir={setDetalle} />}
+      {pestana === 'espacios' && (
+        <EspaciosSalas estados={estados} ahora={ahora} onAbrir={setDetalle} onMantenimiento={setSalaAMantenimiento} onTerminar={(m) => void terminar(m)} />
+      )}
+      {salaAMantenimiento && (
+        <FormularioMantenimiento sala={salaAMantenimiento} onGuardar={mandarAMantenimiento} onCerrar={() => setSalaAMantenimiento(null)} />
+      )}
       {pestana === 'reservas' && (
         <>
         <section className="panel salas">

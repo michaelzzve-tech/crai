@@ -28,3 +28,6 @@ export const ACTIVIDADES = ['Clase Magistral', 'Taller', 'Charla', 'Conferencia'
 
 /** Tabla de la base de datos con las reservas de salas. */
 export const TABLA_RESERVAS_SALAS = 'reservas_salas';
+
+/** Tabla de la base de datos con los mantenimientos de salas. */
+export const TABLA_MANTENIMIENTO_SALAS = 'mantenimiento_salas';

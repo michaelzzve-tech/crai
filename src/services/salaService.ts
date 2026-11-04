@@ -1,7 +1,8 @@
 import { salaPorId } from '../config/salas';
 import { repositorio } from '../data';
-import type { NuevaReservaSala, ReservaSala } from '../types';
+import type { MantenimientoSala, NuevaReservaSala, ReservaSala } from '../types';
 import { diaALas, diaDe, formatearDia, formatearHora, horaActual } from '../utils/fechas';
+import { listarMantenimientosSalas, mantenimientoQueChoca, textoMantenimiento } from './mantenimientoSalas';
 import { validarSerie, type Recurrencia } from './recurrencia';
 import { generarId } from '../utils/id';
 
@@ -73,12 +74,19 @@ function prepararReserva(datos: NuevaReservaSala, existentes: ReservaSala[], ant
   };
 }
 
-/** Error de una reserva que choca con otra de la misma sala. */
+/** Error de una reserva que choca con otra de la misma sala (o con un mantenimiento). */
 class ChoqueDeHorario extends Error {}
+
+/** Una sala en mantenimiento no se puede reservar en ese horario. */
+function revisarMantenimiento(r: ReservaSala, mantenimientos: MantenimientoSala[]): ReservaSala {
+  const m = mantenimientoQueChoca(mantenimientos, r.salaId, new Date(r.inicio), new Date(r.fin));
+  if (m) throw new ChoqueDeHorario(`${salaPorId(r.salaId)?.nombre} está en mantenimiento ${textoMantenimiento(m)}.`);
+  return r;
+}
 
 /** Crea una reserva o, si se pasa `anterior`, la modifica (si es de una serie, solo esa fecha). */
 export async function guardarReservaSala(datos: NuevaReservaSala, anterior?: ReservaSala): Promise<ReservaSala> {
-  const reserva = prepararReserva(datos, await repositorio.listarReservasSalas(), anterior);
+  const reserva = revisarMantenimiento(prepararReserva(datos, await repositorio.listarReservasSalas(), anterior), await listarMantenimientosSalas());
   await repositorio.guardarReservaSala(reserva);
   return reserva;
 }
@@ -93,11 +101,12 @@ export async function guardarSerieSala(datos: NuevaReservaSala, recurrencia: Rec
 
   const serieId = generarId();
   const existentes = await repositorio.listarReservasSalas();
+  const mantenimientos = await listarMantenimientosSalas();
   const nuevas: ReservaSala[] = [];
   const choques: string[] = [];
   for (const fecha of fechas) {
     try {
-      nuevas.push(prepararReserva({ ...datos, fecha }, [...existentes, ...nuevas], undefined, serieId));
+      nuevas.push(revisarMantenimiento(prepararReserva({ ...datos, fecha }, [...existentes, ...nuevas], undefined, serieId), mantenimientos));
     } catch (e) {
       if (!(e instanceof ChoqueDeHorario)) throw e; // Datos incompletos: el mismo error para todas
       choques.push(formatearDia(fecha));
@@ -105,7 +114,7 @@ export async function guardarSerieSala(datos: NuevaReservaSala, recurrencia: Rec
   }
   if (choques.length) {
     const sala = salaPorId(datos.salaId)?.nombre;
-    throw new Error(`No se creó la reserva recurrente: ${sala} ya está ocupada a esa hora el ${choques.join(', ')}.`);
+    throw new Error(`No se creó la reserva recurrente: ${sala} ya está ocupada (o en mantenimiento) a esa hora el ${choques.join(', ')}.`);
   }
   for (const r of nuevas) await repositorio.guardarReservaSala(r);
   return nuevas;

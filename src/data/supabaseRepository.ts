@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { TABLA_RESERVAS_SALAS } from '../config/salas';
-import type { Recurso, Registro, ReservaSala } from '../types';
+import { TABLA_MANTENIMIENTO_SALAS, TABLA_RESERVAS_SALAS } from '../config/salas';
+import type { MantenimientoSala, Recurso, Registro, ReservaSala } from '../types';
 import type { Repositorio } from './repository';
 
 // La base de datos usa nombres en snake_case (ver supabase/esquema.sql);
@@ -139,6 +139,32 @@ const aFilaReservaSala = (r: ReservaSala): FilaReservaSala => ({
   serie_id: r.serieId ?? null,
 });
 
+interface FilaMantenimientoSala {
+  id: string;
+  sala_id: string;
+  inicio: string;
+  fin: string | null;
+  nota: string | null;
+  creado?: string; // Lo pone la base de datos; no se envía
+}
+
+const aMantenimientoSala = (f: FilaMantenimientoSala): MantenimientoSala => ({
+  id: f.id,
+  salaId: f.sala_id,
+  inicio: iso(f.inicio),
+  fin: f.fin ? iso(f.fin) : undefined,
+  nota: f.nota ?? undefined,
+  creado: f.creado ? iso(f.creado) : iso(f.inicio),
+});
+
+const aFilaMantenimientoSala = (m: MantenimientoSala): FilaMantenimientoSala => ({
+  id: m.id,
+  sala_id: m.salaId,
+  inicio: m.inicio,
+  fin: m.fin ?? null,
+  nota: m.nota || null,
+});
+
 function revisar(error: { message: string } | null): void {
   if (error) throw new Error(`Error de la base de datos: ${error.message}`);
 }
@@ -197,6 +223,22 @@ export class SupabaseRepositorio implements Repositorio {
 
   async borrarReservaSala(id: string) {
     const { error } = await this.db.from(TABLA_RESERVAS_SALAS).delete().eq('id', id);
+    revisar(error);
+  }
+
+  async listarMantenimientosSalas() {
+    const { data, error } = await this.db.from(TABLA_MANTENIMIENTO_SALAS).select('*');
+    revisar(error);
+    return (data as FilaMantenimientoSala[]).map(aMantenimientoSala);
+  }
+
+  async guardarMantenimientoSala(mantenimiento: MantenimientoSala) {
+    const { error } = await this.db.from(TABLA_MANTENIMIENTO_SALAS).upsert(aFilaMantenimientoSala(mantenimiento));
+    revisar(error);
+  }
+
+  async borrarMantenimientoSala(id: string) {
+    const { error } = await this.db.from(TABLA_MANTENIMIENTO_SALAS).delete().eq('id', id);
     revisar(error);
   }
 }
