@@ -11,6 +11,7 @@ import { usePaginacion } from '../../hooks/usePaginacion';
 import { useOrden, type CampoOrden } from '../../hooks/useOrden';
 import { POR_PAGINA_ACTIVIDAD } from '../../utils/orden';
 import { OrdenLista } from '../OrdenLista';
+import { PestanasReservas, type GrupoReservas } from '../PestanasReservas';
 import { Paginador } from '../Paginador';
 import { BarraSemana, FiltrosPlanner, PlannerSemanal, type EventoPlanner } from '../Planner';
 import { estadoDeSalas } from '../../services/estadoSalas';
@@ -209,8 +210,13 @@ const CLAVES_SALA: Record<CampoOrden, (r: ReservaSala) => string> = {
  */
 function ReservasActivas({ reservas, onAbrir }: { reservas: ReservaSala[]; onAbrir: (r: ReservaSala) => void }) {
   const ahora = useAhora(60_000);
+  const [grupo, setGrupo] = useState<GrupoReservas>('actuales');
   const activas = reservas.filter((r) => new Date(r.fin) > ahora);
-  const orden = useOrden(activas, CLAVES_SALA); // Al abrir, lo último registrado primero
+  // Pestañas: las reservas de ahora (en curso) y las programadas a futuro.
+  const programadas = activas.filter((r) => new Date(r.inicio) > ahora);
+  const actuales = activas.filter((r) => new Date(r.inicio) <= ahora);
+  const lista = grupo === 'programadas' ? programadas : actuales;
+  const orden = useOrden(lista, CLAVES_SALA); // Al abrir, lo último registrado primero
   const paginacion = usePaginacion(orden.ordenados, POR_PAGINA_ACTIVIDAD);
   return (
     <section className="panel">
@@ -224,8 +230,14 @@ function ReservasActivas({ reservas, onAbrir }: { reservas: ReservaSala[]; onAbr
           textoFecha="Fecha de la reserva"
         />
       </div>
-      {activas.length === 0 ? (
-        <p className="vacio">No hay reservas activas.</p>
+      <PestanasReservas
+        grupo={grupo}
+        onGrupo={(g) => { setGrupo(g); paginacion.irA(0); }}
+        actuales={actuales.length}
+        programadas={programadas.length}
+      />
+      {lista.length === 0 ? (
+        <p className="vacio">{grupo === 'programadas' ? 'No hay reservas programadas.' : 'No hay reservas en curso.'}</p>
       ) : (
         <table>
           <thead>

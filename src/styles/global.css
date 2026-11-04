@@ -358,3 +358,11 @@ label.casilla input { width: 18px; height: 18px; margin: 0; }
 .orden-lista { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
 .orden-lista label { display: flex; flex-direction: column; gap: 2px; font-size: .78rem; color: var(--texto-suave); }
 .orden-lista select { font-size: .9rem; }
+/* Pestañas "Reservas" y "Reservas programadas" de las listas de cubículos y salas */
+.pestanas-reservas { display: flex; gap: 4px; border-bottom: 1px solid var(--borde); margin-bottom: 12px; }
+.pestanas-reservas button {
+  border: none; border-bottom: 3px solid transparent; border-radius: 0; background: none; color: var(--texto-suave);
+  font: inherit; font-weight: 600; padding: 8px 12px; margin-bottom: -1px;
+}
+.pestanas-reservas button.activa { color: var(--texto); border-bottom-color: var(--primario); }
+.pestanas-reservas .cuenta { font-size: .75rem; font-weight: 600; background: var(--fondo); border-radius: 999px; padding: 1px 7px; margin-left: 4px; }
