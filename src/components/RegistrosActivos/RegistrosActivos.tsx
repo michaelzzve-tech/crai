@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { nombreRecurso, type Modulo } from '../../config/modulos';
-import { cancelarProgramado, editarHorario, estaPorVencer, estaProgramado, estaVencido, finalizar, type NuevoHorario } from '../../services/registroService';
+import { cancelarReserva, editarHorario, estaPorVencer, estaProgramado, estaVencido, finalizar, type NuevoHorario } from '../../services/registroService';
 import type { Registro } from '../../types';
 import { useAhora } from '../../hooks/useAhora';
 import { usePaginacion } from '../../hooks/usePaginacion';
@@ -96,6 +96,7 @@ function momentoDeFin(registro: Registro) {
 export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
   const [finalizando, setFinalizando] = useState<string | null>(null);
   const [editando, setEditando] = useState<string | null>(null);
+  const [cancelando, setCancelando] = useState<string | null>(null); // Reserva (cubículos) que se va a cancelar y borrar
   const ahora = useAhora(15_000);
   const conFin = modulo.conHoraFin;
 
@@ -110,10 +111,14 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
 
   async function confirmar(registro: Registro) {
     const { momento, detalle } = momentoDeFin(registro);
-    const ok = estaProgramado(registro)
-      ? await ejecutar(() => cancelarProgramado(modulo, registro), `Reserva de ${modulo.recurso.toLowerCase()} ${nombreRecurso(registro.recursoId)} cancelada.`)
-      : await ejecutar(() => finalizar(modulo, registro, momento), modulo.mensajeFinalizado(nombreRecurso(registro.recursoId)).replace(/\.$/, `${detalle}.`));
+    const ok = await ejecutar(() => finalizar(modulo, registro, momento), modulo.mensajeFinalizado(nombreRecurso(registro.recursoId)).replace(/\.$/, `${detalle}.`));
     if (ok) setFinalizando(null);
+  }
+
+  /** Cancela la reserva (programada o en curso): se borra y no cuenta en las estadísticas. */
+  async function cancelar(registro: Registro) {
+    const ok = await ejecutar(() => cancelarReserva(modulo, registro), `Reserva de ${modulo.recurso.toLowerCase()} ${nombreRecurso(registro.recursoId)} cancelada y borrada.`);
+    if (ok) setCancelando(null);
   }
 
   async function guardarHorario(registro: Registro, horario: NuevoHorario) {
@@ -205,6 +210,12 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                   <td className="acciones">
                     {editando === r.id ? (
                       <EditorHorario registro={r} conUsuarios={modulo.conUsuarios} onGuardar={(h) => guardarHorario(r, h)} onCancelar={() => setEditando(null)} />
+                    ) : cancelando === r.id ? (
+                      <div className="devolucion">
+                        <span className="secundario">¿Cancelar esta reserva? Se borrará del sistema y no contará en las estadísticas.</span>
+                        <button className="peligro" autoFocus onClick={() => cancelar(r)}>Sí, cancelar</button>
+                        <button onClick={() => setCancelando(null)}>No</button>
+                      </div>
                     ) : finalizando === r.id ? (
                       <div className="devolucion">
                         {!conFin && !programado && (
@@ -219,9 +230,8 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                             {' · '}{diferenciaConPrevisto(r.fin, ahora.toISOString())}
                           </span>
                         )}
-                        {programado && <span className="secundario">¿Cancelar esta reserva? Se borrará.</span>}
-                        <button className="primario" autoFocus onClick={() => confirmar(r)}>{programado ? 'Sí, cancelar' : 'Confirmar'}</button>
-                        <button onClick={() => setFinalizando(null)}>{programado ? 'No' : 'Cancelar'}</button>
+                        <button className="primario" autoFocus onClick={() => confirmar(r)}>Confirmar</button>
+                        <button onClick={() => setFinalizando(null)}>Cancelar</button>
                       </div>
                     ) : (
                       <>
@@ -231,14 +241,22 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                             className="boton-icono"
                             aria-label="Editar reserva"
                             title="Editar fecha, horario y usuarios"
-                            onClick={() => { setFinalizando(null); setEditando(r.id); }}
+                            onClick={() => { setFinalizando(null); setCancelando(null); setEditando(r.id); }}
                           >
                             <IconoLapiz />
                           </button>
                         )}
-                        <button className={programado ? undefined : 'primario'} onClick={() => { setEditando(null); setFinalizando(r.id); }}>
-                          {programado ? 'Cancelar reserva' : modulo.finalizar}
-                        </button>
+                        {/* Cubículos: cancelar en cualquier momento (se borra); las laptops solo se devuelven. */}
+                        {modulo.conCalendario && (
+                          <button className="peligro" onClick={() => { setEditando(null); setFinalizando(null); setCancelando(r.id); }}>
+                            Cancelar reserva
+                          </button>
+                        )}
+                        {!programado && (
+                          <button className="primario" onClick={() => { setEditando(null); setCancelando(null); setFinalizando(r.id); }}>
+                            {modulo.finalizar}
+                          </button>
+                        )}
                       </>
                     )}
                   </td>
