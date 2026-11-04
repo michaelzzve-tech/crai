@@ -4,6 +4,9 @@ import { cancelarProgramado, editarHorario, estaPorVencer, estaProgramado, estaV
 import type { Registro } from '../../types';
 import { useAhora } from '../../hooks/useAhora';
 import { usePaginacion } from '../../hooks/usePaginacion';
+import { useOrden } from '../../hooks/useOrden';
+import { CLAVES_REGISTRO, POR_PAGINA_ACTIVIDAD } from '../../utils/orden';
+import { OrdenLista } from '../OrdenLista';
 import { diaDe, diferenciaConPrevisto, duracionEntreFechas, duracionEntreHoras, formatearDia, formatearHora, horaActual } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 import { Paginador } from '../Paginador';
@@ -95,9 +98,9 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
   const ahora = useAhora(15_000);
   const conFin = modulo.conHoraFin;
 
-  // Ya vienen con las últimas en registrarse primero (useBiblioteca).
   const activos = registros.filter((r) => !r.finReal);
-  const paginacion = usePaginacion(activos);
+  const orden = useOrden(activos, CLAVES_REGISTRO); // Al abrir, lo último registrado primero
+  const paginacion = usePaginacion(orden.ordenados, POR_PAGINA_ACTIVIDAD);
 
   async function confirmar(registro: Registro) {
     const { momento, detalle } = momentoDeFin(registro);
@@ -121,7 +124,16 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
 
   return (
     <section className="panel">
-      <h2>{modulo.activos} ({activos.length})</h2>
+      <div className="panel-encabezado">
+        <h2>{modulo.activos} ({activos.length})</h2>
+        <OrdenLista
+          campo={orden.campo}
+          sentido={orden.sentido}
+          onCampo={(c) => { orden.elegirCampo(c); paginacion.irA(0); }}
+          onSentido={(s) => { orden.setSentido(s); paginacion.irA(0); }}
+          textoFecha={modulo.conCalendario ? 'Fecha de la reserva' : 'Fecha del préstamo'}
+        />
+      </div>
       {activos.length === 0 ? (
         <p className="vacio">No hay {modulo.activos.toLowerCase()}.</p>
       ) : (

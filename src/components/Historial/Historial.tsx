@@ -4,6 +4,9 @@ import type { Registro } from '../../types';
 import { diferenciaConPrevisto, duracionEntreFechas, formatearDia, formatearFecha, formatearHora } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 import { usePaginacion } from '../../hooks/usePaginacion';
+import { useOrden } from '../../hooks/useOrden';
+import { CLAVES_REGISTRO, POR_PAGINA_ACTIVIDAD } from '../../utils/orden';
+import { OrdenLista } from '../OrdenLista';
 import { Paginador } from '../Paginador';
 
 interface Props {
@@ -21,7 +24,8 @@ export function Historial({ modulo, registros }: Props) {
       v.toLowerCase().includes(texto),
     ),
   );
-  const paginacion = usePaginacion(visibles);
+  const orden = useOrden(visibles, CLAVES_REGISTRO);
+  const paginacion = usePaginacion(orden.ordenados, POR_PAGINA_ACTIVIDAD);
 
   return (
     <section className="panel">
@@ -32,6 +36,13 @@ export function Historial({ modulo, registros }: Props) {
           placeholder={`Buscar por nombre, ${modulo.recurso.toLowerCase()}, instituto, carrera…`}
           value={filtro}
           onChange={(e) => { setFiltro(e.target.value); paginacion.irA(0); }}
+        />
+        <OrdenLista
+          campo={orden.campo}
+          sentido={orden.sentido}
+          onCampo={(c) => { orden.elegirCampo(c); paginacion.irA(0); }}
+          onSentido={(s) => { orden.setSentido(s); paginacion.irA(0); }}
+          textoFecha={modulo.conCalendario ? 'Fecha de la reserva' : 'Fecha del préstamo'}
         />
       </div>
       {visibles.length === 0 ? (

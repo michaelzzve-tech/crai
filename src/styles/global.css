@@ -354,3 +354,7 @@ label.casilla input { width: 18px; height: 18px; margin: 0; }
 
 /* Informes: horas de préstamo de laptops por mes */
 .tabla-horas { max-width: 560px; }
+/* Menús para ordenar las listas de préstamos y reservas */
+.orden-lista { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+.orden-lista label { display: flex; flex-direction: column; gap: 2px; font-size: .78rem; color: var(--texto-suave); }
+.orden-lista select { font-size: .9rem; }

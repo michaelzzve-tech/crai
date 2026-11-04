@@ -8,6 +8,9 @@ import { useAhora } from '../../hooks/useAhora';
 import { useMostrarDiaElegido } from '../../hooks/useMostrarDiaElegido';
 import { useVistaPlanner } from '../../hooks/useVistaPlanner';
 import { usePaginacion } from '../../hooks/usePaginacion';
+import { useOrden, type CampoOrden } from '../../hooks/useOrden';
+import { POR_PAGINA_ACTIVIDAD } from '../../utils/orden';
+import { OrdenLista } from '../OrdenLista';
 import { Paginador } from '../Paginador';
 import { BarraSemana, FiltrosPlanner, PlannerSemanal, type EventoPlanner } from '../Planner';
 import { estadoDeSalas } from '../../services/estadoSalas';
@@ -192,19 +195,35 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
   );
 }
 
+/** Qué dato de una reserva de sala se usa para cada opción de "Ordenar por". */
+const CLAVES_SALA: Record<CampoOrden, (r: ReservaSala) => string> = {
+  registro: (r) => r.creada,
+  fecha: (r) => r.inicio,
+  nombre: (r) => r.solicitante,
+  carrera: (r) => `${r.carrera} ${r.semestre}`,
+};
+
 /**
  * Reservas que todavía no terminan (en curso o por venir), con las últimas en registrarse
  * primero. Un clic en "Ver" abre sus datos para modificarla o cancelarla.
  */
 function ReservasActivas({ reservas, onAbrir }: { reservas: ReservaSala[]; onAbrir: (r: ReservaSala) => void }) {
   const ahora = useAhora(60_000);
-  const activas = reservas
-    .filter((r) => new Date(r.fin) > ahora)
-    .sort((a, b) => b.creada.localeCompare(a.creada) || a.inicio.localeCompare(b.inicio));
-  const paginacion = usePaginacion(activas);
+  const activas = reservas.filter((r) => new Date(r.fin) > ahora);
+  const orden = useOrden(activas, CLAVES_SALA); // Al abrir, lo último registrado primero
+  const paginacion = usePaginacion(orden.ordenados, POR_PAGINA_ACTIVIDAD);
   return (
     <section className="panel">
-      <h2>Reservas activas ({activas.length})</h2>
+      <div className="panel-encabezado">
+        <h2>Reservas activas ({activas.length})</h2>
+        <OrdenLista
+          campo={orden.campo}
+          sentido={orden.sentido}
+          onCampo={(c) => { orden.elegirCampo(c); paginacion.irA(0); }}
+          onSentido={(s) => { orden.setSentido(s); paginacion.irA(0); }}
+          textoFecha="Fecha de la reserva"
+        />
+      </div>
       {activas.length === 0 ? (
         <p className="vacio">No hay reservas activas.</p>
       ) : (
