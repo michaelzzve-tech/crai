@@ -43,3 +43,6 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # GitHub a veces tarda más de lo normal en publicar; se espera hasta 20 minutos (antes, 10).
+          timeout: 1200000
