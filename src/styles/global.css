@@ -378,3 +378,7 @@ label.casilla input { width: 18px; height: 18px; margin: 0; }
 }
 .opcion-multiple input { margin: 0; }
 .opcion-multiple.elegida { border-color: var(--primario); background: color-mix(in srgb, var(--primario) 12%, #fff); }
+/* Mantenimiento de salas especiales */
+.ventana-chica { width: min(560px, calc(100vw - 32px)); }
+.aviso-mantenimiento { color: var(--aviso); font-weight: 600; }
+.aviso-mantenimiento .normal { font-weight: 400; color: var(--texto-suave, inherit); }

@@ -9,6 +9,7 @@ drop table if exists laptops;
 drop table if exists reservas;
 drop table if exists cubiculos;
 drop table if exists reservas_salas;
+drop table if exists mantenimiento_salas;
 
 -- Recursos: laptops del 1 al 25 y del 55 al 80, y cubículos del 1 al 6 más el Podcast (código "POD").
 -- La app los crea sola la primera vez.
@@ -68,6 +69,16 @@ create table reservas_salas (
   fecha_solicitud date -- cuándo se pidió la sala (solo informativo); vacío en reservas viejas
 );
 
+-- Mantenimiento de las salas especiales: desde "inicio" no se pueden reservar; sin "fin", hasta marcarlas disponibles.
+create table mantenimiento_salas (
+  id text primary key,
+  sala_id text not null,
+  inicio timestamptz not null,
+  fin timestamptz,
+  nota text, -- motivo (opcional)
+  creado timestamptz not null default now()
+);
+
 -- Seguridad: solo los bibliotecarios que inician sesión pueden leer y escribir.
 -- Los visitantes sin sesión no ven ningún dato.
 alter table laptops enable row level security;
@@ -75,9 +86,11 @@ alter table cubiculos enable row level security;
 alter table prestamos enable row level security;
 alter table reservas enable row level security;
 alter table reservas_salas enable row level security;
+alter table mantenimiento_salas enable row level security;
 
 create policy "bibliotecarios" on laptops for all to authenticated using (true) with check (true);
 create policy "bibliotecarios" on cubiculos for all to authenticated using (true) with check (true);
 create policy "bibliotecarios" on prestamos for all to authenticated using (true) with check (true);
 create policy "bibliotecarios" on reservas for all to authenticated using (true) with check (true);
 create policy "bibliotecarios" on reservas_salas for all to authenticated using (true) with check (true);
+create policy "bibliotecarios" on mantenimiento_salas for all to authenticated using (true) with check (true);

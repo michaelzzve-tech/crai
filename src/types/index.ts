@@ -65,6 +65,19 @@ export interface ReservaSala {
   serieId?: string; // Igual en todas las fechas de una reserva recurrente; vacío si es única
 }
 
+/**
+ * Mantenimiento de una sala especial: desde `inicio` la sala no se puede reservar.
+ * Sin `fin`, dura hasta que se marque disponible.
+ */
+export interface MantenimientoSala {
+  id: string;
+  salaId: string;
+  inicio: string; // ISO 8601
+  fin?: string; // ISO 8601; vacío mientras siga en mantenimiento
+  nota?: string; // Motivo (opcional)
+  creado: string; // Cuándo se registró, ISO 8601
+}
+
 /** Datos del formulario de reserva de sala. */
 export interface NuevaReservaSala {
   salaId: string;

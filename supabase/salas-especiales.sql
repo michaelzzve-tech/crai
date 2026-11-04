@@ -27,3 +27,17 @@ alter table reservas_salas add column if not exists fecha_solicitud date;
 alter table reservas_salas enable row level security;
 drop policy if exists "bibliotecarios" on reservas_salas;
 create policy "bibliotecarios" on reservas_salas for all to authenticated using (true) with check (true);
+
+-- Mantenimiento de salas (botón «A mantenimiento» en Salas especiales → Espacios).
+-- Desde "inicio" la sala no se puede reservar; sin "fin", hasta que se marque disponible.
+create table if not exists mantenimiento_salas (
+  id text primary key,
+  sala_id text not null, -- javier, loyola, basabe, piedra o crai (ver src/config/salas.ts)
+  inicio timestamptz not null,
+  fin timestamptz, -- vacío mientras siga en mantenimiento
+  nota text, -- motivo (opcional)
+  creado timestamptz not null default now()
+);
+alter table mantenimiento_salas enable row level security;
+drop policy if exists "bibliotecarios" on mantenimiento_salas;
+create policy "bibliotecarios" on mantenimiento_salas for all to authenticated using (true) with check (true);
