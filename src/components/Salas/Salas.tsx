@@ -10,10 +10,15 @@ import { useVistaPlanner } from '../../hooks/useVistaPlanner';
 import { usePaginacion } from '../../hooks/usePaginacion';
 import { Paginador } from '../Paginador';
 import { BarraSemana, FiltrosPlanner, PlannerSemanal, type EventoPlanner } from '../Planner';
+import { estadoDeSalas } from '../../services/estadoSalas';
+import { EspaciosSalas, ResumenSalas } from './EspaciosSalas';
 import { FormularioSala, type InicioFormulario } from './FormularioSala';
 
-/** Módulo Salas especiales: calendario semanal tipo planificador con las reservas de cada sala. */
-export function Salas() {
+/**
+ * Módulo Salas especiales, con dos pestañas como cubículos: Reservas (calendario tipo
+ * planificador y reservas activas) y Espacios (estado de cada sala).
+ */
+export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espacios' }) {
   const [reservas, setReservas] = useState<ReservaSala[]>([]);
   const [error, setError] = useState('');
   const [aviso, setAviso] = useState('');
@@ -22,6 +27,8 @@ export function Salas() {
   const [formulario, setFormulario] = useState<InicioFormulario | null>(null);
   const [detalle, setDetalle] = useState<ReservaSala | null>(null);
   const contenedor = useMostrarDiaElegido(elegido);
+  const ahora = useAhora(30_000); // Para "EN USO" y el estado de cada sala
+  const estados = estadoDeSalas(reservas, ahora);
 
 
   const recargar = useCallback(async () => {
@@ -68,6 +75,7 @@ export function Salas() {
         ['Profesor(a)', r.profesor],
         ...(r.serieId ? [['Recurrente', 'Sí'] as [string, string]] : []),
       ],
+      etiqueta: new Date(r.inicio) <= ahora && new Date(r.fin) > ahora ? 'EN USO' : undefined,
     };
   };
   const reservaDe = (e: EventoPlanner) => reservas.find((r) => r.id === e.id);
@@ -136,33 +144,40 @@ export function Salas() {
         </div>
       )}
 
-      <section className="panel salas">
-        <BarraSemana titulo="Salas especiales" elegido={elegido} onElegir={elegir} onNueva={() => nueva()} tramo={tramo} />
+      <ResumenSalas estados={estados} />
 
-        {/* Cada sala es un filtro y a la vez la leyenda de colores del calendario. */}
-        <FiltrosPlanner
-          grupo="Salas que se muestran"
-          items={SALAS.map((s) => ({ ...s, detalle: `${s.capacidad} pers. · ${aLaVista.filter((r) => r.salaId === s.id).length} ${textoPeriodo}` }))}
-          ocultos={ocultas}
-          onOcultos={setOcultas}
-        />
+      {pestana === 'espacios' && <EspaciosSalas estados={estados} ahora={ahora} onAbrir={setDetalle} />}
+      {pestana === 'reservas' && (
+        <>
+        <section className="panel salas">
+          <BarraSemana titulo="Salas especiales" elegido={elegido} onElegir={elegir} onNueva={() => nueva()} tramo={tramo} />
 
-        <div className="planner-contenedor" ref={contenedor}>
-          <PlannerSemanal
-            lunes={desde}
-            cantidadDias={cantidad}
-            elegido={elegido}
-            onElegir={elegir}
-            reservas={visibles.map(evento)}
-            onNueva={(dia, hora) => nueva(dia, hora)}
-            onAbrir={(e) => setDetalle(reservaDe(e) ?? null)}
-            onMover={(e, dia, hora) => { const r = reservaDe(e); if (r) void moverA(r, dia, hora); }}
+          {/* Cada sala es un filtro y a la vez la leyenda de colores del calendario. */}
+          <FiltrosPlanner
+            grupo="Salas que se muestran"
+            items={SALAS.map((s) => ({ ...s, detalle: `${s.capacidad} pers. · ${aLaVista.filter((r) => r.salaId === s.id).length} ${textoPeriodo}` }))}
+            ocultos={ocultas}
+            onOcultos={setOcultas}
           />
-        </div>
-        <p className="secundario">Haga clic en un espacio libre del calendario para reservar a esa hora, o en una reserva para ver sus datos. Arrastre una reserva para cambiarla de día u hora.</p>
-      </section>
 
-      <ReservasActivas reservas={reservas} onAbrir={setDetalle} />
+          <div className="planner-contenedor" ref={contenedor}>
+            <PlannerSemanal
+              lunes={desde}
+              cantidadDias={cantidad}
+              elegido={elegido}
+              onElegir={elegir}
+              reservas={visibles.map(evento)}
+              onNueva={(dia, hora) => nueva(dia, hora)}
+              onAbrir={(e) => setDetalle(reservaDe(e) ?? null)}
+              onMover={(e, dia, hora) => { const r = reservaDe(e); if (r) void moverA(r, dia, hora); }}
+            />
+          </div>
+          <p className="secundario">Haga clic en un espacio libre del calendario para reservar a esa hora, o en una reserva para ver sus datos. Arrastre una reserva para cambiarla de día u hora.</p>
+        </section>
+
+        <ReservasActivas reservas={reservas} onAbrir={setDetalle} />
+        </>
+      )}
 
       {formulario && <FormularioSala key={JSON.stringify(formulario)} inicio={formulario} onGuardar={guardar} onCerrar={() => setFormulario(null)} />}
       {detalle && (

@@ -48,6 +48,7 @@ function Principal({ correo, cerrarSesion }: { correo?: string; cerrarSesion?: (
   const [modulo, setModulo] = useState<Modulo>(MODULOS[0]);
   const [pestana, setPestana] = useState<Pestana>('registro');
   const [vista, setVista] = useState<Vista>('modulo');
+  const [pestanaSalas, setPestanaSalas] = useState<Pestana>('registro'); // Reservas o Espacios
   const { notificaciones, sinLeer, leidas, marcarLeidas, permiso, pedirPermiso } = useNotificaciones();
 
   const abrirNotificacion = (n: Notificacion) => {
@@ -65,8 +66,8 @@ function Principal({ correo, cerrarSesion }: { correo?: string; cerrarSesion?: (
         onCambiarModulo={(m) => { setModulo(m); setVista('modulo'); }}
         vista={vista}
         onVista={setVista}
-        activa={pestana}
-        onCambiar={setPestana}
+        activa={vista === 'salas' ? pestanaSalas : pestana}
+        onCambiar={vista === 'salas' ? setPestanaSalas : setPestana}
         correo={correo}
         onCerrarSesion={cerrarSesion}
         notificaciones={
@@ -83,7 +84,7 @@ function Principal({ correo, cerrarSesion }: { correo?: string; cerrarSesion?: (
       <AvisosDestacados notificaciones={sinLeer} onAbrir={abrirNotificacion} onCerrar={(n) => marcarLeidas([n.clave])} />
       {/* `key` hace que cada módulo empiece con su propio estado. */}
       {vista === 'informes' ? <Informes />
-        : vista === 'salas' ? <Salas />
+        : vista === 'salas' ? <Salas pestana={pestanaSalas === 'recursos' ? 'espacios' : 'reservas'} />
         : <VistaModulo key={modulo.id} modulo={modulo} pestana={pestana} />}
     </div>
   );

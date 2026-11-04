@@ -22,11 +22,14 @@ interface Props {
 /** Título, selector de módulo (laptops, cubículos…) y pestañas del módulo. */
 export function Encabezado({ modulos, modulo, onCambiarModulo, vista, onVista, activa, onCambiar, correo, onCerrarSesion, notificaciones }: Props) {
   // Historial se muestra como un ícono de reloj; su nombre queda en la ayuda y para lectores de pantalla.
-  const pestanas: { id: Pestana; titulo: string; icono?: ReactNode }[] = [
-    { id: 'registro', titulo: modulo.registros },
-    { id: 'recursos', titulo: modulo.pestanaRecursos },
-    { id: 'historial', titulo: 'Historial', icono: <IconoReloj /> },
-  ];
+  // Salas especiales tiene Reservas y Espacios, como cubículos (sin historial).
+  const pestanas: { id: Pestana; titulo: string; icono?: ReactNode }[] = vista === 'salas'
+    ? [{ id: 'registro', titulo: 'Reservas' }, { id: 'recursos', titulo: 'Espacios' }]
+    : [
+      { id: 'registro', titulo: modulo.registros },
+      { id: 'recursos', titulo: modulo.pestanaRecursos },
+      { id: 'historial', titulo: 'Historial', icono: <IconoReloj /> },
+    ];
 
   return (
     <header className="encabezado">
@@ -67,7 +70,7 @@ export function Encabezado({ modulos, modulo, onCambiarModulo, vista, onVista, a
           <IconoGrafica />
         </button>
       </nav>
-      {vista === 'modulo' && (
+      {vista !== 'informes' && (
         <nav className="pestanas" aria-label="Sección">
           {pestanas.map((p) => (
             <button
