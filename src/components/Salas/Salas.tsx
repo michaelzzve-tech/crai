@@ -78,7 +78,7 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
       if (fin <= inicio) continue;
       fichasMantenimiento.push({
         id: `mantenimiento-${m.id}-${dia}`, inicio: inicio.toISOString(), fin: fin.toISOString(),
-        color: sala?.color ?? '#7b8794', movible: false,
+        color: sala?.color ?? '#7b8794', movible: false, atenuado: fin <= ahora,
         titulo: sala?.nombre.replace('Sala ', '') ?? m.salaId,
         lineas: ['Mantenimiento', ...(m.nota ? [m.nota] : [])],
         datos: [
@@ -96,7 +96,9 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
     const sala = salaPorId(r.salaId);
     const horario = `${formatearHora(r.inicio)} – ${formatearHora(r.fin)}`;
     return {
-      id: r.id, inicio: r.inicio, fin: r.fin, color: sala?.color ?? '#7b8794', movible: true,
+      // Ya usada (terminó): más clara y fija, como en cubículos.
+      id: r.id, inicio: r.inicio, fin: r.fin, color: sala?.color ?? '#7b8794',
+      movible: new Date(r.fin) > ahora, atenuado: new Date(r.fin) <= ahora,
       titulo: sala?.nombre.replace('Sala ', '') ?? r.salaId,
       lineas: [horario, `${r.actividad} · ${r.usuarios} pers.`, `Solicita: ${r.solicitante}`, `Prof.: ${r.profesor}`,
         `${r.instituto} · ${r.carrera} · ${r.semestre}`],
