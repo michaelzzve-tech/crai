@@ -8,12 +8,21 @@ import { useAhora } from '../../hooks/useAhora';
 import { useMostrarDiaElegido } from '../../hooks/useMostrarDiaElegido';
 import { useVistaPlanner } from '../../hooks/useVistaPlanner';
 import { usePaginacion } from '../../hooks/usePaginacion';
+import { useOrden, type CampoOrden } from '../../hooks/useOrden';
+import { POR_PAGINA_ACTIVIDAD } from '../../utils/orden';
+import { OrdenLista } from '../OrdenLista';
+import { PestanasReservas, type GrupoReservas } from '../PestanasReservas';
 import { Paginador } from '../Paginador';
 import { BarraSemana, FiltrosPlanner, PlannerSemanal, type EventoPlanner } from '../Planner';
+import { estadoDeSalas } from '../../services/estadoSalas';
+import { EspaciosSalas, ResumenSalas } from './EspaciosSalas';
 import { FormularioSala, type InicioFormulario } from './FormularioSala';
 
-/** Módulo Salas especiales: calendario semanal tipo planificador con las reservas de cada sala. */
-export function Salas() {
+/**
+ * Módulo Salas especiales, con dos pestañas como cubículos: Reservas (calendario tipo
+ * planificador y reservas activas) y Espacios (estado de cada sala).
+ */
+export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espacios' }) {
   const [reservas, setReservas] = useState<ReservaSala[]>([]);
   const [error, setError] = useState('');
   const [aviso, setAviso] = useState('');
@@ -22,6 +31,8 @@ export function Salas() {
   const [formulario, setFormulario] = useState<InicioFormulario | null>(null);
   const [detalle, setDetalle] = useState<ReservaSala | null>(null);
   const contenedor = useMostrarDiaElegido(elegido);
+  const ahora = useAhora(30_000); // Para "EN USO" y el estado de cada sala
+  const estados = estadoDeSalas(reservas, ahora);
 
 
   const recargar = useCallback(async () => {
@@ -68,6 +79,7 @@ export function Salas() {
         ['Profesor(a)', r.profesor],
         ...(r.serieId ? [['Recurrente', 'Sí'] as [string, string]] : []),
       ],
+      etiqueta: new Date(r.inicio) <= ahora && new Date(r.fin) > ahora ? 'EN USO' : undefined,
     };
   };
   const reservaDe = (e: EventoPlanner) => reservas.find((r) => r.id === e.id);
@@ -136,33 +148,40 @@ export function Salas() {
         </div>
       )}
 
-      <section className="panel salas">
-        <BarraSemana titulo="Salas especiales" elegido={elegido} onElegir={elegir} onNueva={() => nueva()} tramo={tramo} />
+      <ResumenSalas estados={estados} />
 
-        {/* Cada sala es un filtro y a la vez la leyenda de colores del calendario. */}
-        <FiltrosPlanner
-          grupo="Salas que se muestran"
-          items={SALAS.map((s) => ({ ...s, detalle: `${s.capacidad} pers. · ${aLaVista.filter((r) => r.salaId === s.id).length} ${textoPeriodo}` }))}
-          ocultos={ocultas}
-          onOcultos={setOcultas}
-        />
+      {pestana === 'espacios' && <EspaciosSalas estados={estados} ahora={ahora} onAbrir={setDetalle} />}
+      {pestana === 'reservas' && (
+        <>
+        <section className="panel salas">
+          <BarraSemana titulo="Salas especiales" elegido={elegido} onElegir={elegir} onNueva={() => nueva()} tramo={tramo} />
 
-        <div className="planner-contenedor" ref={contenedor}>
-          <PlannerSemanal
-            lunes={desde}
-            cantidadDias={cantidad}
-            elegido={elegido}
-            onElegir={elegir}
-            reservas={visibles.map(evento)}
-            onNueva={(dia, hora) => nueva(dia, hora)}
-            onAbrir={(e) => setDetalle(reservaDe(e) ?? null)}
-            onMover={(e, dia, hora) => { const r = reservaDe(e); if (r) void moverA(r, dia, hora); }}
+          {/* Cada sala es un filtro y a la vez la leyenda de colores del calendario. */}
+          <FiltrosPlanner
+            grupo="Salas que se muestran"
+            items={SALAS.map((s) => ({ ...s, detalle: `${s.capacidad} pers. · ${aLaVista.filter((r) => r.salaId === s.id).length} ${textoPeriodo}` }))}
+            ocultos={ocultas}
+            onOcultos={setOcultas}
           />
-        </div>
-        <p className="secundario">Haga clic en un espacio libre del calendario para reservar a esa hora, o en una reserva para ver sus datos. Arrastre una reserva para cambiarla de día u hora.</p>
-      </section>
 
-      <ReservasActivas reservas={reservas} onAbrir={setDetalle} />
+          <div className="planner-contenedor" ref={contenedor}>
+            <PlannerSemanal
+              lunes={desde}
+              cantidadDias={cantidad}
+              elegido={elegido}
+              onElegir={elegir}
+              reservas={visibles.map(evento)}
+              onNueva={(dia, hora) => nueva(dia, hora)}
+              onAbrir={(e) => setDetalle(reservaDe(e) ?? null)}
+              onMover={(e, dia, hora) => { const r = reservaDe(e); if (r) void moverA(r, dia, hora); }}
+            />
+          </div>
+          <p className="secundario">Haga clic en un espacio libre del calendario para reservar a esa hora, o en una reserva para ver sus datos. Arrastre una reserva para cambiarla de día u hora.</p>
+        </section>
+
+        <ReservasActivas reservas={reservas} onAbrir={setDetalle} />
+        </>
+      )}
 
       {formulario && <FormularioSala key={JSON.stringify(formulario)} inicio={formulario} onGuardar={guardar} onCerrar={() => setFormulario(null)} />}
       {detalle && (
@@ -177,21 +196,48 @@ export function Salas() {
   );
 }
 
+/** Qué dato de una reserva de sala se usa para cada opción de "Ordenar por". */
+const CLAVES_SALA: Record<CampoOrden, (r: ReservaSala) => string> = {
+  registro: (r) => r.creada,
+  fecha: (r) => r.inicio,
+  nombre: (r) => r.solicitante,
+  carrera: (r) => `${r.carrera} ${r.semestre}`,
+};
+
 /**
  * Reservas que todavía no terminan (en curso o por venir), con las últimas en registrarse
  * primero. Un clic en "Ver" abre sus datos para modificarla o cancelarla.
  */
 function ReservasActivas({ reservas, onAbrir }: { reservas: ReservaSala[]; onAbrir: (r: ReservaSala) => void }) {
   const ahora = useAhora(60_000);
-  const activas = reservas
-    .filter((r) => new Date(r.fin) > ahora)
-    .sort((a, b) => b.creada.localeCompare(a.creada) || a.inicio.localeCompare(b.inicio));
-  const paginacion = usePaginacion(activas);
+  const [grupo, setGrupo] = useState<GrupoReservas>('actuales');
+  const activas = reservas.filter((r) => new Date(r.fin) > ahora);
+  // Pestañas: las reservas de ahora (en curso) y las programadas a futuro.
+  const programadas = activas.filter((r) => new Date(r.inicio) > ahora);
+  const actuales = activas.filter((r) => new Date(r.inicio) <= ahora);
+  const lista = grupo === 'programadas' ? programadas : actuales;
+  const orden = useOrden(lista, CLAVES_SALA); // Al abrir, lo último registrado primero
+  const paginacion = usePaginacion(orden.ordenados, POR_PAGINA_ACTIVIDAD);
   return (
     <section className="panel">
-      <h2>Reservas activas ({activas.length})</h2>
-      {activas.length === 0 ? (
-        <p className="vacio">No hay reservas activas.</p>
+      <div className="panel-encabezado">
+        <h2>Reservas activas ({activas.length})</h2>
+        <OrdenLista
+          campo={orden.campo}
+          sentido={orden.sentido}
+          onCampo={(c) => { orden.elegirCampo(c); paginacion.irA(0); }}
+          onSentido={(s) => { orden.setSentido(s); paginacion.irA(0); }}
+          textoFecha="Fecha de la reserva"
+        />
+      </div>
+      <PestanasReservas
+        grupo={grupo}
+        onGrupo={(g) => { setGrupo(g); paginacion.irA(0); }}
+        actuales={actuales.length}
+        programadas={programadas.length}
+      />
+      {lista.length === 0 ? (
+        <p className="vacio">{grupo === 'programadas' ? 'No hay reservas programadas.' : 'No hay reservas en curso.'}</p>
       ) : (
         <table>
           <thead>
