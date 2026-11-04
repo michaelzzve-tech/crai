@@ -266,6 +266,7 @@ button.boton-peligro { background: var(--alerta); border-color: var(--alerta); c
 }
 .reserva-sala:hover { background: color-mix(in srgb, var(--color-sala) 28%, #fff); }
 .reserva-sala span, .reserva-sala strong { max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reserva-sala > strong, .reserva-sala .fila-titulo strong { font-size: .82rem; } /* El título de la ficha (cubículo o sala), destacado */
 .reserva-sala.compacta { flex-direction: row; gap: 6px; padding-block: 2px; }
 .reserva-sala.compacta span:not(:first-of-type) { display: none; }
 
