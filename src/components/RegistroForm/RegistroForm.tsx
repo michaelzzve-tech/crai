@@ -7,7 +7,7 @@ import { LAPTOPS, nombreRecurso, type Modulo } from '../../config/modulos';
 import { repositorio } from '../../data';
 import { useAhora } from '../../hooks/useAhora';
 import { fechasDeSerie, nombresDeDias, recurrenciaInicial, type Recurrencia } from '../../services/recurrencia';
-import { asegurarRecursos, registrar, registrarConLaptop, registrarSerie } from '../../services/registroService';
+import { asegurarRecursos, registrar, registrarConLaptop, registrarEnMasa, registrarSerie } from '../../services/registroService';
 import type { NuevoRegistro, Recurso, Registro } from '../../types';
 import { diaALas, diaDe, duracionEntreHoras, formatearDia, horaActual } from '../../utils/fechas';
 import { CampoRecurrencia } from '../Planner';
@@ -174,7 +174,9 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
   // Préstamo de laptop: null = casilla apagada; '' = encendida sin laptop elegida.
   const [laptop, setLaptop] = useState<string | null>(null);
   const laptops = useLaptops(modulo.conLaptop && laptop !== null);
-  const limpiar = () => { setDatos({ ...vacio(), ...inicial }); setOtroMotivo(false); setRecurrencia(null); setLaptop(null); };
+  // Préstamo en masa: null = casilla apagada; si no, los recursos elegidos (varias laptops a la vez).
+  const [enMasa, setEnMasa] = useState<string[] | null>(null);
+  const limpiar = () => { setDatos({ ...vacio(), ...inicial }); setOtroMotivo(false); setRecurrencia(null); setLaptop(null); setEnMasa(null); };
   const cambiar = (campo: keyof NuevoRegistro) => (valor: string) =>
     setDatos({ ...datos, [campo]: valor });
   // Con Psicólogo o DTI, carrera y semestre quedan en "No aplica"; con Docente se eligen, y "No aplica" es una opción más.
@@ -209,6 +211,15 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
   async function enviar(e: FormEvent) {
     e.preventDefault();
     const recurso = nombreRecurso(datos.recursoId);
+    if (enMasa) {
+      // Un préstamo por cada recurso elegido, con los mismos datos de la persona.
+      const nombres = enMasa.map(nombreRecurso).join(', ');
+      const mensaje = enMasa.length === 1
+        ? `Se creó 1 ${programado ? 'reserva' : 'préstamo'} para ${datos.nombre}: ${modulo.recurso.toLowerCase()} ${nombres}.`
+        : `Se crearon ${enMasa.length} ${programado ? 'reservas' : 'préstamos'} para ${datos.nombre}: ${modulo.recursos.toLowerCase()} ${nombres}.`;
+      if (await ejecutar(() => registrarEnMasa(modulo, datos, enMasa), mensaje)) { limpiar(); onListo?.(); }
+      return;
+    }
     if (recurrencia) {
       const total = fechasDeSerie(datos.fecha, recurrencia.hasta, recurrencia.dias).length;
       const mensaje = `Se ${total === 1 ? 'creó 1 reserva' : `crearon ${total} reservas`} del ${modulo.recurso.toLowerCase()} ${recurso} para ${datos.nombre}: `
@@ -254,17 +265,19 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
           opciones={sinCarrera ? [NO_APLICA] : semestresDe(datos.instituto, datos.condicion)}
           onCambiar={cambiar('semestre')}
         />
-        <label htmlFor="registro-recurso">
-          {modulo.recurso}
-          <select id="registro-recurso" required value={datos.recursoId} onChange={(e) => cambiar('recursoId')(e.target.value)}>
-            <option value="">Seleccione…</option>
-            {recursos.map((r) => (
-              <option key={r.id} value={r.id} disabled={!elegible(r)}>
-                {nombreRecurso(r.id)}{textoEstado(r)}
-              </option>
-            ))}
-          </select>
-        </label>
+        {!enMasa && (
+          <label htmlFor="registro-recurso">
+            {modulo.recurso}
+            <select id="registro-recurso" required value={datos.recursoId} onChange={(e) => cambiar('recursoId')(e.target.value)}>
+              <option value="">Seleccione…</option>
+              {recursos.map((r) => (
+                <option key={r.id} value={r.id} disabled={!elegible(r)}>
+                  {nombreRecurso(r.id)}{textoEstado(r)}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         {modulo.conUsuarios && (
           <label htmlFor="registro-usuarios">
             Cantidad de usuarios
@@ -346,6 +359,21 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
             </select>
           </label>
         )}
+        {modulo.conPrestamoEnMasa && (
+          <label className="ancho casilla">
+            <input type="checkbox" checked={enMasa !== null} onChange={(e) => setEnMasa(e.target.checked ? (datos.recursoId ? [datos.recursoId] : []) : null)} />
+            Préstamo en masa
+          </label>
+        )}
+        {enMasa && (
+          <SeleccionMultiple
+            titulo={modulo.recursos}
+            recursos={recursos.filter(elegible)}
+            elegidos={enMasa}
+            onCambiar={setEnMasa}
+            textoEstado={textoEstado}
+          />
+        )}
         {recurrencia && (
           <CampoRecurrencia prefijo="registro" desde={datos.fecha} onDesde={cambiar('fecha')} recurrencia={recurrencia} onRecurrencia={setRecurrencia} />
         )}
@@ -378,3 +406,40 @@ function useLaptops(activo: boolean): Recurso[] | null {
 
 /** Para más tarde se ofrece también una laptop que hoy está prestada; se aclara en el menú. */
 const textoLaptop = (r: Recurso) => (r.estado === 'ocupado' ? ' (prestada ahora)' : '');
+
+/**
+ * "Préstamo en masa": casillas con los recursos que se pueden prestar (por ejemplo, las laptops
+ * disponibles), para elegir varios a la vez. Al registrar se crea un préstamo por cada uno.
+ */
+function SeleccionMultiple({ titulo, recursos, elegidos, onCambiar, textoEstado }: {
+  titulo: string;
+  recursos: Recurso[];
+  elegidos: string[];
+  onCambiar: (ids: string[]) => void;
+  textoEstado: (r: Recurso) => string;
+}) {
+  const alternar = (id: string) =>
+    onCambiar(elegidos.includes(id) ? elegidos.filter((x) => x !== id) : recursos.map((r) => r.id).filter((x) => x === id || elegidos.includes(x)));
+  return (
+    <fieldset className="ancho seleccion-multiple">
+      <legend>
+        {titulo} a prestar: <strong>{elegidos.length}</strong> {elegidos.length === 1 ? 'elegida' : 'elegidas'}
+        <button type="button" onClick={() => onCambiar(recursos.map((r) => r.id))}>Todas</button>
+        <button type="button" onClick={() => onCambiar([])}>Ninguna</button>
+      </legend>
+      {recursos.length === 0 ? (
+        <p className="vacio">No hay {titulo.toLowerCase()} disponibles.</p>
+      ) : (
+        <div className="opciones-multiples">
+          {recursos.map((r) => (
+            <label key={r.id} className={`opcion-multiple${elegidos.includes(r.id) ? ' elegida' : ''}`} title={textoEstado(r).trim() || undefined}>
+              <input type="checkbox" checked={elegidos.includes(r.id)} onChange={() => alternar(r.id)} />
+              {nombreRecurso(r.id)}{r.estado === 'ocupado' ? '*' : ''}
+            </label>
+          ))}
+        </div>
+      )}
+      {recursos.some((r) => r.estado === 'ocupado') && <p className="secundario">* Prestada ahora: solo se puede reservar para más tarde.</p>}
+    </fieldset>
+  );
+}
