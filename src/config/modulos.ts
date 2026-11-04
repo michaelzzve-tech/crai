@@ -40,6 +40,7 @@ export interface Modulo {
   colores: string[]; // Color de cada recurso en el calendario, en el orden de `opciones`
   conFechaRegistro: boolean; // true: el formulario pide "Fecha de registro" (cuándo se pidió; solo informativa)
   conLaptop: boolean; // true: el formulario ofrece "Préstamo de laptop", que crea también el préstamo en Laptops
+  conPrestamoEnMasa?: boolean; // true: el formulario ofrece "Préstamo en masa" (varios recursos a la vez para la misma persona)
   tablaRecursos: string; // Tabla de la base de datos con los recursos
   tablaRegistros: string; // Tabla de la base de datos con los préstamos o reservas
   registros: string; // "Préstamos"
@@ -66,6 +67,7 @@ export const LAPTOPS: Modulo = {
   colores: [],
   conFechaRegistro: false,
   conLaptop: false,
+  conPrestamoEnMasa: true,
   condiciones: CONDICIONES_LAPTOPS,
   motivos: MOTIVOS_LAPTOPS,
   tablaRecursos: 'laptops',

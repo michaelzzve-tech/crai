@@ -171,6 +171,32 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
 }
 
 /**
+ * Préstamo en masa: un préstamo por cada recurso de `ids` (por ejemplo, varias laptops), todos
+ * con los mismos datos de la persona, fecha y hora. Se revisan todos antes de guardar: si
+ * alguno no se puede, no se guarda ninguno y se dice cuál falló.
+ */
+export async function registrarEnMasa(modulo: Modulo, datos: NuevoRegistro, ids: string[]): Promise<Registro[]> {
+  if (ids.length === 0) throw new Error(`Seleccione al menos un ${modulo.recurso.toLowerCase()}.`);
+  const [recursos, existentes] = await Promise.all([
+    repositorio.listarRecursos(modulo.tablaRecursos),
+    repositorio.listarRegistros(modulo.tablaRegistros),
+  ]);
+  const nuevos = ids.map((id) => {
+    try {
+      return prepararRegistro(modulo, { ...datos, recursoId: id }, recursos, existentes);
+    } catch (e) {
+      throw new Error(`${modulo.recurso} ${nombreRecurso(id)}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  });
+  for (const n of nuevos) {
+    await repositorio.guardarRegistro(modulo.tablaRegistros, n.registro);
+    if (!n.programado) await repositorio.guardarRecurso(modulo.tablaRecursos, { ...n.recurso, estado: 'ocupado' });
+  }
+  avisarCambio();
+  return nuevos.map((n) => n.registro);
+}
+
+/**
  * Reserva (de cubículo) con préstamo de laptop: con los mismos datos de la persona, la
  * fecha y la hora de inicio se crea también el préstamo de `laptopId` en Laptops. Se revisan
  * los dos antes de guardar: si la laptop o el cubículo no se pueden, no se guarda ninguno.
