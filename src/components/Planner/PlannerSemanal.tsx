@@ -41,6 +41,7 @@ export interface EventoPlanner {
   movible: boolean; // false: no se puede arrastrar (por ejemplo, una reserva ya terminada)
   atenuado?: boolean; // Se muestra más claro (terminada)
   etiqueta?: string; // Etiqueta de alto contraste en la ficha y la vista previa, como "EN USO"
+  etiquetaAviso?: boolean; // La etiqueta va en negro sobre amarillo (por ejemplo, "EN MANTENIMIENTO")
 }
 
 interface Ubicada {
@@ -221,7 +222,7 @@ export function PlannerSemanal({ lunes, cantidadDias = 7, elegido, onElegir, res
                 aria-label={u.reserva.datos.map(([t, v]) => `${t}: ${v}`).join('. ')}
               >
                 {u.reserva.etiqueta
-                  ? <div className="fila-titulo"><em className="etiqueta-ficha">{u.reserva.etiqueta}</em><strong>{u.reserva.titulo}</strong></div>
+                  ? <div className="fila-titulo"><em className={`etiqueta-ficha${u.reserva.etiquetaAviso ? ' aviso' : ''}`}>{u.reserva.etiqueta}</em><strong>{u.reserva.titulo}</strong></div>
                   : <strong>{u.reserva.titulo}</strong>}
                 {/* Las líneas que caben (15 px cada una, debajo del título); el resto se ve en la vista previa. */}
                 {u.reserva.lineas.slice(0, Math.max(1, Math.floor((alto - 8) / 15) - 1)).map((l, i) => <span key={i}>{l}</span>)}
@@ -244,7 +245,7 @@ export function PlannerSemanal({ lunes, cantidadDias = 7, elegido, onElegir, res
                 } as CSSProperties}
                 role="tooltip"
               >
-                {u.reserva.etiqueta && <em className="etiqueta-ficha">{u.reserva.etiqueta}</em>}
+                {u.reserva.etiqueta && <em className={`etiqueta-ficha${u.reserva.etiquetaAviso ? ' aviso' : ''}`}>{u.reserva.etiqueta}</em>}
                 <strong>{u.reserva.titulo}</strong>
                 <dl>
                   {u.reserva.datos.map(([t, v]) => <div key={t}><dt>{t}</dt><dd>{v}</dd></div>)}

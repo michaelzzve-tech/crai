@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { SALAS, salaPorId, type Sala } from '../../config/salas';
-import { listarMantenimientosSalas, programarMantenimiento, terminarMantenimiento, textoMantenimiento, type NuevoMantenimiento } from '../../services/mantenimientoSalas';
+import { HORA_APERTURA, HORA_CIERRE, SALAS, salaPorId, type Sala } from '../../config/salas';
+import { listarMantenimientosSalas, mantenimientoQueChoca, programarMantenimiento, terminarMantenimiento, textoMantenimiento, type NuevoMantenimiento } from '../../services/mantenimientoSalas';
 import { nombresDeDias, type Recurrencia } from '../../services/recurrencia';
 import { cancelarReservaSala, cancelarSerieDesde, guardarReservaSala, guardarSerieSala, listarReservasSalas, moverReservaSala } from '../../services/salaService';
 import type { MantenimientoSala, NuevaReservaSala, ReservaSala } from '../../types';
-import { diaDe, formatearDia, formatearDiaLargo, formatearFecha, formatearHora, horaActual } from '../../utils/fechas';
+import { diaALas, diaDe, formatearDia, sumarDias, formatearDiaLargo, formatearFecha, formatearHora, horaActual } from '../../utils/fechas';
 import { useAhora } from '../../hooks/useAhora';
 import { useMostrarDiaElegido } from '../../hooks/useMostrarDiaElegido';
 import { useVistaPlanner } from '../../hooks/useVistaPlanner';
@@ -62,6 +62,35 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
   });
   const visibles = aLaVista.filter((r) => !ocultas.includes(r.salaId));
 
+  /**
+   * Cada mantenimiento como una ficha más del calendario, en cada día a la vista que cubre
+   * (sin fecha de fin, hasta el final de cada día). No se puede arrastrar.
+   */
+  const fichasMantenimiento: EventoPlanner[] = [];
+  for (const m of mantenimientos) {
+    if (ocultas.includes(m.salaId)) continue;
+    const sala = salaPorId(m.salaId);
+    for (let dia = desde; dia <= hasta; dia = sumarDias(dia, 1)) {
+      const abre = diaALas(dia, `${String(HORA_APERTURA).padStart(2, '0')}:00`);
+      const cierra = diaALas(dia, `${String(HORA_CIERRE).padStart(2, '0')}:00`);
+      const inicio = new Date(Math.max(abre.getTime(), new Date(m.inicio).getTime()));
+      const fin = new Date(Math.min(cierra.getTime(), m.fin ? new Date(m.fin).getTime() : Infinity));
+      if (fin <= inicio) continue;
+      fichasMantenimiento.push({
+        id: `mantenimiento-${m.id}-${dia}`, inicio: inicio.toISOString(), fin: fin.toISOString(),
+        color: sala?.color ?? '#7b8794', movible: false,
+        titulo: sala?.nombre.replace('Sala ', '') ?? m.salaId,
+        lineas: ['Mantenimiento', ...(m.nota ? [m.nota] : [])],
+        datos: [
+          ['Sala', sala?.nombre ?? m.salaId],
+          ['Mantenimiento', textoMantenimiento(m)],
+          ...(m.nota ? [['Motivo', m.nota] as [string, string]] : []),
+        ],
+        etiqueta: 'EN MANTENIMIENTO', etiquetaAviso: true,
+      });
+    }
+  }
+
   /** Cada reserva tal como se dibuja: nombre corto de la sala y todos sus datos (menos la fecha de solicitud). */
   const evento = (r: ReservaSala): EventoPlanner => {
     const sala = salaPorId(r.salaId);
@@ -84,7 +113,9 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
         ['Profesor(a)', r.profesor],
         ...(r.serieId ? [['Recurrente', 'Sí'] as [string, string]] : []),
       ],
-      etiqueta: new Date(r.inicio) <= ahora && new Date(r.fin) > ahora ? 'EN USO' : undefined,
+      ...(mantenimientoQueChoca(mantenimientos, r.salaId, new Date(r.inicio), new Date(r.fin))
+        ? { etiqueta: 'EN MANTENIMIENTO', etiquetaAviso: true } // La sala está en mantenimiento a esa hora
+        : { etiqueta: new Date(r.inicio) <= ahora && new Date(r.fin) > ahora ? 'EN USO' : undefined }),
     };
   };
   const reservaDe = (e: EventoPlanner) => reservas.find((r) => r.id === e.id);
@@ -202,7 +233,7 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
               cantidadDias={cantidad}
               elegido={elegido}
               onElegir={elegir}
-              reservas={visibles.map(evento)}
+              reservas={[...visibles.map(evento), ...fichasMantenimiento]}
               onNueva={(dia, hora) => nueva(dia, hora)}
               onAbrir={(e) => setDetalle(reservaDe(e) ?? null)}
               onMover={(e, dia, hora) => { const r = reservaDe(e); if (r) void moverA(r, dia, hora); }}
