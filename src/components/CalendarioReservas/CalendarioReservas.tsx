@@ -47,9 +47,9 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
     const horario = `${formatearHora(r.inicio)} – ${formatearHora(r.fin!)}`;
     return {
       id: r.id, inicio: r.inicio, fin: r.fin!, color: color(r.recursoId),
-      // En la ficha se ven siempre el cubículo, quien reservó y la hora de inicio y fin.
-      titulo: `${nombreRecurso(r.recursoId) === r.recursoId ? `${modulo.recurso} ${r.recursoId}` : nombreRecurso(r.recursoId)} · ${r.nombre}`,
-      lineas: [horario, ...(r.usuarios ? [`${r.usuarios} usu.`] : []),
+      // En la ficha: el cubículo destacado arriba; debajo, sin negritas, quien reservó, el horario y el resto.
+      titulo: nombreRecurso(r.recursoId) === r.recursoId ? `${modulo.recurso} ${r.recursoId}` : nombreRecurso(r.recursoId),
+      lineas: [r.nombre, horario, ...(r.usuarios ? [`${r.usuarios} usu.`] : []),
         [r.genero, r.instituto, r.condicion].filter(Boolean).join(' · '),
         [r.carrera, r.semestre].filter(Boolean).join(' · '), r.motivo],
       datos: [
