@@ -66,7 +66,8 @@ create table reservas_salas (
   hora_fin timestamptz not null,
   creada timestamptz not null default now(), -- cuándo se registró la reserva
   serie_id text, -- mismo valor en todas las fechas de una reserva recurrente; vacío si es de una sola fecha
-  fecha_solicitud date -- cuándo se pidió la sala (solo informativo); vacío en reservas viejas
+  fecha_solicitud date, -- cuándo se pidió la sala (solo informativo); vacío en reservas viejas
+  fin_real timestamptz -- hora real de salida, si se fueron antes de la hora de fin
 );
 
 -- Mantenimiento de las salas especiales: desde "inicio" no se pueden reservar; sin "fin", hasta marcarlas disponibles.

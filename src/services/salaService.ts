@@ -1,6 +1,6 @@
 import { salaPorId } from '../config/salas';
 import { repositorio } from '../data';
-import type { MantenimientoSala, NuevaReservaSala, ReservaSala } from '../types';
+import { finDeSala, type MantenimientoSala, type NuevaReservaSala, type ReservaSala } from '../types';
 import { diaALas, diaDe, formatearDia, formatearHora, horaActual } from '../utils/fechas';
 import { listarMantenimientosSalas, mantenimientoQueChoca, textoMantenimiento } from './mantenimientoSalas';
 import { validarSerie, type Recurrencia } from './recurrencia';
@@ -51,7 +51,7 @@ function prepararReserva(datos: NuevaReservaSala, existentes: ReservaSala[], ant
 
   const choque = existentes.find((r) =>
     r.id !== anterior?.id && r.salaId === sala.id
-    && new Date(r.inicio) < fin && inicio < new Date(r.fin));
+    && new Date(r.inicio) < fin && inicio < new Date(finDeSala(r)));
   if (choque) {
     throw new ChoqueDeHorario(`${sala.nombre} ya está reservada de ${formatearHora(choque.inicio)} a ${formatearHora(choque.fin)} ese día (${choque.actividad}).`);
   }
@@ -71,6 +71,8 @@ function prepararReserva(datos: NuevaReservaSala, existentes: ReservaSala[], ant
     creada: anterior?.creada ?? new Date().toISOString(),
     ...(datos.fechaSolicitud ? { fechaSolicitud: datos.fechaSolicitud } : {}),
     ...(anterior?.serieId ?? serieId ? { serieId: anterior?.serieId ?? serieId } : {}),
+    // La salida registrada se conserva si sigue dentro del nuevo horario.
+    ...(anterior?.finReal && new Date(anterior.finReal) > inicio && new Date(anterior.finReal) <= fin ? { finReal: anterior.finReal } : {}),
   };
 }
 
@@ -159,4 +161,19 @@ export async function cancelarSerieDesde(reserva: ReservaSala): Promise<number> 
     .filter((r) => r.serieId === reserva.serieId && r.inicio >= reserva.inicio);
   for (const r of deLaSerie) await repositorio.borrarReservaSala(r.id);
   return deLaSerie.length;
+}
+
+/**
+ * Registra la hora real de salida de una reserva (por ejemplo, si se fueron antes): desde esa
+ * hora la sala queda libre y el informe cuenta el uso hasta ahí.
+ */
+export async function registrarSalidaSala(reserva: ReservaSala, hora: string, ahora = new Date()): Promise<ReservaSala> {
+  if (!hora) throw new Error('Indique la hora de salida.');
+  const salida = diaALas(diaDe(reserva.inicio), hora);
+  if (salida <= new Date(reserva.inicio)) throw new Error(`La salida debe ser después del inicio (${formatearHora(reserva.inicio)}).`);
+  if (salida > new Date(reserva.fin)) throw new Error(`La salida no puede ser después de la hora de fin (${formatearHora(reserva.fin)}).`);
+  if (salida > ahora) throw new Error('La salida no puede ser una hora que todavía no llega.');
+  const actualizada = { ...reserva, finReal: salida.toISOString() };
+  await repositorio.guardarReservaSala(actualizada);
+  return actualizada;
 }

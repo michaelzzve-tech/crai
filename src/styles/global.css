@@ -383,3 +383,6 @@ label.casilla input { width: 18px; height: 18px; margin: 0; }
 .ventana-chica { width: min(560px, calc(100vw - 32px)); }
 .aviso-mantenimiento { color: var(--aviso); font-weight: 600; }
 .aviso-mantenimiento .normal { font-weight: 400; color: var(--texto-suave, inherit); }
+/* "Registrar salida" en la ventana de una reserva de sala */
+.hora-salida { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.hora-salida input { width: auto; }

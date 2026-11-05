@@ -103,6 +103,7 @@ interface FilaReservaSala {
   creada: string;
   fecha_solicitud: string | null;
   serie_id: string | null;
+  fin_real?: string | null; // Salida registrada; columna agregada después (ver supabase/salas-especiales.sql)
 }
 
 const aReservaSala = (f: FilaReservaSala): ReservaSala => ({
@@ -120,6 +121,7 @@ const aReservaSala = (f: FilaReservaSala): ReservaSala => ({
   creada: iso(f.creada),
   fechaSolicitud: f.fecha_solicitud ?? undefined,
   serieId: f.serie_id ?? undefined,
+  finReal: f.fin_real ? iso(f.fin_real) : undefined,
 });
 
 const aFilaReservaSala = (r: ReservaSala): FilaReservaSala => ({
@@ -137,6 +139,8 @@ const aFilaReservaSala = (r: ReservaSala): FilaReservaSala => ({
   creada: r.creada,
   fecha_solicitud: r.fechaSolicitud || null,
   serie_id: r.serieId ?? null,
+  // Se envía solo si hay salida registrada, para no exigir la columna a quien aún no corrió el script.
+  ...(r.finReal ? { fin_real: r.finReal } : {}),
 });
 
 interface FilaMantenimientoSala {
