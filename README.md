@@ -99,8 +99,9 @@ y pegue los mismos dos valores.
   se pueden, no se guarda ninguno). No se ofrece junto con la reserva recurrente.
   La casilla **Reserva recurrente** repite la reserva los días elegidos (lunes a sábado) entre
   **Válida desde** y **Válida hasta**; si alguna fecha choca, no se crea ninguna. Con un clic en una
-  reserva se ven sus datos y se puede **Modificar horario**, **Registrar salida** o, si aún no empieza,
-  **Cancelar reserva** (en una serie: **Solo esta fecha** o **Esta y las siguientes**). Una reserva se
+  reserva se ven sus datos y se puede **Modificar reserva** (todos sus datos: persona, cubículo, fecha,
+  horario, motivo…), **Registrar salida** o **Cancelar reserva** en cualquier momento (se borra y no cuenta
+  en las estadísticas; en una serie programada: **Solo esta fecha** o **Esta y las siguientes**). Una reserva se
   puede **arrastrar** a otro día u hora. Las ya terminadas se ven más claras y no se mueven. Al pasar el
   mouse sobre una reserva se ven todos sus datos (menos la fecha de registro).
 - **En curso**: préstamos o reservas activos; desde ahí se registra la devolución de la

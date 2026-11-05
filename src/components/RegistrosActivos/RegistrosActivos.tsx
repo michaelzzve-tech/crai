@@ -1,20 +1,22 @@
 import { useState } from 'react';
 import { nombreRecurso, type Modulo } from '../../config/modulos';
-import { cancelarReserva, editarHorario, estaPorVencer, estaProgramado, estaVencido, finalizar, type NuevoHorario } from '../../services/registroService';
-import type { Registro } from '../../types';
+import { cancelarReserva, estaPorVencer, estaProgramado, estaVencido, finalizar } from '../../services/registroService';
+import type { Recurso, Registro } from '../../types';
+import { ModificarReserva } from '../RegistroForm';
 import { useAhora } from '../../hooks/useAhora';
 import { usePaginacion } from '../../hooks/usePaginacion';
 import { useOrden } from '../../hooks/useOrden';
 import { CLAVES_REGISTRO, POR_PAGINA_ACTIVIDAD } from '../../utils/orden';
 import { OrdenLista } from '../OrdenLista';
 import { PestanasReservas, type GrupoReservas } from '../PestanasReservas';
-import { diaDe, diferenciaConPrevisto, duracionEntreFechas, duracionEntreHoras, formatearDia, formatearHora, horaActual } from '../../utils/fechas';
+import { diaDe, diferenciaConPrevisto, duracionEntreFechas, formatearDia, formatearHora } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 import { Paginador } from '../Paginador';
 import type { EjecutarAccion } from '../tipos';
 
 interface Props {
   modulo: Modulo;
+  recursos: Recurso[]; // Para el formulario de "Modificar reserva"
   registros: Registro[];
   ejecutar: EjecutarAccion;
 }
@@ -28,61 +30,6 @@ function IconoLapiz() {
   );
 }
 
-/** Campos para cambiar la fecha, el horario y la cantidad de usuarios de una reserva, con Guardar y Cancelar. */
-export function EditorHorario({ registro, conUsuarios, onGuardar, onCancelar }: {
-  registro: Registro;
-  conUsuarios: boolean;
-  onGuardar: (horario: NuevoHorario) => void;
-  onCancelar: () => void;
-}) {
-  const [horario, setHorario] = useState<NuevoHorario>({
-    fecha: diaDe(registro.inicio),
-    horaInicio: horaActual(new Date(registro.inicio)),
-    horaFin: registro.fin ? horaActual(new Date(registro.fin)) : '',
-    usuarios: registro.usuarios ? String(registro.usuarios) : '',
-  });
-  const cambiar = (campo: keyof NuevoHorario) => (e: { target: { value: string } }) =>
-    setHorario({ ...horario, [campo]: e.target.value });
-  // No se puede mover a un día pasado, salvo dejarla en el día que ya tenía.
-  const minimo = [diaDe(), diaDe(registro.inicio)].sort()[0];
-  return (
-    <form className="editor-horario" onSubmit={(e) => { e.preventDefault(); onGuardar(horario); }}>
-      <label>
-        Fecha
-        <input type="date" required min={minimo} value={horario.fecha} onChange={cambiar('fecha')} aria-label="Fecha de la reserva" />
-      </label>
-      <label>
-        Inicio
-        <input type="time" required value={horario.horaInicio} onChange={cambiar('horaInicio')} aria-label="Hora de inicio" />
-      </label>
-      <label>
-        Fin
-        <input type="time" required value={horario.horaFin} onChange={cambiar('horaFin')} aria-label="Hora de fin" />
-      </label>
-      {conUsuarios && (
-        <label>
-          Usuarios
-          <input
-            type="number"
-            className="campo-usuarios"
-            min={1}
-            step={1}
-            required
-            value={horario.usuarios}
-            onChange={cambiar('usuarios')}
-            aria-label="Cantidad de usuarios"
-          />
-        </label>
-      )}
-      <span className="secundario">{duracionEntreHoras(horario.horaInicio, horario.horaFin) || 'La hora de fin debe ser posterior a la de inicio'}</span>
-      <div className="botones-editor">
-        <button type="submit" className="primario">Guardar</button>
-        <button type="button" onClick={onCancelar}>Cancelar</button>
-      </div>
-    </form>
-  );
-}
-
 /** El momento exacto de la confirmación y, si hay hora de fin, cuánto se adelantó o atrasó. */
 function momentoDeFin(registro: Registro) {
   const momento = new Date();
@@ -93,9 +40,9 @@ function momentoDeFin(registro: Registro) {
 }
 
 /** Préstamos o reservas en curso, con el botón para devolver o liberar. */
-export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
+export function RegistrosActivos({ modulo, recursos, registros, ejecutar }: Props) {
   const [finalizando, setFinalizando] = useState<string | null>(null);
-  const [editando, setEditando] = useState<string | null>(null);
+  const [editando, setEditando] = useState<Registro | null>(null); // Reserva abierta en "Modificar reserva"
   const [cancelando, setCancelando] = useState<string | null>(null); // Reserva (cubículos) que se va a cancelar y borrar
   const ahora = useAhora(15_000);
   const conFin = modulo.conHoraFin;
@@ -119,14 +66,6 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
   async function cancelar(registro: Registro) {
     const ok = await ejecutar(() => cancelarReserva(modulo, registro), `Reserva de ${modulo.recurso.toLowerCase()} ${nombreRecurso(registro.recursoId)} cancelada y borrada.`);
     if (ok) setCancelando(null);
-  }
-
-  async function guardarHorario(registro: Registro, horario: NuevoHorario) {
-    const ok = await ejecutar(
-      () => editarHorario(modulo, registro, horario),
-      `Reserva de ${modulo.recurso.toLowerCase()} ${nombreRecurso(registro.recursoId)} actualizada.`,
-    );
-    if (ok) setEditando(null);
   }
 
   /** Hora de inicio; si es otro día, también la fecha ("14/10/2026 · 2:00 p. m."). */
@@ -208,9 +147,7 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                     <td>{programado ? <EstadoBadge estado="programado" /> : duracionEntreFechas(r.inicio, ahora)}</td>
                   )}
                   <td className="acciones">
-                    {editando === r.id ? (
-                      <EditorHorario registro={r} conUsuarios={modulo.conUsuarios} onGuardar={(h) => guardarHorario(r, h)} onCancelar={() => setEditando(null)} />
-                    ) : cancelando === r.id ? (
+                    {cancelando === r.id ? (
                       <div className="devolucion">
                         <span className="secundario">¿Cancelar esta reserva? Se borrará del sistema y no contará en las estadísticas.</span>
                         <button className="peligro" autoFocus onClick={() => cancelar(r)}>Sí, cancelar</button>
@@ -239,9 +176,9 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
                         {conFin && (
                           <button
                             className="boton-icono"
-                            aria-label="Editar reserva"
-                            title="Editar fecha, horario y usuarios"
-                            onClick={() => { setFinalizando(null); setCancelando(null); setEditando(r.id); }}
+                            aria-label="Modificar reserva"
+                            title="Modificar reserva"
+                            onClick={() => { setFinalizando(null); setCancelando(null); setEditando(r); }}
                           >
                             <IconoLapiz />
                           </button>
@@ -267,6 +204,9 @@ export function RegistrosActivos({ modulo, registros, ejecutar }: Props) {
         </table>
       )}
       <Paginador paginacion={paginacion} />
+      {editando && (
+        <ModificarReserva modulo={modulo} recursos={recursos} registro={editando} ejecutar={ejecutar} onCerrar={() => setEditando(null)} />
+      )}
     </section>
   );
 }

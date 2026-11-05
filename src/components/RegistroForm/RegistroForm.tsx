@@ -7,7 +7,7 @@ import { LAPTOPS, nombreRecurso, type Modulo } from '../../config/modulos';
 import { repositorio } from '../../data';
 import { useAhora } from '../../hooks/useAhora';
 import { fechasDeSerie, nombresDeDias, recurrenciaInicial, type Recurrencia } from '../../services/recurrencia';
-import { asegurarRecursos, registrar, registrarConLaptop, registrarEnMasa, registrarSerie } from '../../services/registroService';
+import { asegurarRecursos, modificarRegistro, registrar, registrarConLaptop, registrarEnMasa, registrarSerie } from '../../services/registroService';
 import type { NuevoRegistro, Recurso, Registro } from '../../types';
 import { diaALas, diaDe, duracionEntreHoras, formatearDia, horaActual } from '../../utils/fechas';
 import { CampoRecurrencia } from '../Planner';
@@ -40,6 +40,26 @@ interface Props {
   error?: string; // Error que se muestra dentro del formulario
   onListo?: () => void; // Tras registrar
   onCerrar?: () => void; // Botón Cancelar (cierra la ventana)
+  anterior?: Registro; // Reserva que se modifica: el formulario se abre con todos sus datos
+}
+
+/** Todos los datos de una reserva guardada, para modificarla en el formulario. */
+function datosParaModificar(r: Registro): NuevoRegistro {
+  return {
+    nombre: r.nombre,
+    genero: r.genero ?? '',
+    instituto: r.instituto,
+    condicion: r.condicion,
+    carrera: r.carrera,
+    semestre: r.semestre ?? '',
+    usuarios: r.usuarios ? String(r.usuarios) : '',
+    recursoId: r.recursoId,
+    motivo: r.motivo,
+    fecha: diaDe(r.inicio),
+    horaInicio: horaActual(new Date(r.inicio)),
+    horaFin: r.fin ? horaActual(new Date(r.fin)) : '',
+    fechaRegistro: r.fechaRegistro ?? (r.creado ? diaDe(r.creado) : ''), // Las reservas viejas sin fecha de registro usan cuándo se crearon
+  };
 }
 
 /** Menú desplegable con una opción vacía inicial. */
@@ -166,9 +186,9 @@ function datosDe(r: Registro, modulo: Modulo): Partial<NuevoRegistro> {
 }
 
 /** Formulario de préstamo o reserva; el campo del recurso cambia según el módulo. */
-export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrencia, error, onListo, onCerrar }: Props) {
-  const [datos, setDatos] = useState<NuevoRegistro>(() => ({ ...vacio(), ...inicial }));
-  const [otroMotivo, setOtroMotivo] = useState(false); // "Otro" elegido en Motivo de uso
+export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrencia, error, onListo, onCerrar, anterior }: Props) {
+  const [datos, setDatos] = useState<NuevoRegistro>(() => (anterior ? datosParaModificar(anterior) : { ...vacio(), ...inicial }));
+  const [otroMotivo, setOtroMotivo] = useState(() => !!anterior && !modulo.motivos.includes(anterior.motivo)); // "Otro" elegido en Motivo de uso
   // Reserva recurrente: se repite en los días elegidos, de "Válida desde" a "Válida hasta".
   const [recurrencia, setRecurrencia] = useState<Recurrencia | null>(null);
   // Préstamo de laptop: null = casilla apagada; '' = encendida sin laptop elegida.
@@ -200,7 +220,7 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
   const programado = !!datos.fecha && !!datos.horaInicio
     && diaALas(datos.fecha, datos.horaInicio) > ahora;
   // Con hora de fin (cubículos) también se puede elegir uno en uso: solo se impide si el horario choca.
-  const elegible = (r: Recurso) => r.estado === 'disponible' || ((programado || modulo.conHoraFin) && r.estado === 'ocupado');
+  const elegible = (r: Recurso) => r.id === anterior?.recursoId || r.estado === 'disponible' || ((programado || modulo.conHoraFin) && r.estado === 'ocupado');
   // Una laptop (sin hora de fin) en uso solo se ofrece para más tarde.
   const laptopElegible = (r: Recurso) => r.estado === 'disponible' || (programado && r.estado === 'ocupado');
 
@@ -211,6 +231,11 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
   async function enviar(e: FormEvent) {
     e.preventDefault();
     const recurso = nombreRecurso(datos.recursoId);
+    if (anterior) {
+      const mensaje = `Reserva de ${datos.nombre} (${modulo.recurso.toLowerCase()} ${recurso}) actualizada.`;
+      if (await ejecutar(() => modificarRegistro(modulo, anterior, datos), mensaje)) onListo?.();
+      return;
+    }
     if (enMasa) {
       // Un préstamo por cada recurso elegido, con los mismos datos de la persona.
       const nombres = enMasa.map(nombreRecurso).join(', ');
@@ -243,7 +268,7 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
   return (
     <form className={onCerrar ? 'formulario formulario-ventana' : 'formulario'} onSubmit={enviar}>
       <div className="panel-encabezado">
-        <h2 id="titulo-registro">{modulo.nuevo}</h2>
+        <h2 id="titulo-registro">{anterior ? 'Modificar reserva' : modulo.nuevo}</h2>
         {onCerrar && <button type="button" className="boton-cerrar" onClick={onCerrar} aria-label="Cerrar">×</button>}
       </div>
       <div className="campos">
@@ -309,7 +334,7 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
         {!recurrencia && (
           <label htmlFor="registro-fecha">
             Fecha de la reserva
-            <input id="registro-fecha" type="date" required min={diaDe()} value={datos.fecha} onChange={(e) => cambiar('fecha')(e.target.value)} />
+            <input id="registro-fecha" type="date" required min={anterior ? undefined : diaDe()} value={datos.fecha} onChange={(e) => cambiar('fecha')(e.target.value)} />
           </label>
         )}
         <label htmlFor="registro-inicio">
@@ -335,14 +360,14 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
             </label>
           </>
         )}
-        {conRecurrencia && (
+        {conRecurrencia && !anterior && (
           <label className="ancho casilla">
             <input type="checkbox" checked={!!recurrencia} onChange={(e) => { setRecurrencia(e.target.checked ? recurrenciaInicial(datos.fecha) : null); if (e.target.checked) setLaptop(null); }} />
             Reserva recurrente
           </label>
         )}
         {/* El préstamo de laptop es para una sola fecha: no se ofrece con la reserva recurrente. */}
-        {modulo.conLaptop && !recurrencia && (
+        {modulo.conLaptop && !recurrencia && !anterior && (
           <label className="ancho casilla">
             <input type="checkbox" checked={laptop !== null} onChange={(e) => setLaptop(e.target.checked ? '' : null)} />
             Préstamo de laptop
@@ -359,7 +384,7 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
             </select>
           </label>
         )}
-        {modulo.conPrestamoEnMasa && (
+        {modulo.conPrestamoEnMasa && !anterior && (
           <label className="ancho casilla">
             <input type="checkbox" checked={enMasa !== null} onChange={(e) => setEnMasa(e.target.checked ? (datos.recursoId ? [datos.recursoId] : []) : null)} />
             Préstamo en masa
@@ -380,9 +405,9 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
       </div>
       {error && <div className="aviso aviso-error" role="alert">{error}</div>}
       <div className="botones-formulario">
-        <button type="submit" className="primario">{modulo.registrar}</button>
+        <button type="submit" className="primario">{anterior ? 'Guardar cambios' : modulo.registrar}</button>
         {/* Vacía los campos y vuelve a poner la hora de inicio en la hora actual. */}
-        <button type="button" onClick={limpiar}>Limpiar</button>
+        {!anterior && <button type="button" onClick={limpiar}>Limpiar</button>}
         {onCerrar && <button type="button" onClick={onCerrar}>Cancelar</button>}
       </div>
     </form>
