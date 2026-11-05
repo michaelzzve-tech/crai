@@ -1,5 +1,5 @@
 import { SALAS, type Sala } from '../config/salas';
-import type { MantenimientoSala, ReservaSala } from '../types';
+import { finDeSala, type MantenimientoSala, type ReservaSala } from '../types';
 import { enCurso } from './mantenimientoSalas';
 
 export interface EstadoSala {
@@ -17,7 +17,7 @@ export function estadoDeSalas(reservas: ReservaSala[], ahora: Date, mantenimient
     const susMantenimientos = mantenimientos.filter((m) => m.salaId === sala.id).sort((a, b) => a.inicio.localeCompare(b.inicio));
     return {
       sala,
-      actual: deLaSala.find((r) => new Date(r.inicio) <= ahora && new Date(r.fin) > ahora),
+      actual: deLaSala.find((r) => new Date(r.inicio) <= ahora && new Date(finDeSala(r)) > ahora),
       proxima: deLaSala.find((r) => new Date(r.inicio) > ahora),
       mantenimiento: susMantenimientos.find((m) => enCurso(m, ahora)),
       mantenimientoProgramado: susMantenimientos.find((m) => new Date(m.inicio) > ahora),

@@ -63,7 +63,11 @@ export interface ReservaSala {
   creada: string; // Cuándo se registró la reserva, ISO 8601
   fechaSolicitud?: string; // Día en que se pidió la sala, "AAAA-MM-DD"; solo informativo (vacío en reservas viejas)
   serieId?: string; // Igual en todas las fechas de una reserva recurrente; vacío si es única
+  finReal?: string; // Hora real de salida, si se fueron antes de la hora de fin (ISO 8601)
 }
+
+/** Hasta cuándo se usa de verdad una reserva de sala: la salida registrada o, si no hay, la hora de fin. */
+export const finDeSala = (r: ReservaSala): string => r.finReal ?? r.fin;
 
 /**
  * Mantenimiento de una sala especial: desde `inicio` la sala no se puede reservar.

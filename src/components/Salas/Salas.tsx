@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { HORA_APERTURA, HORA_CIERRE, SALAS, salaPorId, type Sala } from '../../config/salas';
 import { listarMantenimientosSalas, mantenimientoQueChoca, programarMantenimiento, terminarMantenimiento, textoMantenimiento, type NuevoMantenimiento } from '../../services/mantenimientoSalas';
 import { nombresDeDias, type Recurrencia } from '../../services/recurrencia';
-import { cancelarReservaSala, cancelarSerieDesde, guardarReservaSala, guardarSerieSala, listarReservasSalas, moverReservaSala } from '../../services/salaService';
-import type { MantenimientoSala, NuevaReservaSala, ReservaSala } from '../../types';
+import { cancelarReservaSala, cancelarSerieDesde, guardarReservaSala, guardarSerieSala, listarReservasSalas, moverReservaSala, registrarSalidaSala } from '../../services/salaService';
+import { finDeSala, type MantenimientoSala, type NuevaReservaSala, type ReservaSala } from '../../types';
 import { diaALas, diaDe, formatearDia, sumarDias, formatearDiaLargo, formatearFecha, formatearHora, horaActual } from '../../utils/fechas';
 import { useAhora } from '../../hooks/useAhora';
 import { useMostrarDiaElegido } from '../../hooks/useMostrarDiaElegido';
@@ -95,12 +95,13 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
   const evento = (r: ReservaSala): EventoPlanner => {
     const sala = salaPorId(r.salaId);
     const horario = `${formatearHora(r.inicio)} – ${formatearHora(r.fin)}`;
+    const fin = finDeSala(r); // Si se fueron antes, la ficha llega hasta la salida
     return {
       // Ya usada (terminó): más clara y fija, como en cubículos.
-      id: r.id, inicio: r.inicio, fin: r.fin, color: sala?.color ?? '#7b8794',
-      movible: new Date(r.fin) > ahora, atenuado: new Date(r.fin) <= ahora,
+      id: r.id, inicio: r.inicio, fin, color: sala?.color ?? '#7b8794',
+      movible: !r.finReal && new Date(fin) > ahora, atenuado: new Date(fin) <= ahora,
       titulo: sala?.nombre.replace('Sala ', '') ?? r.salaId,
-      lineas: [horario, `${r.actividad} · ${r.usuarios} pers.`, `Solicita: ${r.solicitante}`, `Prof.: ${r.profesor}`,
+      lineas: [horario, ...(r.finReal ? [`Salida: ${formatearHora(r.finReal)}`] : []), `${r.actividad} · ${r.usuarios} pers.`, `Solicita: ${r.solicitante}`, `Prof.: ${r.profesor}`,
         `${r.instituto} · ${r.carrera} · ${r.semestre}`],
       datos: [
         ['Sala', sala?.nombre ?? r.salaId],
@@ -114,10 +115,11 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
         ['Solicitado por', r.solicitante],
         ['Profesor(a)', r.profesor],
         ...(r.serieId ? [['Recurrente', 'Sí'] as [string, string]] : []),
+        ...(r.finReal ? [['Salida registrada', formatearHora(r.finReal)] as [string, string]] : []),
       ],
       ...(mantenimientoQueChoca(mantenimientos, r.salaId, new Date(r.inicio), new Date(r.fin))
         ? { etiqueta: 'EN MANTENIMIENTO', etiquetaAviso: true } // La sala está en mantenimiento a esa hora
-        : { etiqueta: new Date(r.inicio) <= ahora && new Date(r.fin) > ahora ? 'EN USO' : undefined }),
+        : { etiqueta: new Date(r.inicio) <= ahora && new Date(fin) > ahora ? 'EN USO' : undefined }),
     };
   };
   const reservaDe = (e: EventoPlanner) => reservas.find((r) => r.id === e.id);
@@ -156,6 +158,14 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
       setAviso('');
       setError(e instanceof Error ? e.message : String(e));
     }
+  }
+
+  /** Guarda la hora real de salida; si falla, el error se muestra dentro de la ventana. */
+  async function registrarSalida(r: ReservaSala, hora: string) {
+    const actualizada = await registrarSalidaSala(r, hora);
+    await recargar();
+    setDetalle(null);
+    setAviso(`${salaPorId(r.salaId)?.nombre}: salida registrada a las ${formatearHora(actualizada.finReal)}`);
   }
 
   async function cancelar(r: ReservaSala, siguientes = false) {
@@ -255,6 +265,7 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
           onCerrar={() => setDetalle(null)}
           onModificar={() => { setFormulario({ reserva: detalle }); setDetalle(null); }}
           onCancelar={(siguientes) => cancelar(detalle, siguientes)}
+          onSalida={(hora) => registrarSalida(detalle, hora)}
         />
       )}
     </main>
@@ -276,7 +287,7 @@ const CLAVES_SALA: Record<CampoOrden, (r: ReservaSala) => string> = {
 function ReservasActivas({ reservas, onAbrir }: { reservas: ReservaSala[]; onAbrir: (r: ReservaSala) => void }) {
   const ahora = useAhora(60_000);
   const [grupo, setGrupo] = useState<GrupoReservas>('actuales');
-  const activas = reservas.filter((r) => new Date(r.fin) > ahora);
+  const activas = reservas.filter((r) => new Date(finDeSala(r)) > ahora);
   // Pestañas: las reservas de ahora (en curso) y las programadas a futuro.
   const programadas = activas.filter((r) => new Date(r.inicio) > ahora);
   const actuales = activas.filter((r) => new Date(r.inicio) <= ahora);
@@ -344,14 +355,27 @@ function ReservasActivas({ reservas, onAbrir }: { reservas: ReservaSala[]; onAbr
 }
 
 /** Ventana con todos los datos de una reserva, para modificarla o cancelarla. */
-function DetalleReserva({ reserva: r, onCerrar, onModificar, onCancelar }: {
+function DetalleReserva({ reserva: r, onCerrar, onModificar, onCancelar, onSalida }: {
   reserva: ReservaSala;
   onCerrar: () => void;
   onModificar: () => void;
+  onSalida: (hora: string) => Promise<void>; // Registra la hora real de salida; lanza un error si no es válida
   onCancelar: (siguientes: boolean) => void; // siguientes: también las próximas fechas de la serie
 }) {
   const ventana = useRef<HTMLDialogElement>(null);
   const [confirmando, setConfirmando] = useState(false);
+  const ahora = useAhora(30_000);
+  // "Registrar salida": para una reserva que ya empezó y aún no tiene salida registrada.
+  const puedeSalir = !r.finReal && new Date(r.inicio) < ahora;
+  const [salida, setSalida] = useState<string | null>(null); // Hora elegida mientras se registra la salida
+  const [errorSalida, setErrorSalida] = useState('');
+  const guardarSalida = async () => {
+    try {
+      await onSalida(salida ?? '');
+    } catch (e) {
+      setErrorSalida(e instanceof Error ? e.message : String(e));
+    }
+  };
   useEffect(() => {
     const d = ventana.current;
     if (d && !d.open) d.showModal();
@@ -369,6 +393,7 @@ function DetalleReserva({ reserva: r, onCerrar, onModificar, onCancelar }: {
     ['Profesor(a)', r.profesor],
     ['Fecha de solicitud', r.fechaSolicitud ? formatearDia(r.fechaSolicitud) : 'No registrada'],
     ['Registrada', formatearFecha(r.creada)],
+    ...(r.finReal ? [['Salida registrada', `${formatearHora(r.finReal)} (antes de las ${formatearHora(r.fin)})`] as [string, string]] : []),
   ];
   if (r.serieId) filas.splice(2, 0, ['Reserva recurrente', 'Sí; al modificarla solo cambia esta fecha']);
   return (
@@ -385,8 +410,18 @@ function DetalleReserva({ reserva: r, onCerrar, onModificar, onCancelar }: {
           <div key={t}><dt>{t}</dt><dd>{v}</dd></div>
         ))}
       </dl>
+      {errorSalida && <div className="aviso aviso-error" role="alert">{errorSalida}</div>}
       <div className="botones-formulario">
-        {confirmando ? (
+        {salida !== null ? (
+          <>
+            <label htmlFor="sala-salida" className="hora-salida">
+              Hora de salida
+              <input id="sala-salida" type="time" autoFocus value={salida} onChange={(e) => setSalida(e.target.value)} />
+            </label>
+            <button className="primario" onClick={() => void guardarSalida()}>Guardar salida</button>
+            <button onClick={() => { setSalida(null); setErrorSalida(''); }}>Cancelar</button>
+          </>
+        ) : confirmando ? (
           <>
             <span>¿Cancelar {r.serieId ? 'la reserva' : 'esta reserva'}? No se puede deshacer.</span>
             <button className="peligro" onClick={() => onCancelar(false)}>{r.serieId ? 'Solo esta fecha' : 'Sí, cancelar'}</button>
@@ -395,7 +430,13 @@ function DetalleReserva({ reserva: r, onCerrar, onModificar, onCancelar }: {
           </>
         ) : (
           <>
-            <button className="primario" onClick={onModificar}>Modificar</button>
+            {puedeSalir && (
+              // Por defecto, la hora actual (o la de fin, si la reserva ya terminó).
+              <button className="primario" onClick={() => setSalida(horaActual(new Date(Math.min(ahora.getTime(), new Date(r.fin).getTime()))))}>
+                Registrar salida
+              </button>
+            )}
+            <button className={puedeSalir ? undefined : 'primario'} onClick={onModificar}>Modificar</button>
             <button className="peligro" onClick={() => setConfirmando(true)}>Cancelar reserva</button>
             <button onClick={onCerrar}>Cerrar</button>
           </>

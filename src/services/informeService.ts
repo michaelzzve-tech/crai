@@ -153,8 +153,8 @@ const usoCubiculo = (r: Registro) => {
   return fin ? minutosEntre(r.inicio, fin) : 0;
 };
 
-/** Salas: de la hora de inicio a la de fin. */
-const usoSala = (r: ReservaSala) => minutosEntre(r.inicio, r.fin);
+/** Salas: de la hora de inicio a la salida registrada o, si no hay, a la hora de fin. */
+const usoSala = (r: ReservaSala) => minutosEntre(r.inicio, r.finReal ?? r.fin);
 
 function enPeriodo<T extends { inicio: string }>(registros: T[], { desde, hasta }: Periodo): T[] {
   return registros.filter((r) => {

@@ -73,6 +73,7 @@ const columnas = (modulo: Modulo): Columna[] =>
 const columnasHojaSalas = (): Columna<ReservaSala>[] => [
   ...columnasSalas(),
   { titulo: 'Duración', ancho: 14, valor: (r) => duracionEntreFechas(r.inicio, r.fin) },
+  { titulo: 'Salida registrada', ancho: 14, valor: (r) => (r.finReal ? formatearHora(r.finReal) : '') },
   { titulo: 'Reserva recurrente', ancho: 12, valor: (r) => (r.serieId ? 'Sí' : 'No') },
   { titulo: 'Código interno', ancho: 26, valor: (r) => r.id },
 ];
