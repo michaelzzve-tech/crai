@@ -11,8 +11,7 @@ import type { NuevoRegistro, Recurso, Registro } from '../../types';
 import { diaALas, diaDe, diferenciaConPrevisto, formatearDia, formatearDiaLargo, formatearHora, horaActual } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 import { BarraSemana, FiltrosPlanner, PlannerSemanal, type EventoPlanner } from '../Planner';
-import { RegistroForm } from '../RegistroForm';
-import { EditorHorario } from '../RegistrosActivos';
+import { ModificarReserva, RegistroForm } from '../RegistroForm';
 import type { EjecutarAccion } from '../tipos';
 
 const dosDigitos = (n: number) => String(n).padStart(2, '0');
@@ -35,6 +34,7 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
   const [nuevo, setNuevo] = useState<Partial<NuevoRegistro> | null>(null); // Valores iniciales del formulario abierto
   const [errorVentana, setErrorVentana] = useState('');
   const [detalle, setDetalle] = useState<string | null>(null); // id del registro abierto
+  const [modificando, setModificando] = useState<Registro | null>(null); // Reserva abierta en "Modificar reserva"
   const contenedor = useMostrarDiaElegido(elegido);
   const ahora = useAhora(30_000); // Para marcar "EN USO" las reservas que ya empezaron
 
@@ -179,7 +179,11 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
           siguientes={abierto.serieId ? registros.filter((r) => r.serieId === abierto.serieId && r.inicio >= abierto.inicio && estaProgramado(r)).length : 1}
           ejecutar={ejecutar}
           onCerrar={() => setDetalle(null)}
+          onModificar={() => { setModificando(abierto); setDetalle(null); }}
         />
+      )}
+      {modificando && (
+        <ModificarReserva modulo={modulo} recursos={recursos} registro={modificando} ejecutar={ejecutar} onCerrar={() => setModificando(null)} />
       )}
     </section>
   );
@@ -199,15 +203,16 @@ function Ventana({ titulo, onCerrar, children }: { titulo: string; onCerrar: () 
   );
 }
 
-/** Datos de una reserva con sus acciones: modificar horario, registrar salida o cancelar (también las siguientes de la serie). */
-function DetalleRegistro({ modulo, registro: r, siguientes, ejecutar, onCerrar }: {
+/** Datos de una reserva con sus acciones: modificar todos sus datos, registrar salida o cancelar (también las siguientes de la serie). */
+function DetalleRegistro({ modulo, registro: r, siguientes, ejecutar, onCerrar, onModificar }: {
   modulo: Modulo;
   registro: Registro;
   siguientes: number; // Reservas de la serie que se cancelan con "Esta y las siguientes" (incluida esta)
   ejecutar: EjecutarAccion;
   onCerrar: () => void;
+  onModificar: () => void; // Abre el formulario con todos los datos de la reserva
 }) {
-  const [paso, setPaso] = useState<'ver' | 'editar' | 'confirmar' | 'cancelar'>('ver');
+  const [paso, setPaso] = useState<'ver' | 'confirmar' | 'cancelar'>('ver');
   const ahora = useAhora(15_000);
   const programado = estaProgramado(r, ahora);
   const nombre = `${modulo.recurso} ${nombreRecurso(r.recursoId)}`;
@@ -231,10 +236,7 @@ function DetalleRegistro({ modulo, registro: r, siguientes, ejecutar, onCerrar }
 
   // La ventana se cierra también si algo falla, para que se vea el aviso de error de la página.
   const hecho = () => onCerrar();
-  const guardarHorario = async (h: NuevoHorario) => {
-    await ejecutar(() => editarHorario(modulo, r, h), `Reserva del ${nombre.toLowerCase()} actualizada.`);
-    hecho();
-  };
+
   const cancelar = async (todas: boolean) => {
     await (todas
       ? ejecutar(() => cancelarSerieDesde(modulo, r), `Se cancelaron ${siguientes} reservas del ${nombre.toLowerCase()} (desde el ${formatearDia(diaDe(r.inicio))}).`)
@@ -263,34 +265,30 @@ function DetalleRegistro({ modulo, registro: r, siguientes, ejecutar, onCerrar }
           <div key={t}><dt>{t}</dt><dd>{v}</dd></div>
         ))}
       </dl>
-      {paso === 'editar' ? (
-        <EditorHorario registro={r} conUsuarios={modulo.conUsuarios} onGuardar={guardarHorario} onCancelar={() => setPaso('ver')} />
-      ) : (
-        <div className="botones-formulario">
-          {paso === 'cancelar' ? (
-            <>
-              <span>¿Cancelar {r.serieId ? 'la reserva' : 'esta reserva'}? Se borrará del sistema y no contará en las estadísticas.</span>
-              <button className="peligro" onClick={() => cancelar(false)}>{r.serieId && programado && siguientes > 1 ? 'Solo esta fecha' : 'Sí, cancelar'}</button>
-              {r.serieId && programado && siguientes > 1 && <button className="peligro" onClick={() => cancelar(true)}>Esta y las siguientes ({siguientes})</button>}
-              <button onClick={() => setPaso('ver')}>No</button>
-            </>
-          ) : paso === 'confirmar' ? (
-            <>
-              <span>Hora de salida: <strong>{formatearHora(ahora.toISOString())}</strong></span>
-              <button className="primario" autoFocus onClick={salida}>Confirmar</button>
-              <button onClick={() => setPaso('ver')}>Cancelar</button>
-            </>
-          ) : (
-            <>
-              {!r.finReal && <button onClick={() => setPaso('editar')}>Modificar horario</button>}
-              {/* Se puede cancelar en cualquier momento: la reserva se borra. */}
-              <button className="peligro" onClick={() => setPaso('cancelar')}>Cancelar reserva</button>
-              {!r.finReal && !programado && <button className="primario" onClick={() => setPaso('confirmar')}>{modulo.finalizar}</button>}
-              <button onClick={onCerrar}>Cerrar</button>
-            </>
-          )}
-        </div>
-      )}
+      <div className="botones-formulario">
+        {paso === 'cancelar' ? (
+          <>
+            <span>¿Cancelar {r.serieId ? 'la reserva' : 'esta reserva'}? Se borrará del sistema y no contará en las estadísticas.</span>
+            <button className="peligro" onClick={() => cancelar(false)}>{r.serieId && programado && siguientes > 1 ? 'Solo esta fecha' : 'Sí, cancelar'}</button>
+            {r.serieId && programado && siguientes > 1 && <button className="peligro" onClick={() => cancelar(true)}>Esta y las siguientes ({siguientes})</button>}
+            <button onClick={() => setPaso('ver')}>No</button>
+          </>
+        ) : paso === 'confirmar' ? (
+          <>
+            <span>Hora de salida: <strong>{formatearHora(ahora.toISOString())}</strong></span>
+            <button className="primario" autoFocus onClick={salida}>Confirmar</button>
+            <button onClick={() => setPaso('ver')}>Cancelar</button>
+          </>
+        ) : (
+          <>
+            <button onClick={onModificar}>Modificar reserva</button>
+            {/* Se puede cancelar en cualquier momento: la reserva se borra. */}
+            <button className="peligro" onClick={() => setPaso('cancelar')}>Cancelar reserva</button>
+            {!r.finReal && !programado && <button className="primario" onClick={() => setPaso('confirmar')}>{modulo.finalizar}</button>}
+            <button onClick={onCerrar}>Cerrar</button>
+          </>
+        )}
+      </div>
     </Ventana>
   );
 }

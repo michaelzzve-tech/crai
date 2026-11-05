@@ -106,12 +106,13 @@ function revisarChoque(modulo: Modulo, existentes: Registro[], recursoId: string
 }
 
 /** Revisa los datos y arma el registro, sin guardarlo. `programado`: es para más tarde y aún no ocupa el recurso. */
-function prepararRegistro(modulo: Modulo, datos: NuevoRegistro, recursos: Recurso[], existentes: Registro[], serieId?: string) {
+/** `anterior`: la reserva que se modifica (conserva su id, serie y salida; puede quedar en su fecha aunque ya pasó). */
+function prepararRegistro(modulo: Modulo, datos: NuevoRegistro, recursos: Recurso[], existentes: Registro[], serieId?: string, anterior?: Registro) {
   const recurso = recursos.find((r) => r.id === datos.recursoId);
   if (!recurso) throw new Error(`Seleccione un ${modulo.recurso.toLowerCase()}.`);
 
   const dia = datos.fecha || diaDe();
-  if (dia < diaDe()) throw new Error('La fecha de la reserva no puede ser anterior a hoy.');
+  if (dia < diaDe() && dia !== (anterior && diaDe(anterior.inicio))) throw new Error('La fecha de la reserva no puede ser anterior a hoy.');
   const inicio = diaALas(dia, datos.horaInicio);
   const fin = modulo.conHoraFin ? diaALas(dia, datos.horaFin) : undefined;
   if (fin && fin <= inicio) {
@@ -122,7 +123,8 @@ function prepararRegistro(modulo: Modulo, datos: NuevoRegistro, recursos: Recurs
   const programado = inicio > new Date();
   // Con hora de fin (cubículos), un recurso en uso solo impide la reserva si el horario choca
   // (lo revisa revisarChoque); un préstamo sin hora de fin necesita el recurso libre ahora.
-  if (recurso.estado === 'mantenimiento' || (!programado && !modulo.conHoraFin && recurso.estado !== 'disponible')) {
+  const mismoRecurso = anterior?.recursoId === recurso.id;
+  if ((recurso.estado === 'mantenimiento' && !mismoRecurso) || (!anterior && !programado && !modulo.conHoraFin && recurso.estado !== 'disponible')) {
     throw new Error(`${modulo.recurso} ${nombreRecurso(recurso.id)} no está disponible.`);
   }
   const usuarios = modulo.conUsuarios ? Number(datos.usuarios) : undefined;
@@ -136,10 +138,11 @@ function prepararRegistro(modulo: Modulo, datos: NuevoRegistro, recursos: Recurs
     if (datos.fechaRegistro > diaDe()) throw new Error('La fecha de registro no puede ser posterior a hoy.');
   }
 
-  revisarChoque(modulo, existentes, recurso.id, inicio, fin);
+  if (!anterior?.finReal) revisarChoque(modulo, existentes, recurso.id, inicio, fin, anterior?.id);
 
   const registro: Registro = {
-    id: generarId(),
+    ...anterior, // Al modificar: conserva serie y hora de salida
+    id: anterior?.id ?? generarId(),
     recursoId: recurso.id,
     nombre: datos.nombre.trim(),
     genero: datos.genero,
@@ -153,7 +156,7 @@ function prepararRegistro(modulo: Modulo, datos: NuevoRegistro, recursos: Recurs
     fin: fin?.toISOString(),
     ...(serieId ? { serieId } : {}),
     ...(modulo.conFechaRegistro ? { fechaRegistro: datos.fechaRegistro } : {}),
-    creado: new Date().toISOString(),
+    creado: anterior?.creado ?? new Date().toISOString(),
   };
   return { registro, recurso, programado };
 }
@@ -256,6 +259,23 @@ export interface NuevoHorario {
   horaInicio: string; // "HH:MM"
   horaFin: string; // "HH:MM"
   usuarios?: string; // Solo en módulos con "Cantidad de usuarios"
+}
+
+/**
+ * Modifica todos los datos de una reserva (persona, cubículo, fecha, horario, motivo…) con las
+ * mismas reglas que al crearla. El estado de los cubículos (el anterior y el nuevo) se actualiza.
+ */
+export async function modificarRegistro(modulo: Modulo, anterior: Registro, datos: NuevoRegistro): Promise<Registro> {
+  const [recursos, existentes] = await Promise.all([
+    repositorio.listarRecursos(modulo.tablaRecursos),
+    repositorio.listarRegistros(modulo.tablaRegistros),
+  ]);
+  const { registro } = prepararRegistro(modulo, datos, recursos, existentes, undefined, anterior);
+  await repositorio.guardarRegistro(modulo.tablaRegistros, registro);
+  await actualizarEstadoRecurso(modulo, anterior.recursoId);
+  if (registro.recursoId !== anterior.recursoId) await actualizarEstadoRecurso(modulo, registro.recursoId);
+  avisarCambio();
+  return registro;
 }
 
 /**

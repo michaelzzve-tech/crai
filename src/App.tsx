@@ -124,7 +124,7 @@ function VistaModulo({ modulo, pestana }: { modulo: Modulo; pestana: Pestana }) 
           {modulo.conCalendario
             ? <CalendarioReservas modulo={modulo} recursos={recursos} registros={registros} ejecutar={ejecutar} />
             : <RegistroForm modulo={modulo} recursos={recursos} ejecutar={ejecutar} />}
-          <RegistrosActivos modulo={modulo} registros={registros} ejecutar={ejecutar} />
+          <RegistrosActivos modulo={modulo} recursos={recursos} registros={registros} ejecutar={ejecutar} />
         </>
       )}
       {pestana === 'recursos' && <RecursoList modulo={modulo} recursos={recursos} registros={registros} ejecutar={ejecutar} />}
