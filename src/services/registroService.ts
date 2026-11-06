@@ -124,7 +124,7 @@ function prepararRegistro(modulo: Modulo, datos: NuevoRegistro, recursos: Recurs
   // Con hora de fin (cubículos), un recurso en uso solo impide la reserva si el horario choca
   // (lo revisa revisarChoque); un préstamo sin hora de fin necesita el recurso libre ahora.
   const mismoRecurso = anterior?.recursoId === recurso.id;
-  if ((recurso.estado === 'mantenimiento' && !mismoRecurso) || (!anterior && !programado && !modulo.conHoraFin && recurso.estado !== 'disponible')) {
+  if ((recurso.estado === 'mantenimiento' && !mismoRecurso) || (!mismoRecurso && !programado && !modulo.conHoraFin && recurso.estado !== 'disponible')) {
     throw new Error(`${modulo.recurso} ${nombreRecurso(recurso.id)} no está disponible.`);
   }
   const usuarios = modulo.conUsuarios ? Number(datos.usuarios) : undefined;

@@ -232,7 +232,7 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
     e.preventDefault();
     const recurso = nombreRecurso(datos.recursoId);
     if (anterior) {
-      const mensaje = `Reserva de ${datos.nombre} (${modulo.recurso.toLowerCase()} ${recurso}) actualizada.`;
+      const mensaje = `${modulo.conCalendario ? 'Reserva' : 'Préstamo'} de ${datos.nombre} (${modulo.recurso.toLowerCase()} ${recurso}) ${modulo.conCalendario ? 'actualizada' : 'actualizado'}.`;
       if (await ejecutar(() => modificarRegistro(modulo, anterior, datos), mensaje)) onListo?.();
       return;
     }
@@ -268,7 +268,7 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
   return (
     <form className={onCerrar ? 'formulario formulario-ventana' : 'formulario'} onSubmit={enviar}>
       <div className="panel-encabezado">
-        <h2 id="titulo-registro">{anterior ? 'Modificar reserva' : modulo.nuevo}</h2>
+        <h2 id="titulo-registro">{anterior ? `Modificar ${modulo.conCalendario ? 'reserva' : 'préstamo'}` : modulo.nuevo}</h2>
         {onCerrar && <button type="button" className="boton-cerrar" onClick={onCerrar} aria-label="Cerrar">×</button>}
       </div>
       <div className="campos">
