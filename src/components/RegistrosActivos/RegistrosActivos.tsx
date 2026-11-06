@@ -16,7 +16,7 @@ import type { EjecutarAccion } from '../tipos';
 
 interface Props {
   modulo: Modulo;
-  recursos: Recurso[]; // Para el formulario de "Modificar reserva"
+  recursos: Recurso[]; // Para el formulario de "Modificar reserva" o "Modificar préstamo"
   registros: Registro[];
   ejecutar: EjecutarAccion;
 }
@@ -46,6 +46,7 @@ export function RegistrosActivos({ modulo, recursos, registros, ejecutar }: Prop
   const [cancelando, setCancelando] = useState<string | null>(null); // Reserva (cubículos) que se va a cancelar y borrar
   const ahora = useAhora(15_000);
   const conFin = modulo.conHoraFin;
+  const textoModificar = modulo.conCalendario ? 'Modificar reserva' : 'Modificar préstamo';
 
   const [grupo, setGrupo] = useState<GrupoReservas>('actuales');
   const activos = registros.filter((r) => !r.finReal);
@@ -172,17 +173,15 @@ export function RegistrosActivos({ modulo, recursos, registros, ejecutar }: Prop
                       </div>
                     ) : (
                       <>
-                        {/* Solo las reservas con hora de fin (cubículos) cambian de fecha y horario. */}
-                        {conFin && (
-                          <button
-                            className="boton-icono"
-                            aria-label="Modificar reserva"
-                            title="Modificar reserva"
-                            onClick={() => { setFinalizando(null); setCancelando(null); setEditando(r); }}
-                          >
-                            <IconoLapiz />
-                          </button>
-                        )}
+                        {/* Abre el formulario con todos los datos de la reserva o del préstamo. */}
+                        <button
+                          className="boton-icono"
+                          aria-label={textoModificar}
+                          title={textoModificar}
+                          onClick={() => { setFinalizando(null); setCancelando(null); setEditando(r); }}
+                        >
+                          <IconoLapiz />
+                        </button>
                         {/* Cubículos: cancelar en cualquier momento (se borra); las laptops solo se devuelven. */}
                         {modulo.conCalendario && (
                           <button className="peligro" onClick={() => { setEditando(null); setFinalizando(null); setCancelando(r.id); }}>
