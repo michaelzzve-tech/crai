@@ -1,9 +1,9 @@
 import { CUBICULOS, LAPTOPS, nombreRecurso } from '../config/modulos';
-import { CARRERA_POR_INSTITUTO, CONDICIONES_LAPTOPS } from '../config/opciones';
+import { ANIOS, CARRERA_POR_INSTITUTO, CARRERAS, CARRERAS_CFJO, CONDICIONES_LAPTOPS } from '../config/opciones';
 import { SALAS } from '../config/salas';
 import { repositorio } from '../data';
 import type { Registro, ReservaSala } from '../types';
-import { diaDe, formatearDia } from '../utils/fechas';
+import { diaDe, formatearDia, minutosDelDia } from '../utils/fechas';
 
 // Informe con el formato del reporte mensual del CRAI: beneficiarios por servicio
 // (con el detalle por institución y condición) y cuadros comparativos mes a mes.
@@ -82,8 +82,28 @@ export interface HorasLaptops {
   porLaptop: { laptop: string; prestamos: number; minutos: number[]; total: number }[];
 }
 
+/**
+ * Qué registros entran en el informe, además de las fechas. Una lista vacía o un
+ * campo en blanco no filtra nada.
+ */
+export interface FiltroInforme {
+  horaDesde: string; // "HH:MM": hora de inicio desde (incluida)
+  horaHasta: string; // "HH:MM": hora de inicio hasta (incluida)
+  instituciones: string[]; // De OPCIONES_FILTRO.instituciones
+  carreras: string[]; // De OPCIONES_FILTRO.carreras
+  anios: string[]; // "1"…"6" (años de ITJO)
+  horasMin: string; // Duración mínima en horas ("1.5")
+  horasMax: string; // Duración máxima en horas
+}
+
+export const SIN_FILTRO: FiltroInforme = {
+  horaDesde: '', horaHasta: '', instituciones: [], carreras: [], anios: [], horasMin: '', horasMax: '',
+};
+
 export interface Informe {
   periodo: Periodo;
+  filtros: { etiqueta: string; valor: string }[]; // Filtros activos, para la portada
+
   titulo: string; // "SEPTIEMBRE, 2026" o "01/09/2026 al 15/09/2026"
   servicios: Servicio[];
   horasLaptops: HorasLaptops;
@@ -118,6 +138,13 @@ const INSTITUCIONES = ['ITJO', 'IUJO', 'CFJO'];
 const GENEROS = ['Femenino', 'Masculino', 'No aplica']; // Orden de los cuadros del reporte
 const OTROS = 'OTROS';
 const OTROS_DTI = 'OTROS (DTI)';
+
+/** Opciones que ofrece cada filtro, en el orden del reporte. */
+export const OPCIONES_FILTRO = {
+  instituciones: [...INSTITUCIONES, OTROS, OTROS_DTI],
+  carreras: [...CARRERAS, ...CARRERAS_CFJO],
+  anios: ANIOS,
+};
 
 /** Del primer día del mes actual a hoy. */
 export function periodoDelMes(hoy = new Date()): Periodo {
@@ -429,6 +456,57 @@ function horasLaptopsPorMes(prestamos: Registro[], hasta: string): HorasLaptops 
   return { anio, meses, porLaptop };
 }
 
+/** "13:30" → "1:30 p. m." */
+function hora12(hora: string): string {
+  const [h, m] = hora.split(':').map(Number);
+  return `${h % 12 || 12}:${dosCifras(m)} ${h < 12 ? 'a. m.' : 'p. m.'}`;
+}
+
+/** 1.5 → "1,5 horas"; 1 → "1 hora". */
+const textoHoras = (horas: string) => `${horas.replace('.', ',')} ${Number(horas) === 1 ? 'hora' : 'horas'}`;
+
+/** Los filtros activos en palabras, para la portada del informe y del PDF. */
+export function describirFiltro(f: FiltroInforme): { etiqueta: string; valor: string }[] {
+  const lineas: { etiqueta: string; valor: string }[] = [];
+  if (f.horaDesde || f.horaHasta) {
+    lineas.push({ etiqueta: 'Horario', valor: f.horaDesde && f.horaHasta
+      ? `de ${hora12(f.horaDesde)} a ${hora12(f.horaHasta)}`
+      : f.horaDesde ? `desde las ${hora12(f.horaDesde)}` : `hasta las ${hora12(f.horaHasta)}` });
+  }
+  if (f.instituciones.length) lineas.push({ etiqueta: 'Instituciones', valor: f.instituciones.join(', ') });
+  if (f.carreras.length) lineas.push({ etiqueta: 'Carreras', valor: f.carreras.join(', ') });
+  if (f.anios.length) lineas.push({ etiqueta: 'Años (ITJO)', valor: f.anios.map((a) => `Año ${a}`).join(', ') });
+  if (f.horasMin || f.horasMax) {
+    lineas.push({ etiqueta: 'Duración', valor: f.horasMin && f.horasMax
+      ? `de ${textoHoras(f.horasMin)} a ${textoHoras(f.horasMax)}`
+      : f.horasMin ? `desde ${textoHoras(f.horasMin)}` : `hasta ${textoHoras(f.horasMax)}` });
+  }
+  return lineas;
+}
+
+/** Deja solo los registros que cumplen el filtro (la institución y la duración se calculan según el servicio). */
+function filtrar<T extends { inicio: string; instituto: string; carrera: string }>(
+  registros: T[],
+  f: FiltroInforme,
+  institucion: (r: T) => string,
+  minutos: (r: T) => number,
+): T[] {
+  const aMinutos = (hora: string) => { const [h, m] = hora.split(':').map(Number); return h * 60 + m; };
+  const desde = f.horaDesde ? aMinutos(f.horaDesde) : 0;
+  const hasta = f.horaHasta ? aMinutos(f.horaHasta) : 24 * 60;
+  const cursantes = new Set([...f.carreras, ...f.anios.map((a) => `Año ${a}`)]);
+  const min = f.horasMin ? Number(f.horasMin) * 60 : 0;
+  const max = f.horasMax ? Number(f.horasMax) * 60 : Infinity;
+  return registros.filter((r) => {
+    const hora = minutosDelDia(r.inicio);
+    if (hora < desde || hora > hasta) return false;
+    if (f.instituciones.length && !f.instituciones.includes(institucion(r))) return false;
+    if (cursantes.size && !cursantes.has(cursante(r))) return false;
+    const uso = minutos(r);
+    return uso >= min && uso <= max;
+  });
+}
+
 /** "SEPTIEMBRE, 2026" si el período es un mes completo; si no, "01/09/2026 al 15/09/2026". */
 function tituloPeriodo(periodo: Periodo): string {
   const mes = periodo.desde.slice(0, 7);
@@ -439,12 +517,17 @@ function tituloPeriodo(periodo: Periodo): string {
 }
 
 /** Arma el informe del período con el formato del reporte mensual. */
-export async function generarInforme(periodo: Periodo): Promise<Informe> {
-  const [prestamos, reservas, salas] = await Promise.all([
+export async function generarInforme(periodo: Periodo, filtro: FiltroInforme = SIN_FILTRO): Promise<Informe> {
+  const [todosPrestamos, todasReservas, todasSalas] = await Promise.all([
     repositorio.listarRegistros(LAPTOPS.tablaRegistros),
     repositorio.listarRegistros(CUBICULOS.tablaRegistros),
     repositorio.listarReservasSalas(),
   ]);
+  // El filtro se aplica a todo, también a los cuadros comparativos y a las horas del año.
+  const institucionSala = (r: ReservaSala) => (INSTITUCIONES.includes(r.instituto) ? r.instituto : OTROS);
+  const prestamos = filtrar(todosPrestamos, filtro, institucionDe, usoLaptop);
+  const reservas = filtrar(todasReservas, filtro, institucionDe, usoCubiculo);
+  const salas = filtrar(todasSalas, filtro, institucionSala, usoSala);
   const porInicio = (a: { inicio: string }, b: { inicio: string }) => a.inicio.localeCompare(b.inicio);
   const p = enPeriodo(prestamos, periodo).sort(porInicio);
   const r = enPeriodo(reservas, periodo).sort(porInicio);
@@ -452,6 +535,7 @@ export async function generarInforme(periodo: Periodo): Promise<Informe> {
   return {
     periodo,
     titulo: tituloPeriodo(periodo),
+    filtros: describirFiltro(filtro),
     servicios: [
       servicio('cubiculos', 'Cubículos de Estudio', 'reservas', r, usoCubiculo, true),
       servicio('laptops', 'Préstamos de Laptops', 'solicitudes', p, usoLaptop, false),
