@@ -148,7 +148,9 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
           cantidadDias={cantidad}
           elegido={elegido}
           onElegir={elegir}
-          reservas={aLaVista.filter((r) => !ocultos.includes(r.recursoId)).map(evento)}
+          // Solo las reservas en uso o programadas: al registrar la salida, la reserva sale del planner
+          // (sigue en Actividades, en el historial y en los informes).
+          reservas={aLaVista.filter((r) => !r.finReal && !ocultos.includes(r.recursoId)).map(evento)}
           onNueva={(dia, hora) => abrirNuevo(dia, hora)}
           onAbrir={(e) => setDetalle(e.id)}
           onMover={(e, dia, hora) => { const r = registroDe(e); if (r) void mover(r, dia, hora); }}
