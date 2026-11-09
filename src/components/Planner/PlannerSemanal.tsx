@@ -3,7 +3,11 @@ import { HORA_APERTURA, HORA_CIERRE } from '../../config/salas';
 import { diaDe, formatearDiaCorto, minutosDelDia, sumarDias } from '../../utils/fechas';
 
 /** Alto en píxeles de una hora en el calendario. */
-const ALTO_HORA = 56;
+const ALTO_HORA = 64;
+/** Ancho mínimo de cada ficha cuando hay varias a la misma hora: si no caben, el calendario se desplaza de lado. */
+const ANCHO_CARRIL = 96;
+/** Ancho mínimo de la columna de un día. */
+const ANCHO_DIA = 110;
 
 /**
  * Horas que muestra el calendario: de la apertura al cierre, o más si alguna reserva
@@ -36,12 +40,19 @@ export interface EventoPlanner {
   fin: string; // ISO 8601
   color: string;
   titulo: string; // Primera línea: "Javier", "Cubículo 3"
+  tituloCorto?: string; // En fichas angostas, en vez del título: "C3"
   lineas: string[]; // Líneas siguientes, que se ocultan si no caben
   datos: [string, string][]; // Todos los datos registrados, para la vista previa al pasar el mouse
   movible: boolean; // false: no se puede arrastrar (por ejemplo, una reserva ya terminada)
   atenuado?: boolean; // Se muestra más claro (terminada)
   etiqueta?: string; // Etiqueta de alto contraste en la ficha y la vista previa, como "EN USO"
   etiquetaAviso?: boolean; // La etiqueta va en negro sobre amarillo (por ejemplo, "EN MANTENIMIENTO")
+}
+
+/** El título de la ficha; si hay un título corto, se usa cuando la ficha es angosta (ver estilos). */
+function TituloFicha({ reserva }: { reserva: EventoPlanner }) {
+  if (!reserva.tituloCorto) return <strong>{reserva.titulo}</strong>;
+  return <strong><b className="titulo-largo">{reserva.titulo}</b><b className="titulo-corto">{reserva.tituloCorto}</b></strong>;
 }
 
 interface Ubicada {
@@ -123,6 +134,13 @@ export function PlannerSemanal({ lunes, cantidadDias = 7, elegido, onElegir, res
   const [arrastre, setArrastre] = useState<Arrastre | null>(null);
   const [previa, setPrevia] = useState<string | null>(null); // Reserva bajo el mouse: se muestran todos sus datos
   const grilla = useRef<HTMLDivElement>(null);
+  // Las reservas de cada día, ya repartidas en carriles. Cada día es tan ancho como para que sus
+  // fichas no se aprieten: si no cabe en la pantalla, el calendario se desplaza de lado.
+  const ubicadas = dias.map((dia) => ubicar(reservas.filter((r) => diaDe(r.inicio) === dia), INICIO, FIN));
+  const anchos = ubicadas.map((lista) => {
+    const carriles = Math.max(1, ...lista.map((u) => u.carriles));
+    return `minmax(${Math.max(ANCHO_DIA, carriles * ANCHO_CARRIL)}px, 1fr)`;
+  });
 
   // Arrastrar una reserva (con el mouse o el dedo) la mueve a otro día u hora; la duración se mantiene.
   const empezar = (u: Ubicada) => (e: PointerEvent<HTMLButtonElement>) => {
@@ -172,7 +190,7 @@ export function PlannerSemanal({ lunes, cantidadDias = 7, elegido, onElegir, res
   };
 
   return (
-    <div className={`planner${arrastre?.movido ? ' arrastrando' : ''}`} ref={grilla} style={{ '--alto-hora': `${ALTO_HORA}px`, '--dias': cantidadDias } as CSSProperties}>
+    <div className={`planner${arrastre?.movido ? ' arrastrando' : ''}`} ref={grilla} style={{ '--alto-hora': `${ALTO_HORA}px`, '--dias': cantidadDias, gridTemplateColumns: `64px ${anchos.join(' ')}` } as CSSProperties}>
       <div className="planner-esquina" />
       {dias.map((dia) => (
         <button
@@ -188,7 +206,7 @@ export function PlannerSemanal({ lunes, cantidadDias = 7, elegido, onElegir, res
       <div className="planner-horas">
         {HORAS.map((h) => <span key={h} style={{ top: (h - rango.desde) * ALTO_HORA }}>{etiquetaHora(h)}</span>)}
       </div>
-      {dias.map((dia) => (
+      {dias.map((dia, columna) => (
         <div
           key={dia}
           className={`planner-columna${dia === hoy ? ' hoy' : ''}${dia < hoy ? ' pasado' : ''}`}
@@ -196,7 +214,7 @@ export function PlannerSemanal({ lunes, cantidadDias = 7, elegido, onElegir, res
           onClick={dia < hoy ? undefined : clicEnDia(dia)}
           title={dia < hoy ? undefined : 'Clic en un espacio libre para reservar'}
         >
-          {ubicar(reservas.filter((r) => diaDe(r.inicio) === dia), INICIO, FIN).map((u) => {
+          {ubicadas[columna].map((u) => {
             const alto = ((u.hasta - u.desde) / 60) * ALTO_HORA;
             return (
               <button
@@ -222,23 +240,29 @@ export function PlannerSemanal({ lunes, cantidadDias = 7, elegido, onElegir, res
                 aria-label={u.reserva.datos.map(([t, v]) => `${t}: ${v}`).join('. ')}
               >
                 {u.reserva.etiqueta
-                  ? <div className="fila-titulo"><em className={`etiqueta-ficha${u.reserva.etiquetaAviso ? ' aviso' : ''}`}>{u.reserva.etiqueta}</em><strong>{u.reserva.titulo}</strong></div>
-                  : <strong>{u.reserva.titulo}</strong>}
+                  ? <div className="fila-titulo"><em className={`etiqueta-ficha${u.reserva.etiquetaAviso ? ' aviso' : ''}`}>{u.reserva.etiqueta}</em><TituloFicha reserva={u.reserva} /></div>
+                  : <TituloFicha reserva={u.reserva} />}
                 {/* Las líneas que caben (15 px cada una, debajo del título); el resto se ve en la vista previa. */}
                 {u.reserva.lineas.slice(0, Math.max(1, Math.floor((alto - 8) / 15) - 1)).map((l, i) => <span key={i}>{l}</span>)}
               </button>
             );
           })}
           {(() => {
-            // Vista previa: a la derecha de la ficha (a la izquierda en las últimas columnas), hacia arriba si es tarde.
-            const u = !arrastre?.movido && ubicar(reservas.filter((r) => diaDe(r.inicio) === dia), INICIO, FIN).find((x) => x.reserva.id === previa);
+            // Vista previa: junto a la ficha, sin taparla. A su derecha si la ficha está en la mitad
+            // izquierda del calendario; si no, a su izquierda. Hacia arriba si es tarde.
+            const u = !arrastre?.movido && ubicadas[columna].find((x) => x.reserva.id === previa);
             if (!u) return null;
-            const columna = dias.indexOf(dia);
             const abajo = u.desde > (FIN - INICIO) / 2;
+            const dentro = dias.length === 1 && u.carriles === 1; // Un día y una sola ficha: cabe dentro de la columna
+            const centro = (columna + (u.carril + 0.5) / u.carriles) / dias.length;
+            const lado: CSSProperties = dentro ? {}
+              : centro < 0.5 ? { left: `calc(${((u.carril + 1) / u.carriles) * 100}% + 4px)` }
+              : { left: 'auto', right: `calc(${(1 - u.carril / u.carriles) * 100}% + 4px)` };
             return (
               <div
-                className={`vista-previa${dias.length === 1 ? ' dentro' : columna >= dias.length - (dias.length > 3 ? 2 : 1) ? ' izquierda' : ''}`}
+                className={`vista-previa${dentro ? ' dentro' : ''}`}
                 style={{
+                  ...lado,
                   top: abajo ? undefined : (u.desde / 60) * ALTO_HORA,
                   bottom: abajo ? HORAS.length * ALTO_HORA - (u.hasta / 60) * ALTO_HORA : undefined,
                   '--color-sala': u.reserva.color,

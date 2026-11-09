@@ -269,6 +269,8 @@ button.boton-peligro { background: var(--alerta); border-color: var(--alerta); c
 .reserva-sala > strong, .reserva-sala .fila-titulo strong { font-size: .82rem; } /* El título de la ficha (cubículo o sala), destacado */
 .reserva-sala.compacta { flex-direction: row; gap: 6px; padding-block: 2px; }
 .reserva-sala.compacta span:not(:first-of-type) { display: none; }
+.reserva-sala.compacta > strong, .reserva-sala.compacta .fila-titulo { flex-shrink: 0; } /* El título no se corta; el nombre sí, con "…" */
+.reserva-sala.compacta > span { min-width: 0; }
 
 /* Ventanas (formulario y detalle de una reserva de sala) */
 .ventana { border: none; border-radius: 12px; padding: 20px; width: min(720px, calc(100vw - 32px)); max-height: calc(100vh - 32px); color: var(--texto); }
@@ -304,13 +306,17 @@ label.casilla input { width: 18px; height: 18px; margin: 0; }
 .dias-recurrencia button { border-radius: 999px; min-width: 52px; padding: 6px 12px; }
 .dias-recurrencia button.activo { background: var(--primario); border-color: var(--primario); color: #fff; }
 /* Calendario de reservas de cubículos (el mismo de salas especiales) */
-/* Fichas angostas (varias reservas a la misma hora): el texto pasa a la línea siguiente en vez de
-   cortarse; solo en las muy angostas se deja nada más el título (el resto, en la vista previa). */
-@container (max-width: 150px) {
-  .reserva-sala span, .reserva-sala strong { white-space: normal; overflow-wrap: break-word; flex-shrink: 0; }
+/* Fichas angostas (varias reservas a la misma hora): cada día se ensancha para que no se aprieten
+   (ver ANCHO_CARRIL); si aun así la ficha es angosta, el título pasa a su forma corta ("C3") y cada
+   línea se corta con "…" en vez de partir las palabras. Todo se ve completo en la vista previa. */
+.reserva-sala b { font-weight: inherit; }
+.reserva-sala .titulo-corto { display: none; }
+@container (max-width: 84px) {
+  .reserva-sala .titulo-largo { display: none; }
+  .reserva-sala .titulo-corto { display: inline; }
 }
-@container (max-width: 64px) {
-  .reserva-sala span { display: none; }
+@container (max-width: 48px) {
+  .reserva-sala > span { display: none; }
 }
 .reserva-sala.atenuada { opacity: .55; background-image: repeating-linear-gradient(135deg, transparent 0 6px, rgba(255, 255, 255, .5) 6px 8px); }
 .reserva-sala.fija { cursor: pointer; }
@@ -328,18 +334,18 @@ label.casilla input { width: 18px; height: 18px; margin: 0; }
 .formulario-ventana .aviso { margin: 4px 0 12px; }
 /* Vista previa de una reserva del calendario: todos sus datos al pasar el mouse */
 .vista-previa {
-  position: absolute; left: calc(100% - 6px); z-index: 5; width: 260px; pointer-events: none;
+  position: absolute; left: calc(100% - 6px); z-index: 5; width: 300px; pointer-events: none;
   background: var(--superficie); border: 1px solid var(--borde); border-top: 4px solid var(--color-sala); border-radius: 8px;
   box-shadow: 0 8px 24px rgba(15, 23, 42, .18); padding: 8px 10px; font-size: .78rem; line-height: 1.3;
 }
-.vista-previa.izquierda { left: auto; right: calc(100% - 6px); }
 .vista-previa.dentro { left: auto; right: 8px; } /* Un solo día: la columna es ancha y la vista previa cabe dentro */
 .vistas-planner { display: inline-flex; border: 1px solid var(--borde); border-radius: 8px; overflow: hidden; }
 .vistas-planner button { border: none; border-radius: 0; padding: 6px 12px; background: var(--superficie); color: inherit; font: inherit; }
 .vistas-planner button + button { border-left: 1px solid var(--borde); }
 .vistas-planner button[aria-pressed="true"] { background: var(--primario); color: #fff; }
 .vista-previa dl { margin: 6px 0 0; display: grid; gap: 2px; }
-.vista-previa dl div { display: grid; grid-template-columns: 96px 1fr; gap: 6px; }
+.vista-previa dl { gap: 3px; }
+.vista-previa dl div { display: grid; grid-template-columns: 118px 1fr; gap: 8px; }
 .vista-previa dt { color: var(--texto-suave); }
 .vista-previa dd { margin: 0; overflow-wrap: anywhere; }
 .vista-previa p { margin: 6px 0 0; color: var(--texto-suave); font-size: .72rem; }
