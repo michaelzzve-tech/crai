@@ -4,6 +4,7 @@ import { repositorio } from '../data';
 import { activarProgramados, asegurarRecursos } from '../services/registroService';
 import type { Recurso, Registro } from '../types';
 import { masRecientesPrimero } from '../utils/orden';
+import { useCambiosEnVivo } from './useCambiosEnVivo';
 
 /** Carga los recursos y registros del módulo, y expone `recargar` para refrescar tras cada acción. */
 export function useBiblioteca(modulo: Modulo) {
@@ -35,6 +36,9 @@ export function useBiblioteca(modulo: Modulo) {
     const id = setInterval(() => { recargar().catch(() => {}); }, 60_000);
     return () => clearInterval(id);
   }, [modulo, recargar]);
+
+  // Lo que se reserva o cambia en otra cuenta aparece aquí al momento.
+  useCambiosEnVivo([modulo.tablaRegistros, modulo.tablaRecursos], recargar);
 
   return { recursos, registros, recargar, error };
 }

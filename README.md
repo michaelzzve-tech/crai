@@ -56,6 +56,9 @@ Sin Supabase, cada persona que la abre tiene sus propios datos, guardados en su 
    `alter table reservas add column if not exists serie_id text;`
    Y para la fecha de registro de los cubículos (tampoco borra datos):
    `alter table reservas add column if not exists fecha_registro date;`
+   Para que los planners se actualicen al momento en todas las cuentas conectadas, ejecute
+   [`supabase/tiempo-real.sql`](supabase/tiempo-real.sql) (activa Supabase Realtime en las tablas; no borra datos).
+   Sin ese paso la app funciona igual, pero los cambios de otra cuenta solo se ven al volver a la pestaña o al recargar la página.
 3. En **Authentication → Users → Add user → Create new user**, cree una cuenta (correo y
    contraseña) para cada bibliotecario. Marque "Auto Confirm User".
 4. En **Authentication → Sign In / Providers**, desactive **Allow new users to sign up**

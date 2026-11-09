@@ -26,4 +26,10 @@ export interface Repositorio {
   listarMantenimientosSalas(): Promise<MantenimientoSala[]>;
   guardarMantenimientoSala(mantenimiento: MantenimientoSala): Promise<void>;
   borrarMantenimientoSala(id: string): Promise<void>;
+
+  /**
+   * Avisa con `alCambiar` cada vez que otra cuenta (u otra pestaña) cambia alguna de
+   * estas tablas, para volver a cargar los datos. Devuelve la función para dejar de escuchar.
+   */
+  escucharCambios(tablas: string[], alCambiar: () => void): () => void;
 }

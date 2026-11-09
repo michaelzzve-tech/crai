@@ -75,4 +75,12 @@ export class LocalStorageRepositorio implements Repositorio {
   async borrarMantenimientoSala(id: string) {
     escribir(TABLA_MANTENIMIENTO_SALAS, leer<MantenimientoSala>(TABLA_MANTENIMIENTO_SALAS).filter((m) => m.id !== id));
   }
+
+  escucharCambios(tablas: string[], alCambiar: () => void) {
+    // Sin base de datos solo hay un navegador: se avisa cuando otra pestaña guarda algo.
+    const claves = tablas.map(clave);
+    const alGuardar = (e: StorageEvent) => { if (e.key && claves.includes(e.key)) alCambiar(); };
+    window.addEventListener('storage', alGuardar);
+    return () => window.removeEventListener('storage', alGuardar);
+  }
 }
