@@ -3,9 +3,11 @@ import { HORA_APERTURA, HORA_CIERRE } from '../../config/salas';
 import { diaDe, formatearDiaCorto, minutosDelDia, sumarDias } from '../../utils/fechas';
 
 /** Alto en píxeles de una hora en el calendario. */
-const ALTO_HORA = 64;
+const ALTO_HORA = 72;
 /** Ancho mínimo de cada ficha cuando hay varias a la misma hora: si no caben, el calendario se desplaza de lado. */
 const ANCHO_CARRIL = 96;
+/** En la vista de un día, cada ficha es más ancha para que se lea todo lo posible (con desplazamiento lateral si no cabe). */
+const ANCHO_CARRIL_DIA = 180;
 /** Ancho mínimo de la columna de un día. */
 const ANCHO_DIA = 110;
 
@@ -139,7 +141,7 @@ export function PlannerSemanal({ lunes, cantidadDias = 7, elegido, onElegir, res
   const ubicadas = dias.map((dia) => ubicar(reservas.filter((r) => diaDe(r.inicio) === dia), INICIO, FIN));
   const anchos = ubicadas.map((lista) => {
     const carriles = Math.max(1, ...lista.map((u) => u.carriles));
-    return `minmax(${Math.max(ANCHO_DIA, carriles * ANCHO_CARRIL)}px, 1fr)`;
+    return `minmax(${Math.max(ANCHO_DIA, carriles * (cantidadDias === 1 ? ANCHO_CARRIL_DIA : ANCHO_CARRIL))}px, 1fr)`;
   });
 
   // Arrastrar una reserva (con el mouse o el dedo) la mueve a otro día u hora; la duración se mantiene.
@@ -242,8 +244,8 @@ export function PlannerSemanal({ lunes, cantidadDias = 7, elegido, onElegir, res
                 {u.reserva.etiqueta
                   ? <div className="fila-titulo"><em className={`etiqueta-ficha${u.reserva.etiquetaAviso ? ' aviso' : ''}`}>{u.reserva.etiqueta}</em><TituloFicha reserva={u.reserva} /></div>
                   : <TituloFicha reserva={u.reserva} />}
-                {/* Las líneas que caben (15 px cada una, debajo del título); el resto se ve en la vista previa. */}
-                {u.reserva.lineas.slice(0, Math.max(1, Math.floor((alto - 8) / 15) - 1)).map((l, i) => <span key={i}>{l}</span>)}
+                {/* Las líneas que caben (15 px cada una, debajo del título y de la etiqueta); el resto se ve en la vista previa. */}
+                {u.reserva.lineas.slice(0, Math.max(1, Math.floor((alto - 8) / 15) - (u.reserva.etiqueta ? 2 : 1))).map((l, i) => <span key={i}>{l}</span>)}
               </button>
             );
           })}
