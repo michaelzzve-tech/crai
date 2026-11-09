@@ -245,4 +245,15 @@ export class SupabaseRepositorio implements Repositorio {
     const { error } = await this.db.from(TABLA_MANTENIMIENTO_SALAS).delete().eq('id', id);
     revisar(error);
   }
+
+  escucharCambios(tablas: string[], alCambiar: () => void) {
+    // Supabase Realtime: avisa al momento de cada alta, cambio o borrado en estas tablas.
+    // Requiere que las tablas estén en la publicación "supabase_realtime" (supabase/tiempo-real.sql).
+    const canal = this.db.channel(`cambios:${tablas.join(',')}:${crypto.randomUUID()}`);
+    for (const table of tablas) {
+      canal.on('postgres_changes', { event: '*', schema: 'public', table }, () => alCambiar());
+    }
+    canal.subscribe();
+    return () => { void this.db.removeChannel(canal); };
+  }
 }

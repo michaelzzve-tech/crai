@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { HORA_APERTURA, HORA_CIERRE, SALAS, salaPorId, type Sala } from '../../config/salas';
+import { HORA_APERTURA, HORA_CIERRE, SALAS, salaPorId, TABLA_MANTENIMIENTO_SALAS, TABLA_RESERVAS_SALAS, type Sala } from '../../config/salas';
 import { listarMantenimientosSalas, mantenimientoQueChoca, programarMantenimiento, terminarMantenimiento, textoMantenimiento, type NuevoMantenimiento } from '../../services/mantenimientoSalas';
 import { nombresDeDias, type Recurrencia } from '../../services/recurrencia';
 import { cancelarReservaSala, cancelarSerieDesde, guardarReservaSala, guardarSerieSala, listarReservasSalas, moverReservaSala, registrarSalidaSala } from '../../services/salaService';
 import { finDeSala, type MantenimientoSala, type NuevaReservaSala, type ReservaSala } from '../../types';
 import { diaALas, diaDe, formatearDia, sumarDias, formatearDiaLargo, formatearFecha, formatearHora, horaActual } from '../../utils/fechas';
 import { useAhora } from '../../hooks/useAhora';
+import { useCambiosEnVivo } from '../../hooks/useCambiosEnVivo';
 import { useMostrarDiaElegido } from '../../hooks/useMostrarDiaElegido';
 import { useVistaPlanner } from '../../hooks/useVistaPlanner';
 import { usePaginacion } from '../../hooks/usePaginacion';
@@ -47,6 +48,8 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
       setError(e instanceof Error ? e.message : String(e));
     }
   }, []);
+  // Lo que se reserva o cambia en otra cuenta aparece aquí al momento.
+  useCambiosEnVivo([TABLA_RESERVAS_SALAS, TABLA_MANTENIMIENTO_SALAS], recargar);
   useEffect(() => {
     let vigente = true;
     listarReservasSalas()
