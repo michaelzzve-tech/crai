@@ -105,6 +105,20 @@ export async function descargarInformePdf(informe: Informe): Promise<void> {
     y += 8;
   }
   lineaCentrada('Reporte Mensual', informe.titulo, '  |  ');
+  // Filtros activos (horario, instituciones…), para que se sepa qué registros entraron.
+  if (informe.filtros.length) {
+    y += 1;
+    fuente(9.5, true);
+    doc.text('Filtros aplicados', centro, y, { align: 'center' });
+    y += 5;
+    fuente(9.5);
+    for (const f of informe.filtros) {
+      const lineas = doc.splitTextToSize(`${f.etiqueta}: ${f.valor}`, ancho) as string[];
+      doc.text(lineas, centro, y, { align: 'center' });
+      y += lineas.length * 4.6;
+    }
+    y += 2;
+  }
   doc.line(margen, y, anchoPagina - margen, y);
   y += 10;
 

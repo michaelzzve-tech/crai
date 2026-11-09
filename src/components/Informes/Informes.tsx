@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { descargarInformePdf } from '../../services/informePdf';
 import {
-  dosCifras, generarInforme, horasCortas, lineasGrupo, lineasInstitucion, periodoDelMes, periodoDeMes,
-  type Cuadro, type HorasLaptops, type Informe, type Periodo, type Servicio,
+  dosCifras, generarInforme, horasCortas, lineasGrupo, lineasInstitucion, OPCIONES_FILTRO, periodoDelMes, periodoDeMes,
+  SIN_FILTRO, type Cuadro, type FiltroInforme, type HorasLaptops, type Informe, type Periodo, type Servicio,
 } from '../../services/informeService';
 import { BorrarRegistros } from '../BorrarRegistros';
 import { CopiaCompleta } from '../CopiaCompleta';
@@ -145,24 +145,100 @@ function CuadroComparativo({ cuadro }: { cuadro: Cuadro }) {
   );
 }
 
+/** Botones para elegir varias opciones; sin ninguna elegida, entran todas. */
+function Opciones({ titulo, opciones, elegidas, etiqueta = (o) => o, onCambio }: {
+  titulo: string;
+  opciones: string[];
+  elegidas: string[];
+  etiqueta?: (o: string) => string;
+  onCambio: (elegidas: string[]) => void;
+}) {
+  return (
+    <div className="filtro-opciones" role="group" aria-label={titulo}>
+      <span>{titulo}</span>
+      <div className="dias-recurrencia">
+        {opciones.map((o) => {
+          const activa = elegidas.includes(o);
+          return (
+            <button key={o} type="button" className={activa ? 'activo' : ''} aria-pressed={activa}
+              onClick={() => onCambio(activa ? elegidas.filter((e) => e !== o) : opciones.filter((x) => x === o || elegidas.includes(x)))}>
+              {etiqueta(o)}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** Horario, instituciones, carreras, años y duración de los registros que entran en el informe y el PDF. */
+function Filtros({ filtro, onCambio }: { filtro: FiltroInforme; onCambio: (f: FiltroInforme) => void }) {
+  const cambiar = (cambios: Partial<FiltroInforme>) => onCambio({ ...filtro, ...cambios });
+  const activo = JSON.stringify(filtro) !== JSON.stringify(SIN_FILTRO);
+  return (
+    <fieldset className="recurrencia filtros-informe">
+      <legend>Filtros del informe y del PDF</legend>
+      <div className="campos">
+        <label htmlFor="filtro-hora-desde">
+          Hora de inicio desde
+          <input id="filtro-hora-desde" type="time" value={filtro.horaDesde} max={filtro.horaHasta || undefined}
+            onChange={(e) => cambiar({ horaDesde: e.target.value })} />
+        </label>
+        <label htmlFor="filtro-hora-hasta">
+          Hora de inicio hasta
+          <input id="filtro-hora-hasta" type="time" value={filtro.horaHasta} min={filtro.horaDesde || undefined}
+            onChange={(e) => cambiar({ horaHasta: e.target.value })} />
+        </label>
+        <label htmlFor="filtro-horas-min">
+          Duración mínima (horas)
+          <input id="filtro-horas-min" type="number" min="0" step="0.5" inputMode="decimal" placeholder="Sin mínimo"
+            value={filtro.horasMin} onChange={(e) => cambiar({ horasMin: e.target.value })} />
+        </label>
+        <label htmlFor="filtro-horas-max">
+          Duración máxima (horas)
+          <input id="filtro-horas-max" type="number" min="0" step="0.5" inputMode="decimal" placeholder="Sin máximo"
+            value={filtro.horasMax} onChange={(e) => cambiar({ horasMax: e.target.value })} />
+        </label>
+      </div>
+      <Opciones titulo="Instituciones" opciones={OPCIONES_FILTRO.instituciones} elegidas={filtro.instituciones}
+        onCambio={(instituciones) => cambiar({ instituciones })} />
+      <Opciones titulo="Carreras" opciones={OPCIONES_FILTRO.carreras} elegidas={filtro.carreras}
+        onCambio={(carreras) => cambiar({ carreras })} />
+      <Opciones titulo="Años (ITJO)" opciones={OPCIONES_FILTRO.anios} elegidas={filtro.anios} etiqueta={(a) => `Año ${a}`}
+        onCambio={(anios) => cambiar({ anios })} />
+      <div className="filtros-pie">
+        <p className="secundario">Si no elige ninguna opción de un grupo, entran todas. Las carreras y los años se suman entre sí.</p>
+        {activo && <button type="button" onClick={() => onCambio(SIN_FILTRO)}>Quitar filtros</button>}
+      </div>
+    </fieldset>
+  );
+}
+
 /** Informe con el formato del reporte mensual del CRAI, con descarga en PDF. */
 export function Informes() {
   const [periodo, setPeriodo] = useState<Periodo>(() => periodoDelMes());
+  const [filtro, setFiltro] = useState<FiltroInforme>(SIN_FILTRO);
   const [version, setVersion] = useState(0); // Sube tras borrar todo, para recalcular
   const [informe, setInforme] = useState<Informe | null>(null);
   const [error, setError] = useState('');
   const [descargando, setDescargando] = useState(false);
 
   const rangoValido = periodo.desde !== '' && periodo.hasta !== '' && periodo.desde <= periodo.hasta;
+  const errorFiltro =
+    filtro.horaDesde && filtro.horaHasta && filtro.horaDesde > filtro.horaHasta ? 'La hora "desde" debe ser anterior a la hora "hasta".'
+    : [filtro.horasMin, filtro.horasMax].some((h) => h !== '' && !(Number(h) >= 0)) ? 'La duración debe ser un número de horas.'
+    : filtro.horasMin && filtro.horasMax && Number(filtro.horasMin) > Number(filtro.horasMax) ? 'La duración mínima no puede ser mayor que la máxima.'
+    : '';
+  const valido = rangoValido && !errorFiltro;
 
   useEffect(() => {
-    if (!rangoValido) return;
+    if (!valido) return;
     let vigente = true;
-    generarInforme(periodo)
+    generarInforme(periodo, filtro)
       .then((i) => { if (vigente) { setInforme(i); setError(''); } })
       .catch((e: unknown) => { if (vigente) setError(e instanceof Error ? e.message : String(e)); });
     return () => { vigente = false; };
-  }, [periodo, rangoValido, version]);
+  }, [periodo, filtro, valido, version]);
 
   async function descargar() {
     if (!informe) return;
@@ -199,15 +275,17 @@ export function Informes() {
               onChange={(e) => setPeriodo({ ...periodo, hasta: e.target.value })} />
           </label>
         </div>
+        <Filtros filtro={filtro} onCambio={setFiltro} />
         {!rangoValido && <p className="texto-alerta">Elija un rango de fechas válido.</p>}
-        <button className="primario" disabled={!informe || !rangoValido || descargando} onClick={descargar}>
+        {errorFiltro && <p className="texto-alerta">{errorFiltro}</p>}
+        <button className="primario" disabled={!informe || !valido || descargando} onClick={descargar}>
           {descargando ? 'Preparando PDF…' : 'Descargar PDF'}
         </button>
       </section>
 
       {error && <div className="aviso aviso-error" role="alert">No se pudo generar el informe. {error}</div>}
 
-      {informe && rangoValido && (
+      {informe && valido && (
         // `key`: al cambiar el período se vuelve a la vista previa.
         <VistaInforme key={`${periodo.desde}-${periodo.hasta}-${version}`} informe={informe} />
       )}
@@ -235,6 +313,7 @@ function VistaInforme({ informe }: { informe: Informe }) {
         <p><strong>CENTRO DE RECURSOS DE APRENDIZAJE E INVESTIGACIÓN</strong></p>
         <p><strong>BIBLIOTECA HERMANO KORTA S.J.</strong></p>
         <p>Reporte Mensual | <strong>{informe.titulo}</strong></p>
+        {informe.filtros.map((f) => <p key={f.etiqueta} className="filtro-portada">{f.etiqueta}: <strong>{f.valor}</strong></p>)}
       </section>
 
       <h2 className="titulo-seccion-informe">Beneficiarios alcanzados por servicio prestado</h2>
