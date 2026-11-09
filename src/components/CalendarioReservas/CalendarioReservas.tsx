@@ -46,7 +46,8 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
   const evento = (r: Registro): EventoPlanner => {
     const horario = `${formatearHora(r.inicio)} – ${formatearHora(r.fin!)}`;
     return {
-      id: r.id, inicio: r.inicio, fin: r.fin!, color: color(r.recursoId),
+      // Si se fue antes de tiempo, la ficha termina en la salida real, para no chocar con la siguiente reserva de su columna.
+      id: r.id, inicio: r.inicio, fin: r.finReal && new Date(r.finReal) < new Date(r.fin!) ? r.finReal : r.fin!, color: color(r.recursoId), columna: r.recursoId,
       // En la ficha: el cubículo destacado arriba; debajo, sin negritas, quien reservó, el horario y el resto.
       titulo: nombreRecurso(r.recursoId) === r.recursoId ? `${modulo.recurso} ${r.recursoId}` : nombreRecurso(r.recursoId),
       tituloCorto: nombreRecurso(r.recursoId) === r.recursoId ? `${modulo.recurso[0]}${r.recursoId}` : nombreRecurso(r.recursoId),
@@ -148,9 +149,13 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
           cantidadDias={cantidad}
           elegido={elegido}
           onElegir={elegir}
-          // Solo las reservas en uso o programadas: al registrar la salida, la reserva sale del planner
-          // (sigue en Actividades, en el historial y en los informes).
-          reservas={aLaVista.filter((r) => !r.finReal && !ocultos.includes(r.recursoId)).map(evento)}
+          // Una columna por cubículo, en el orden del menú (1 a 6 y Podcast al final); las ocultas no se muestran.
+          columnas={recursos.filter((r) => !ocultos.includes(r.id)).map((r) => ({
+            id: r.id, color: color(r.id),
+            titulo: nombreRecurso(r.id) === r.id ? `${modulo.recurso} ${r.id}` : nombreRecurso(r.id),
+            tituloCorto: nombreRecurso(r.id) === r.id ? `${modulo.recurso[0]}${r.id}` : nombreRecurso(r.id),
+          }))}
+          reservas={aLaVista.filter((r) => !ocultos.includes(r.recursoId)).map(evento)}
           onNueva={(dia, hora) => abrirNuevo(dia, hora)}
           onAbrir={(e) => setDetalle(e.id)}
           onMover={(e, dia, hora) => { const r = registroDe(e); if (r) void mover(r, dia, hora); }}
