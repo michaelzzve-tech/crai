@@ -401,3 +401,12 @@ label.casilla input { width: 18px; height: 18px; margin: 0; }
 .filtros-pie { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
 .filtros-pie p { margin: 0; }
 .portada-informe .filtro-portada { font-size: .9rem; }
+
+/* Planner de cubículos: una columna fija por cubículo dentro de cada día, con su nombre arriba. */
+.planner-subcolumnas { display: grid; grid-template-columns: repeat(var(--carriles), 1fr); margin-top: 6px; font-size: .72rem; font-weight: 600; }
+.planner-subcolumnas span { color: var(--texto); border-top: 3px solid var(--color-sala); padding-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.planner-columna.con-columnas {
+  background-image:
+    repeating-linear-gradient(to bottom, var(--borde) 0 1px, transparent 1px var(--alto-hora)),
+    repeating-linear-gradient(to right, transparent 0 calc(100% / var(--carriles) - 1px), #e6ebf1 calc(100% / var(--carriles) - 1px) calc(100% / var(--carriles)));
+}

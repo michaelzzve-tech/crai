@@ -43,6 +43,7 @@ export interface EventoPlanner {
   color: string;
   titulo: string; // Primera línea: "Javier", "Cubículo 3"
   tituloCorto?: string; // En fichas angostas, en vez del título: "C3"
+  columna?: string; // Con columnas fijas (ver Props.columnas): id de la columna de la reserva, como el cubículo
   lineas: string[]; // Líneas siguientes, que se ocultan si no caben
   datos: [string, string][]; // Todos los datos registrados, para la vista previa al pasar el mouse
   movible: boolean; // false: no se puede arrastrar (por ejemplo, una reserva ya terminada)
@@ -69,8 +70,9 @@ interface Ubicada {
  * Coloca las reservas de un día. Las que se cruzan en horario (de salas o cubículos distintos)
  * se reparten en carriles lado a lado, como en un planificador.
  */
-function ubicar(reservas: EventoPlanner[], INICIO: number, FIN: number): Ubicada[] {
+function ubicar(reservas: EventoPlanner[], INICIO: number, FIN: number, columnas?: Columna[]): Ubicada[] {
   const lista = reservas
+    .filter((reserva) => !columnas || columnas.some((c) => c.id === reserva.columna))
     .map((reserva) => ({
       reserva,
       desde: Math.max(INICIO, minutosDelDia(reserva.inicio)) - INICIO,
@@ -79,6 +81,15 @@ function ubicar(reservas: EventoPlanner[], INICIO: number, FIN: number): Ubicada
       carriles: 1,
     }))
     .sort((a, b) => a.desde - b.desde || b.hasta - a.hasta);
+
+  // Columnas fijas: cada reserva va en la columna de su cubículo, una bajo otra.
+  if (columnas) {
+    for (const u of lista) {
+      u.carril = columnas.findIndex((c) => c.id === u.reserva.columna);
+      u.carriles = columnas.length;
+    }
+    return lista;
+  }
 
   // Grupos de reservas que se cruzan entre sí; cada grupo reparte su ancho.
   let grupo: Ubicada[] = [];
@@ -99,7 +110,17 @@ function ubicar(reservas: EventoPlanner[], INICIO: number, FIN: number): Ubicada
   return lista;
 }
 
+/** Una columna fija dentro de cada día (por ejemplo, un cubículo). */
+export interface Columna {
+  id: string;
+  titulo: string; // "Cubículo 1", "Podcast": en la vista de un día
+  tituloCorto: string; // "C1", "Podcast": con varios días
+  color: string;
+}
+
 interface Props {
+  /** Si se indica, cada día se divide en estas columnas, en este orden, y cada reserva va en la suya (EventoPlanner.columna). */
+  columnas?: Columna[];
   lunes: string; // Primer día que se muestra, "AAAA-MM-DD" (el lunes, si es la semana entera)
   cantidadDias?: number; // Columnas de días: 7 (la semana) si no se indica
   elegido: string; // Día elegido en el menú de fecha; se resalta
@@ -126,7 +147,7 @@ interface Arrastre {
  * Calendario por horas de la semana (lunes a domingo) o de unos pocos días, con reservas
  * que se abren con un clic y se arrastran.
  */
-export function PlannerSemanal({ lunes, cantidadDias = 7, elegido, onElegir, reservas, onNueva, onAbrir, onMover }: Props) {
+export function PlannerSemanal({ columnas, lunes, cantidadDias = 7, elegido, onElegir, reservas, onNueva, onAbrir, onMover }: Props) {
   const hoy = diaDe();
   const dias = Array.from({ length: cantidadDias }, (_, i) => sumarDias(lunes, i));
   const rango = rangoDeHoras(reservas);
@@ -138,9 +159,9 @@ export function PlannerSemanal({ lunes, cantidadDias = 7, elegido, onElegir, res
   const grilla = useRef<HTMLDivElement>(null);
   // Las reservas de cada día, ya repartidas en carriles. Cada día es tan ancho como para que sus
   // fichas no se aprieten: si no cabe en la pantalla, el calendario se desplaza de lado.
-  const ubicadas = dias.map((dia) => ubicar(reservas.filter((r) => diaDe(r.inicio) === dia), INICIO, FIN));
+  const ubicadas = dias.map((dia) => ubicar(reservas.filter((r) => diaDe(r.inicio) === dia), INICIO, FIN, columnas));
   const anchos = ubicadas.map((lista) => {
-    const carriles = Math.max(1, ...lista.map((u) => u.carriles));
+    const carriles = columnas ? columnas.length : Math.max(1, ...lista.map((u) => u.carriles));
     return `minmax(${Math.max(ANCHO_DIA, carriles * (cantidadDias === 1 ? ANCHO_CARRIL_DIA : ANCHO_CARRIL))}px, 1fr)`;
   });
 
@@ -202,6 +223,11 @@ export function PlannerSemanal({ lunes, cantidadDias = 7, elegido, onElegir, res
           onClick={() => onElegir(dia)}
         >
           {formatearDiaCorto(dia)}
+          {columnas && (
+            <span className="planner-subcolumnas" style={{ '--carriles': columnas.length } as CSSProperties}>
+              {columnas.map((c) => <span key={c.id} style={{ '--color-sala': c.color } as CSSProperties}>{cantidadDias === 1 ? c.titulo : c.tituloCorto}</span>)}
+            </span>
+          )}
         </button>
       ))}
 
@@ -211,8 +237,8 @@ export function PlannerSemanal({ lunes, cantidadDias = 7, elegido, onElegir, res
       {dias.map((dia, columna) => (
         <div
           key={dia}
-          className={`planner-columna${dia === hoy ? ' hoy' : ''}${dia < hoy ? ' pasado' : ''}`}
-          style={{ height: HORAS.length * ALTO_HORA }}
+          className={`planner-columna${dia === hoy ? ' hoy' : ''}${dia < hoy ? ' pasado' : ''}${columnas ? ' con-columnas' : ''}`}
+          style={{ height: HORAS.length * ALTO_HORA, '--carriles': columnas?.length ?? 1 } as CSSProperties}
           onClick={dia < hoy ? undefined : clicEnDia(dia)}
           title={dia < hoy ? undefined : 'Clic en un espacio libre para reservar'}
         >
