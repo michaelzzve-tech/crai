@@ -327,7 +327,9 @@ label.casilla input { width: 18px; height: 18px; margin: 0; }
 }
 .etiqueta-ficha.aviso { background: #ffd60a; color: #000; box-shadow: inset 0 0 0 1px #000; }
 .vista-previa .etiqueta-ficha { display: inline-block; margin: 0 6px 4px 0; }
-.fila-titulo { display: flex; align-items: center; gap: 5px; max-width: 100%; min-width: 0; }
+/* "EN USO" arriba y el cubículo o sala en la línea de abajo, para que el nombre siempre se lea completo. */
+.fila-titulo { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; max-width: 100%; min-width: 0; }
+.reserva-sala .etiqueta-ficha { line-height: 1.25; }
 .formulario-ventana { margin: 0; }
 .ventana .formulario { box-shadow: none; padding: 0; border: none; }
 .titulo-sala .badge { font-size: .75rem; }
