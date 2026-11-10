@@ -81,7 +81,7 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
       if (fin <= inicio) continue;
       fichasMantenimiento.push({
         id: `mantenimiento-${m.id}-${dia}`, inicio: inicio.toISOString(), fin: fin.toISOString(),
-        color: sala?.color ?? '#7b8794', movible: false, atenuado: fin <= ahora,
+        color: sala?.color ?? '#7b8794', movible: false, atenuado: fin <= ahora, columna: m.salaId,
         titulo: sala?.nombre.replace('Sala ', '') ?? m.salaId,
         lineas: ['Mantenimiento', ...(m.nota ? [m.nota] : [])],
         datos: [
@@ -102,7 +102,7 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
     return {
       // Ya usada (terminó): más clara y fija, como en cubículos.
       id: r.id, inicio: r.inicio, fin, color: sala?.color ?? '#7b8794',
-      movible: !r.finReal && new Date(fin) > ahora, atenuado: new Date(fin) <= ahora,
+      movible: !r.finReal && new Date(fin) > ahora, atenuado: new Date(fin) <= ahora, columna: r.salaId,
       titulo: sala?.nombre.replace('Sala ', '') ?? r.salaId,
       lineas: [horario, ...(r.finReal ? [`Salida: ${formatearHora(r.finReal)}`] : []), `${r.actividad} · ${r.usuarios} pers.`, `Solicita: ${r.solicitante}`, `Prof.: ${r.profesor}`,
         `${r.instituto} · ${r.carrera} · ${r.semestre}`],
@@ -248,6 +248,10 @@ export function Salas({ pestana = 'reservas' }: { pestana?: 'reservas' | 'espaci
               cantidadDias={cantidad}
               elegido={elegido}
               onElegir={elegir}
+              // Una columna por sala, en el orden de SALAS; las ocultas no se muestran.
+              columnas={SALAS.filter((s) => !ocultas.includes(s.id)).map((s) => ({
+                id: s.id, color: s.color, titulo: s.nombre, tituloCorto: s.nombre.replace('Sala ', ''),
+              }))}
               reservas={[...visibles.map(evento), ...fichasMantenimiento]}
               onNueva={(dia, hora) => nueva(dia, hora)}
               onAbrir={(e) => setDetalle(reservaDe(e) ?? null)}

@@ -82,15 +82,25 @@ function ubicar(reservas: EventoPlanner[], INICIO: number, FIN: number, columnas
     }))
     .sort((a, b) => a.desde - b.desde || b.hasta - a.hasta);
 
-  // Columnas fijas: cada reserva va en la columna de su cubículo, una bajo otra.
+  // Columnas fijas: cada reserva va en la columna de su cubículo o sala, una bajo otra. Si dos se
+  // cruzan en la misma columna (por ejemplo, una reserva y un mantenimiento), esa columna se reparte entre ellas.
   if (columnas) {
-    for (const u of lista) {
-      u.carril = columnas.findIndex((c) => c.id === u.reserva.columna);
-      u.carriles = columnas.length;
-    }
+    columnas.forEach((c, indice) => {
+      const suyas = lista.filter((u) => u.reserva.columna === c.id);
+      repartir(suyas);
+      for (const u of suyas) {
+        u.carril = indice * u.carriles + u.carril;
+        u.carriles = columnas.length * u.carriles;
+      }
+    });
     return lista;
   }
+  repartir(lista);
+  return lista;
+}
 
+/** Reparte en carriles lado a lado las reservas (ya ordenadas por hora) que se cruzan entre sí. */
+function repartir(lista: Ubicada[]) {
   // Grupos de reservas que se cruzan entre sí; cada grupo reparte su ancho.
   let grupo: Ubicada[] = [];
   let finGrupo = -1;
@@ -107,10 +117,9 @@ function ubicar(reservas: EventoPlanner[], INICIO: number, FIN: number, columnas
     finGrupo = Math.max(finGrupo, u.hasta);
   }
   if (grupo.length) cerrar();
-  return lista;
 }
 
-/** Una columna fija dentro de cada día (por ejemplo, un cubículo). */
+/** Una columna fija dentro de cada día (por ejemplo, un cubículo o una sala). */
 export interface Columna {
   id: string;
   titulo: string; // "Cubículo 1", "Podcast": en la vista de un día
