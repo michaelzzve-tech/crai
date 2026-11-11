@@ -1,0 +1,1 @@
+export { BuscadorNombre } from './BuscadorNombre';
