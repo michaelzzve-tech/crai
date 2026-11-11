@@ -10,6 +10,7 @@ import { CLAVES_REGISTRO, POR_PAGINA_ACTIVIDAD } from '../../utils/orden';
 import { OrdenLista } from '../OrdenLista';
 import { PestanasReservas, type GrupoReservas } from '../PestanasReservas';
 import { diaDe, diferenciaConPrevisto, duracionEntreFechas, formatearDia, formatearHora } from '../../utils/fechas';
+import { CintilloEnMasa } from '../CintilloEnMasa';
 import { EstadoBadge } from '../EstadoBadge';
 import { Paginador } from '../Paginador';
 import type { EjecutarAccion } from '../tipos';
@@ -85,6 +86,7 @@ export function RegistrosActivos({ modulo, recursos, registros, ejecutar }: Prop
           textoFecha={modulo.conCalendario ? 'Fecha de la reserva' : 'Fecha del préstamo'}
         />
       </div>
+      {modulo.conPrestamoEnMasa && <CintilloEnMasa modulo={modulo} recursos={recursos} registros={registros} ejecutar={ejecutar} />}
       {modulo.conCalendario && (
         <PestanasReservas
           grupo={grupo}

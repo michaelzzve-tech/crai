@@ -412,12 +412,9 @@ label.casilla input { width: 18px; height: 18px; margin: 0; }
     repeating-linear-gradient(to right, transparent 0 calc(100% / var(--carriles) - 1px), #e6ebf1 calc(100% / var(--carriles) - 1px) calc(100% / var(--carriles)));
 }
 
-/* Cintillo de préstamos en masa: fijo en la parte inferior, una fila por persona. */
-.cintillo-masa {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; max-height: 45vh; overflow-y: auto;
-  background: #111; color: #fff; box-shadow: 0 -6px 18px rgba(15, 23, 42, .25); padding: 6px 16px;
-}
-.cintillo-fila { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; max-width: 1200px; margin: 0 auto; padding: 8px 0; }
+/* Cintillo de préstamos en masa: incrustado en "Préstamos activos", una fila por persona. */
+.cintillo-masa { background: #111; color: #fff; border-radius: 8px; padding: 4px 14px; margin-bottom: 14px; }
+.cintillo-fila { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 8px 0; }
 .cintillo-fila + .cintillo-fila { border-top: 1px solid rgba(255, 255, 255, .18); }
 .etiqueta-masa {
   font-style: normal; font-weight: 800; font-size: .75rem; letter-spacing: .06em; white-space: nowrap;

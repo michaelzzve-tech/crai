@@ -8,9 +8,9 @@ import { ModificarReserva } from '../RegistroForm';
 import type { EjecutarAccion } from '../tipos';
 
 /**
- * Cintillo fijo en la parte inferior con cada préstamo en masa activo o programado: quién lo
- * pidió, una etiqueta "PRÉSTAMO EN MASA" y botones para cancelar, editar o finalizar todos
- * sus préstamos a la vez.
+ * Cintillo incrustado en la sección de préstamos activos con cada préstamo en masa activo o
+ * programado: quién lo pidió, una etiqueta "PRÉSTAMO EN MASA" y botones para cancelar, editar o
+ * finalizar todos sus préstamos a la vez.
  */
 export function CintilloEnMasa({ modulo, recursos, registros, ejecutar }: {
   modulo: Modulo;
@@ -28,9 +28,7 @@ export function CintilloEnMasa({ modulo, recursos, registros, ejecutar }: {
 
   return (
     <>
-      {/* Espacio al final de la página para que el cintillo no tape lo último. */}
-      <div className="cintillo-espacio" style={{ height: grupos.length * 64 + 16 }} aria-hidden />
-      <aside className="cintillo-masa" aria-label="Préstamos en masa">
+      <div className="cintillo-masa" role="region" aria-label="Préstamos en masa">
         {grupos.map((g) => {
           const clave = g[0].id;
           const programado = new Date(g[0].inicio) > ahora;
@@ -76,7 +74,7 @@ export function CintilloEnMasa({ modulo, recursos, registros, ejecutar }: {
             </div>
           );
         })}
-      </aside>
+      </div>
       {editando && (
         <ModificarReserva modulo={modulo} recursos={recursos} registro={editando[0]} grupo={editando} ejecutar={ejecutar} onCerrar={() => setEditando(null)} />
       )}
