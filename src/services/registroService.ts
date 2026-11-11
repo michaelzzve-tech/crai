@@ -200,6 +200,59 @@ export async function registrarEnMasa(modulo: Modulo, datos: NuevoRegistro, ids:
 }
 
 /**
+ * Préstamos en masa que siguen activos o programados: los de una misma persona registrados
+ * juntos (mismo nombre y misma hora de inicio exacta, como los crea registrarEnMasa).
+ * Solo cuentan los grupos de 2 o más; cada grupo va ordenado por recurso.
+ */
+export function gruposEnMasa(registros: Registro[], modulo: Modulo): Registro[][] {
+  const grupos = new Map<string, Registro[]>();
+  for (const r of registros) {
+    if (r.finReal) continue;
+    const clave = `${r.nombre}|${new Date(r.inicio).getTime()}`;
+    grupos.set(clave, [...(grupos.get(clave) ?? []), r]);
+  }
+  const orden = (r: Registro) => modulo.opciones.indexOf(r.recursoId);
+  return [...grupos.values()]
+    .filter((g) => g.length > 1)
+    .map((g) => g.sort((a, b) => orden(a) - orden(b)))
+    .sort((a, b) => a[0].inicio.localeCompare(b[0].inicio));
+}
+
+/**
+ * Modifica a la vez todos los préstamos de un grupo en masa con los mismos datos (persona,
+ * fecha, hora, motivo…); cada uno conserva su recurso. Se revisan todos antes de guardar.
+ */
+export async function modificarEnMasa(modulo: Modulo, grupo: Registro[], datos: NuevoRegistro): Promise<Registro[]> {
+  const [recursos, existentes] = await Promise.all([
+    repositorio.listarRecursos(modulo.tablaRecursos),
+    repositorio.listarRegistros(modulo.tablaRegistros),
+  ]);
+  const nuevos = grupo.map((anterior) => {
+    try {
+      return prepararRegistro(modulo, { ...datos, recursoId: anterior.recursoId }, recursos, existentes, undefined, anterior).registro;
+    } catch (e) {
+      throw new Error(`${modulo.recurso} ${nombreRecurso(anterior.recursoId)}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  });
+  for (const r of nuevos) await repositorio.guardarRegistro(modulo.tablaRegistros, r);
+  for (const r of nuevos) await actualizarEstadoRecurso(modulo, r.recursoId);
+  avisarCambio();
+  return nuevos;
+}
+
+/** Cancela todos los préstamos de un grupo en masa: se borran (no cuentan en estadísticas) y sus recursos quedan disponibles. */
+export async function cancelarEnMasa(modulo: Modulo, grupo: Registro[]) {
+  for (const r of grupo) await repositorio.borrarRegistro(modulo.tablaRegistros, r.id);
+  for (const r of grupo) await actualizarEstadoRecurso(modulo, r.recursoId);
+  avisarCambio();
+}
+
+/** Finaliza (devuelve) todos los préstamos de un grupo en masa a la misma hora. */
+export async function finalizarEnMasa(modulo: Modulo, grupo: Registro[], momento = new Date()) {
+  for (const r of grupo) await finalizar(modulo, r, momento);
+}
+
+/**
  * Reserva (de cubículo) con préstamo de laptop: con los mismos datos de la persona, la
  * fecha y la hora de inicio se crea también el préstamo de `laptopId` en Laptops. Se revisan
  * los dos antes de guardar: si la laptop o el cubículo no se pueden, no se guarda ninguno.
