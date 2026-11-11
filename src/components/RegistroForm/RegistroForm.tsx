@@ -7,7 +7,7 @@ import { LAPTOPS, nombreRecurso, type Modulo } from '../../config/modulos';
 import { repositorio } from '../../data';
 import { useAhora } from '../../hooks/useAhora';
 import { fechasDeSerie, nombresDeDias, recurrenciaInicial, type Recurrencia } from '../../services/recurrencia';
-import { asegurarRecursos, modificarRegistro, registrar, registrarConLaptop, registrarEnMasa, registrarSerie } from '../../services/registroService';
+import { asegurarRecursos, modificarEnMasa, modificarRegistro, registrar, registrarConLaptop, registrarEnMasa, registrarSerie } from '../../services/registroService';
 import type { NuevoRegistro, Recurso, Registro } from '../../types';
 import { diaALas, diaDe, duracionEntreHoras, formatearDia, horaActual } from '../../utils/fechas';
 import { CampoRecurrencia } from '../Planner';
@@ -41,6 +41,7 @@ interface Props {
   onListo?: () => void; // Tras registrar
   onCerrar?: () => void; // Botón Cancelar (cierra la ventana)
   anterior?: Registro; // Reserva que se modifica: el formulario se abre con todos sus datos
+  grupo?: Registro[]; // Préstamo en masa que se modifica completo: cada préstamo conserva su recurso
 }
 
 /** Todos los datos de una reserva guardada, para modificarla en el formulario. */
@@ -186,7 +187,8 @@ function datosDe(r: Registro, modulo: Modulo): Partial<NuevoRegistro> {
 }
 
 /** Formulario de préstamo o reserva; el campo del recurso cambia según el módulo. */
-export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrencia, error, onListo, onCerrar, anterior }: Props) {
+export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrencia, error, onListo, onCerrar, anterior: unico, grupo }: Props) {
+  const anterior = grupo?.[0] ?? unico;
   const [datos, setDatos] = useState<NuevoRegistro>(() => (anterior ? datosParaModificar(anterior) : { ...vacio(), ...inicial }));
   const [otroMotivo, setOtroMotivo] = useState(() => !!anterior && !modulo.motivos.includes(anterior.motivo)); // "Otro" elegido en Motivo de uso
   // Reserva recurrente: se repite en los días elegidos, de "Válida desde" a "Válida hasta".
@@ -231,6 +233,11 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
   async function enviar(e: FormEvent) {
     e.preventDefault();
     const recurso = nombreRecurso(datos.recursoId);
+    if (grupo) {
+      const mensaje = `Se ${grupo.length === 1 ? 'actualizó 1 préstamo' : `actualizaron los ${grupo.length} préstamos`} en masa de ${datos.nombre}.`;
+      if (await ejecutar(() => modificarEnMasa(modulo, grupo, datos), mensaje)) onListo?.();
+      return;
+    }
     if (anterior) {
       const mensaje = `${modulo.conCalendario ? 'Reserva' : 'Préstamo'} de ${datos.nombre} (${modulo.recurso.toLowerCase()} ${recurso}) ${modulo.conCalendario ? 'actualizada' : 'actualizado'}.`;
       if (await ejecutar(() => modificarRegistro(modulo, anterior, datos), mensaje)) onListo?.();
@@ -268,7 +275,7 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
   return (
     <form className={onCerrar ? 'formulario formulario-ventana' : 'formulario'} onSubmit={enviar}>
       <div className="panel-encabezado">
-        <h2 id="titulo-registro">{anterior ? `Modificar ${modulo.conCalendario ? 'reserva' : 'préstamo'}` : modulo.nuevo}</h2>
+        <h2 id="titulo-registro">{grupo ? `Modificar préstamo en masa (${grupo.length} ${modulo.recursos.toLowerCase()})` : anterior ? `Modificar ${modulo.conCalendario ? 'reserva' : 'préstamo'}` : modulo.nuevo}</h2>
         {onCerrar && <button type="button" className="boton-cerrar" onClick={onCerrar} aria-label="Cerrar">×</button>}
       </div>
       <div className="campos">
@@ -290,7 +297,12 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
           opciones={sinCarrera ? [NO_APLICA] : semestresDe(datos.instituto, datos.condicion)}
           onCambiar={cambiar('semestre')}
         />
-        {!enMasa && (
+        {grupo && (
+          <p className="ancho secundario">
+            {modulo.recursos}: {grupo.map((r) => nombreRecurso(r.recursoId)).join(', ')}. Los cambios se aplican a todos.
+          </p>
+        )}
+        {!enMasa && !grupo && (
           <label htmlFor="registro-recurso">
             {modulo.recurso}
             <select id="registro-recurso" required value={datos.recursoId} onChange={(e) => cambiar('recursoId')(e.target.value)}>

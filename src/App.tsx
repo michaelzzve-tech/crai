@@ -15,6 +15,7 @@ import { Resumen } from './components/Resumen';
 import type { EjecutarAccion } from './components/tipos';
 import { MODULOS, type Modulo } from './config/modulos';
 import { useBiblioteca } from './hooks/useBiblioteca';
+import { CintilloEnMasa } from './components/CintilloEnMasa';
 import { errorConfiguracion } from './data/supabaseClient';
 import { useNotificaciones } from './hooks/useNotificaciones';
 import { useSesion } from './hooks/useSesion';
@@ -129,6 +130,8 @@ function VistaModulo({ modulo, pestana }: { modulo: Modulo; pestana: Pestana }) 
       )}
       {pestana === 'recursos' && <RecursoList modulo={modulo} recursos={recursos} registros={registros} ejecutar={ejecutar} />}
       {pestana === 'historial' && <Historial modulo={modulo} registros={registros} />}
+      {/* Préstamos en masa activos: cintillo fijo abajo, en todas las pestañas del módulo. */}
+      {modulo.conPrestamoEnMasa && <CintilloEnMasa modulo={modulo} recursos={recursos} registros={registros} ejecutar={ejecutar} />}
     </main>
   );
 }

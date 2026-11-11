@@ -8,10 +8,11 @@ import { RegistroForm } from './RegistroForm';
  * Ventana para modificar todos los datos de una reserva (cubículos): el mismo formulario de
  * registro, abierto con los datos guardados. Los errores se muestran dentro de la ventana.
  */
-export function ModificarReserva({ modulo, recursos, registro, ejecutar, onCerrar }: {
+export function ModificarReserva({ modulo, recursos, registro, grupo, ejecutar, onCerrar }: {
   modulo: Modulo;
   recursos: Recurso[];
   registro: Registro;
+  grupo?: Registro[]; // Préstamo en masa: se modifican todos a la vez
   ejecutar: EjecutarAccion;
   onCerrar: () => void;
 }) {
@@ -32,7 +33,7 @@ export function ModificarReserva({ modulo, recursos, registro, ejecutar, onCerra
   };
   return (
     <dialog ref={ventana} className="ventana" onCancel={onCerrar} aria-labelledby="titulo-registro">
-      <RegistroForm modulo={modulo} recursos={recursos} ejecutar={ejecutarEnVentana} anterior={registro} error={error} onListo={onCerrar} onCerrar={onCerrar} />
+      <RegistroForm modulo={modulo} recursos={recursos} ejecutar={ejecutarEnVentana} anterior={registro} grupo={grupo} error={error} onListo={onCerrar} onCerrar={onCerrar} />
     </dialog>
   );
 }
