@@ -12,6 +12,8 @@ import { useVistaPlanner } from '../../hooks/useVistaPlanner';
 import { usePaginacion } from '../../hooks/usePaginacion';
 import { useOrden, type CampoOrden } from '../../hooks/useOrden';
 import { POR_PAGINA_ACTIVIDAD } from '../../utils/orden';
+import { BuscadorNombre } from '../BuscadorNombre';
+import { coincideNombre } from '../../utils/texto';
 import { OrdenLista } from '../OrdenLista';
 import { PestanasReservas, type GrupoReservas } from '../PestanasReservas';
 import { Paginador } from '../Paginador';
@@ -294,10 +296,12 @@ const CLAVES_SALA: Record<CampoOrden, (r: ReservaSala) => string> = {
 function ReservasActivas({ reservas, onAbrir }: { reservas: ReservaSala[]; onAbrir: (r: ReservaSala) => void }) {
   const ahora = useAhora(60_000);
   const [grupo, setGrupo] = useState<GrupoReservas>('actuales');
+  const [buscar, setBuscar] = useState('');
   const activas = reservas.filter((r) => new Date(finDeSala(r)) > ahora);
+  const encontradas = activas.filter((r) => coincideNombre(r.solicitante, buscar));
   // Pestañas: las reservas de ahora (en curso) y las programadas a futuro.
-  const programadas = activas.filter((r) => new Date(r.inicio) > ahora);
-  const actuales = activas.filter((r) => new Date(r.inicio) <= ahora);
+  const programadas = encontradas.filter((r) => new Date(r.inicio) > ahora);
+  const actuales = encontradas.filter((r) => new Date(r.inicio) <= ahora);
   const lista = grupo === 'programadas' ? programadas : actuales;
   const orden = useOrden(lista, CLAVES_SALA); // Al abrir, lo último registrado primero
   const paginacion = usePaginacion(orden.ordenados, POR_PAGINA_ACTIVIDAD);
@@ -305,6 +309,7 @@ function ReservasActivas({ reservas, onAbrir }: { reservas: ReservaSala[]; onAbr
     <section className="panel">
       <div className="panel-encabezado">
         <h2>Reservas activas ({activas.length})</h2>
+        <BuscadorNombre valor={buscar} onCambio={(v) => { setBuscar(v); paginacion.irA(0); }} />
         <OrdenLista
           campo={orden.campo}
           sentido={orden.sentido}
@@ -320,7 +325,7 @@ function ReservasActivas({ reservas, onAbrir }: { reservas: ReservaSala[]; onAbr
         programadas={programadas.length}
       />
       {lista.length === 0 ? (
-        <p className="vacio">{grupo === 'programadas' ? 'No hay reservas programadas.' : 'No hay reservas en curso.'}</p>
+        <p className="vacio">{buscar.trim() ? `Ningún nombre coincide con «${buscar.trim()}».` : grupo === 'programadas' ? 'No hay reservas programadas.' : 'No hay reservas en curso.'}</p>
       ) : (
         <table>
           <thead>

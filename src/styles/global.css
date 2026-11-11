@@ -369,6 +369,9 @@ label.casilla input { width: 18px; height: 18px; margin: 0; }
 .orden-lista { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
 .orden-lista label { display: flex; flex-direction: column; gap: 2px; font-size: .78rem; color: var(--texto-suave); }
 .orden-lista select { font-size: .9rem; }
+/* Casilla "Buscar por nombre" de las listas de préstamos y reservas activas */
+.buscador-nombre { display: flex; flex-direction: column; gap: 2px; font-size: .78rem; color: var(--texto-suave); flex: 1 1 200px; max-width: 320px; }
+.buscador-nombre input { font-size: .9rem; }
 /* Pestañas "Reservas" y "Reservas programadas" de las listas de cubículos y salas */
 .pestanas-reservas { display: flex; gap: 4px; border-bottom: 1px solid var(--borde); margin-bottom: 12px; }
 .pestanas-reservas button {

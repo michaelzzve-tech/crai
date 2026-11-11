@@ -10,6 +10,8 @@ import { CLAVES_REGISTRO, POR_PAGINA_ACTIVIDAD } from '../../utils/orden';
 import { OrdenLista } from '../OrdenLista';
 import { PestanasReservas, type GrupoReservas } from '../PestanasReservas';
 import { diaDe, diferenciaConPrevisto, duracionEntreFechas, formatearDia, formatearHora } from '../../utils/fechas';
+import { BuscadorNombre } from '../BuscadorNombre';
+import { coincideNombre } from '../../utils/texto';
 import { CintilloEnMasa } from '../CintilloEnMasa';
 import { EstadoBadge } from '../EstadoBadge';
 import { Paginador } from '../Paginador';
@@ -50,10 +52,12 @@ export function RegistrosActivos({ modulo, recursos, registros, ejecutar }: Prop
   const textoModificar = modulo.conCalendario ? 'Modificar reserva' : 'Modificar préstamo';
 
   const [grupo, setGrupo] = useState<GrupoReservas>('actuales');
+  const [buscar, setBuscar] = useState('');
   const activos = registros.filter((r) => !r.finReal);
+  const encontrados = activos.filter((r) => coincideNombre(r.nombre, buscar));
   // Cubículos: pestañas para separar las reservas de ahora de las programadas a futuro.
-  const programadas = modulo.conCalendario ? activos.filter((r) => estaProgramado(r, ahora)) : [];
-  const actuales = modulo.conCalendario ? activos.filter((r) => !estaProgramado(r, ahora)) : activos;
+  const programadas = modulo.conCalendario ? encontrados.filter((r) => estaProgramado(r, ahora)) : [];
+  const actuales = modulo.conCalendario ? encontrados.filter((r) => !estaProgramado(r, ahora)) : encontrados;
   const lista = grupo === 'programadas' ? programadas : actuales;
   const orden = useOrden(lista, CLAVES_REGISTRO); // Al abrir, lo último registrado primero
   const paginacion = usePaginacion(orden.ordenados, POR_PAGINA_ACTIVIDAD);
@@ -78,6 +82,7 @@ export function RegistrosActivos({ modulo, recursos, registros, ejecutar }: Prop
     <section className="panel">
       <div className="panel-encabezado">
         <h2>{modulo.activos} ({activos.length})</h2>
+        <BuscadorNombre valor={buscar} onCambio={(v) => { setBuscar(v); paginacion.irA(0); }} />
         <OrdenLista
           campo={orden.campo}
           sentido={orden.sentido}
@@ -97,7 +102,7 @@ export function RegistrosActivos({ modulo, recursos, registros, ejecutar }: Prop
       )}
       {lista.length === 0 ? (
         <p className="vacio">
-          {!modulo.conCalendario ? `No hay ${modulo.activos.toLowerCase()}.` : grupo === 'programadas' ? 'No hay reservas programadas.' : 'No hay reservas en curso.'}
+          {buscar.trim() ? `Ningún nombre coincide con «${buscar.trim()}».` : !modulo.conCalendario ? `No hay ${modulo.activos.toLowerCase()}.` : grupo === 'programadas' ? 'No hay reservas programadas.' : 'No hay reservas en curso.'}
         </p>
       ) : (
         <table>
