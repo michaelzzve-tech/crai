@@ -340,6 +340,7 @@ export async function descargarInformePdf(informe: Informe): Promise<void> {
   const detalles = [
     tabla('Detalle de préstamos de laptops', columnasDetalle(LAPTOPS), informe.detallePrestamos),
     tabla('Detalle de reservas de cubículos', columnasDetalle(CUBICULOS), informe.detalleReservas),
+    tabla('Detalle de reservas de la sala Podcast', columnasDetalle(CUBICULOS), informe.detallePodcast),
     tabla('Detalle de reservas de salas especiales', columnasSalas(), informe.detalleSalas),
   ];
   for (const { titulo, cols, filas: registros } of detalles) {
