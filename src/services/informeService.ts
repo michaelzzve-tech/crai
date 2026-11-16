@@ -42,9 +42,9 @@ export interface BloqueInstitucion {
   grupos: Grupo[];
 }
 
-/** "Cubículos de Estudio", "Préstamos de Laptops" o "Salas Especiales", como en la sección 3 del reporte. */
+/** Un servicio del informe, con Podcast separado de los cubículos de estudio. */
 export interface Servicio {
-  tipo: 'cubiculos' | 'laptops' | 'salas';
+  tipo: 'cubiculos' | 'podcast' | 'laptops' | 'salas';
   titulo: string;
   unidad: string; // "reservas" o "solicitudes"
   totales: { etiqueta: string; valor: string }[];
@@ -109,7 +109,8 @@ export interface Informe {
   horasLaptops: HorasLaptops;
   comparativos: SeccionCuadros[];
   detallePrestamos: Registro[]; // Cada préstamo del período, del más antiguo al más reciente
-  detalleReservas: Registro[]; // Cada reserva del período, igual
+  detalleReservas: Registro[]; // Reservas de cubículos, sin Podcast
+  detallePodcast: Registro[]; // Reservas de la sala Podcast
   detalleSalas: ReservaSala[]; // Cada reserva de sala especial del período, igual
 }
 
@@ -230,7 +231,7 @@ function servicio(
   const totales = conUsuarios
     ? [
         { etiqueta: `Total de ${unidad} realizadas`, valor: dosCifras(registros.length) },
-        { etiqueta: 'Total de usuarios en cubículos', valor: dosCifras(usuariosCubiculos(registros) ?? 0) },
+        { etiqueta: `Total de usuarios en ${RECURSOS[tipo]}`, valor: dosCifras(usuariosCubiculos(registros) ?? 0) },
         { etiqueta: `Total de ${unidad} por estudiantes`, valor: dosCifras(porCondicion('Estudiante')) },
         { etiqueta: `Total de ${unidad} por docentes`, valor: dosCifras(porCondicion('Docente')) },
       ]
@@ -359,8 +360,10 @@ function cuadro<T extends { inicio: string }>(
   };
 }
 
-function comparativos(prestamos: Registro[], reservas: Registro[], salas: ReservaSala[], hasta: string): SeccionCuadros[] {
+function comparativos(prestamos: Registro[], todasReservas: Registro[], salas: ReservaSala[], hasta: string): SeccionCuadros[] {
   const meses = mesesHasta(hasta);
+  const reservas = todasReservas.filter((r) => r.recursoId !== 'POD');
+  const podcast = todasReservas.filter((r) => r.recursoId === 'POD');
   const institucion = (r: Registro) => (INSTITUCIONES.includes(r.instituto) && r.condicion !== 'DTI' ? r.instituto : OTROS);
   const institucionSala = (r: ReservaSala) => (INSTITUCIONES.includes(r.instituto) ? r.instituto : OTROS);
   const nombreSala = (r: ReservaSala) => SALAS.find((s) => s.id === r.salaId)?.nombre ?? '';
@@ -370,6 +373,7 @@ function comparativos(prestamos: Registro[], reservas: Registro[], salas: Reserv
       titulo: 'POR GÉNERO',
       cuadros: [
         cuadro('Reservas de CUBÍCULOS DE ESTUDIO', 'Reservas de cubículos de estudio por género', 'GÉNERO', meses, reservas, GENEROS, (r) => r.genero ?? ''),
+        cuadro('Reservas de SALA PODCAST', 'Reservas de sala Podcast por género', 'GÉNERO', meses, podcast, GENEROS, (r) => r.genero ?? ''),
         cuadro('Solicitudes de LAPTOPS', 'Solicitud de laptops por género', 'GÉNERO', meses, prestamos, GENEROS, (r) => r.genero ?? ''),
       ],
     },
@@ -377,21 +381,26 @@ function comparativos(prestamos: Registro[], reservas: Registro[], salas: Reserv
       titulo: 'POR INSTITUCIÓN',
       cuadros: [
         cuadro('Reservas de CUBÍCULOS DE ESTUDIO', 'Reserva de cubículos de estudio por institución', 'INSTITUCIÓN', meses, reservas, filasInstitucion, institucion),
+        cuadro('Reservas de SALA PODCAST', 'Reserva de sala Podcast por institución', 'INSTITUCIÓN', meses, podcast, filasInstitucion, institucion),
         cuadro('Solicitudes de LAPTOPS', 'Solicitud de laptops por institución', 'INSTITUCIÓN', meses, prestamos, filasInstitucion, institucion),
         cuadro('Reservas de SALAS ESPECIALES', 'Reserva de salas especiales por institución', 'INSTITUCIÓN', meses, salas, filasInstitucion, institucionSala),
       ],
     },
     {
-      titulo: 'TOTAL USUARIOS DE CUBÍCULOS DE ESTUDIO',
+      titulo: 'TOTAL USUARIOS DE CUBÍCULOS DE ESTUDIO Y PODCAST',
       cuadros: [
         cuadro('Usuarios en CUBÍCULOS DE ESTUDIO', 'Usuarios de cubículos de estudio por institución', 'INSTITUCIÓN', meses, reservas,
+          filasInstitucion, institucion, (r) => r.usuarios ?? 0),
+        cuadro('Usuarios en SALA PODCAST', 'Usuarios de sala Podcast por institución', 'INSTITUCIÓN', meses, podcast,
           filasInstitucion, institucion, (r) => r.usuarios ?? 0),
       ],
     },
     {
-      titulo: 'HORAS DE USO DE CUBÍCULOS DE ESTUDIO',
+      titulo: 'HORAS DE USO DE CUBÍCULOS DE ESTUDIO Y PODCAST',
       cuadros: [
         cuadro('Horas de uso CUBÍCULOS DE ESTUDIO', 'Horas de uso de cubículos de estudio', 'INSTITUCIÓN', meses, reservas,
+          filasInstitucion, institucion, usoCubiculo, true),
+        cuadro('Horas de uso SALA PODCAST', 'Horas de uso de sala Podcast', 'INSTITUCIÓN', meses, podcast,
           filasInstitucion, institucion, usoCubiculo, true),
       ],
     },
@@ -537,14 +546,16 @@ export async function generarInforme(periodo: Periodo, filtro: FiltroInforme = S
     titulo: tituloPeriodo(periodo),
     filtros: describirFiltro(filtro),
     servicios: [
-      servicio('cubiculos', 'Cubículos de Estudio', 'reservas', r, usoCubiculo, true),
+      servicio('cubiculos', 'Cubículos de Estudio', 'reservas', r.filter((r) => r.recursoId !== 'POD'), usoCubiculo, true),
+      servicio('podcast', 'Sala Podcast', 'reservas', r.filter((r) => r.recursoId === 'POD'), usoCubiculo, true),
       servicio('laptops', 'Préstamos de Laptops', 'solicitudes', p, usoLaptop, false),
       servicioSalas(s),
     ],
     horasLaptops: horasLaptopsPorMes(prestamos, periodo.hasta),
     comparativos: comparativos(prestamos, reservas, salas, periodo.hasta),
     detallePrestamos: p,
-    detalleReservas: r,
+    detalleReservas: r.filter((r) => r.recursoId !== 'POD'),
+    detallePodcast: r.filter((r) => r.recursoId === 'POD'),
     detalleSalas: s,
   };
 }
@@ -558,12 +569,12 @@ export function lineasGrupo(g: Grupo, servicio: Servicio): string[] {
     salas ? `${Unidad}: ${dosCifras(g.cantidad)}.` : `${Unidad}: ${dosCifras(g.cantidad)} (${dosCifras(g.usuarias)} usuarias, ${dosCifras(g.usuarios)} usuarios).`,
     ...(g.cursantes.length ? [`Cursantes de: ${lista(g.cursantes)}`] : []),
     `${salas ? 'Actividades' : 'Motivos de uso'}: ${lista(g.motivos)}`,
-    ...(g.usuariosCubiculos !== undefined ? [`Total usuarios en ${salas ? 'salas' : 'cubículos'}: ${dosCifras(g.usuariosCubiculos)}`] : []),
+    ...(g.usuariosCubiculos !== undefined ? [`Total usuarios en ${RECURSOS[servicio.tipo]}: ${dosCifras(g.usuariosCubiculos)}`] : []),
     `Horas de uso: ${horasYMinutos(g.minutos)}.`,
   ];
 }
 
-const RECURSOS: Record<Servicio['tipo'], string> = { cubiculos: 'cubículos', laptops: 'laptops', salas: 'salas' };
+const RECURSOS: Record<Servicio['tipo'], string> = { cubiculos: 'cubículos', podcast: 'sala Podcast', laptops: 'laptops', salas: 'salas' };
 
 export function lineasInstitucion(b: BloqueInstitucion, servicio: Servicio): string[] {
   const { unidad, tipo } = servicio;
