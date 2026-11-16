@@ -151,6 +151,7 @@ y pegue los mismos dos valores.
   **Esta y las siguientes**.
 - **Informes** (ícono de gráfica en el extremo derecho del encabezado): informe de actividades con el formato
   del reporte mensual del CRAI, para un mes (campo **Mes**) o un rango de fechas (por defecto, el mes actual):
+  - **Sala Podcast separada de los cubículos**: tiene sus propios totales de reservas, usuarios y horas de uso, detalle por institución y condición, y cuadros y gráficas por género e institución. La separación se aplica también al PDF y a su detalle de reservas, incluidos los registros históricos. Los filtros se aplican a ambos servicios; Podcast no suma en las métricas de cubículos.
   - **Beneficiarios alcanzados por servicio prestado**: para cubículos y laptops, los totales (reservas o
     solicitudes, por estudiantes, docentes y otros, usuarias, usuarios, usuarios en cubículos y tiempo total)
     y el detalle por institución (ITJO, IUJO, CFJO, Otros y Otros (DTI)) y por condición: cantidad, cursantes
