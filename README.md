@@ -108,7 +108,10 @@ y pegue los mismos dos valores.
   puede **arrastrar** a otro día u hora. Las ya terminadas se ven más claras y no se mueven. Al pasar el
   mouse sobre una reserva se ven todos sus datos (menos la fecha de registro).
 - **En curso**: préstamos o reservas activos; desde ahí se registra la devolución de la
-  laptop o la salida del cubículo. En los cubículos, el botón del **lápiz** cambia la fecha, el
+  laptop o la salida del cubículo. Tanto en Laptops como en Cubículos, cada registro tiene el botón
+  **Cancelar reserva**: pide confirmación y, al aceptar, borra el registro, actualiza la disponibilidad
+  del recurso y lo excluye de las estadísticas. También permite cancelar reservas programadas.
+  En los cubículos, el botón del **lápiz** cambia la fecha, el
   horario y la cantidad de usuarios de una reserva (se revisa que no choque con otra; si queda para más tarde, el cubículo
   se libera mientras tanto). En las laptops, la hora de devolución
   se toma sola en el momento y se muestra el **tiempo transcurrido** desde la hora de inicio. En los
