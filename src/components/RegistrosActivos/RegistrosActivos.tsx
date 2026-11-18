@@ -46,7 +46,7 @@ function momentoDeFin(registro: Registro) {
 export function RegistrosActivos({ modulo, recursos, registros, ejecutar }: Props) {
   const [finalizando, setFinalizando] = useState<string | null>(null);
   const [editando, setEditando] = useState<Registro | null>(null); // Reserva abierta en "Modificar reserva"
-  const [cancelando, setCancelando] = useState<string | null>(null); // Reserva (cubículos) que se va a cancelar y borrar
+  const [cancelando, setCancelando] = useState<string | null>(null); // Reserva o préstamo que se va a cancelar y borrar
   const ahora = useAhora(15_000);
   const conFin = modulo.conHoraFin;
   const textoModificar = modulo.conCalendario ? 'Modificar reserva' : 'Modificar préstamo';
@@ -189,12 +189,9 @@ export function RegistrosActivos({ modulo, recursos, registros, ejecutar }: Prop
                         >
                           <IconoLapiz />
                         </button>
-                        {/* Cubículos: cancelar en cualquier momento (se borra); las laptops solo se devuelven. */}
-                        {modulo.conCalendario && (
-                          <button className="peligro" onClick={() => { setEditando(null); setFinalizando(null); setCancelando(r.id); }}>
-                            Cancelar reserva
-                          </button>
-                        )}
+                        <button className="peligro" onClick={() => { setEditando(null); setFinalizando(null); setCancelando(r.id); }}>
+                          Cancelar reserva
+                        </button>
                         {!programado && (
                           <button className="primario" onClick={() => { setEditando(null); setCancelando(null); setFinalizando(r.id); }}>
                             {modulo.finalizar}
