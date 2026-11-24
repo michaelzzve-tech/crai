@@ -264,14 +264,18 @@ src/
 > Sin Supabase los datos viven solo en ese navegador y esa computadora.
 
 
-### Finalización automática de préstamos en masa de laptops
+### Devolución automática de laptops
 
-Al marcar **Préstamo en masa** aparecen **Fecha de finalización** y **Hora de finalización**
-(opcionales, en hora de Caracas). Pueden ser de otro día, siempre después del inicio y del momento
-actual. Ambos campos vacíos conservan la devolución manual. En **Préstamos activos → Préstamo en
-masa → Editar** puede agregar, cambiar o quitar la finalización de préstamos que ya registró; los
-cambios se aplican a todo el grupo. El lápiz individual conserva y permite editar el fin de una laptop
-que ya lo tenga programado. El cintillo y cada fila muestran la fecha y hora de finalización.
+En Laptops, la casilla **Devolución automática** está disponible al crear o editar un préstamo,
+tanto individual como en masa. Al activarla aparecen **Fecha de finalización** y **Hora de
+finalización**, ambas obligatorias y en hora de Caracas. Pueden ser de otro día, siempre después
+del inicio y del momento actual. Al desactivarla se ocultan los campos y se quita la programación
+al guardar. **Limpiar** también desactiva la casilla.
+
+En préstamos existentes use el lápiz individual o **Préstamo en masa → Editar** para activar,
+cambiar o desactivar la programación; si ya tienen un fin guardado, la casilla aparece activada.
+Al editar el grupo, los cambios se aplican a todas sus laptops. La programación se mantiene al
+alternar entre préstamo individual y en masa. El cintillo y cada fila muestran el fin programado.
 
 Al vencer, el préstamo pasa al historial con la hora fijada como devolución, actualiza la disponibilidad
 de la laptop y suma las horas de uso hasta ese momento. Puede registrar una devolución antes de

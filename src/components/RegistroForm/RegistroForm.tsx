@@ -200,7 +200,8 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
   const laptops = useLaptops(modulo.conLaptop && laptop !== null);
   // Préstamo en masa: null = casilla apagada; si no, los recursos elegidos (varias laptops a la vez).
   const [enMasa, setEnMasa] = useState<string[] | null>(null);
-  const limpiar = () => { setDatos({ ...vacio(), ...inicial }); setOtroMotivo(false); setRecurrencia(null); setLaptop(null); setEnMasa(null); };
+  const [devolucionAutomatica, setDevolucionAutomatica] = useState(() => !!anterior?.fin);
+  const limpiar = () => { setDatos({ ...vacio(), ...inicial }); setOtroMotivo(false); setRecurrencia(null); setLaptop(null); setEnMasa(null); setDevolucionAutomatica(false); };
   const cambiar = (campo: keyof NuevoRegistro) => (valor: string) =>
     setDatos({ ...datos, [campo]: valor });
   // Con Psicólogo o DTI, carrera y semestre quedan en "No aplica"; con Docente se eligen, y "No aplica" es una opción más.
@@ -374,19 +375,28 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
             </label>
           </>
         )}
-        {modulo.conPrestamoEnMasa && (enMasa !== null || grupo || anterior?.fin) && (
+        {modulo.conPrestamoEnMasa && (
+          <label className="ancho casilla">
+            <input type="checkbox" checked={devolucionAutomatica} onChange={(e) => {
+              setDevolucionAutomatica(e.target.checked);
+              if (!e.target.checked) setDatos({ ...datos, fechaFin: '', horaFin: '' });
+            }} />
+            Devolución automática
+          </label>
+        )}
+        {modulo.conPrestamoEnMasa && devolucionAutomatica && (
           <>
             <label htmlFor="registro-fecha-fin">
               Fecha de finalización
-              <input id="registro-fecha-fin" type="date" min={datos.fecha} required={!!datos.horaFin}
+              <input id="registro-fecha-fin" type="date" min={datos.fecha} required
                 value={datos.fechaFin ?? ''} onChange={(e) => cambiar('fechaFin')(e.target.value)} />
             </label>
             <label htmlFor="registro-hora-fin-masa">
               Hora de finalización
-              <input id="registro-hora-fin-masa" type="time" required={!!datos.fechaFin}
+              <input id="registro-hora-fin-masa" type="time" required
                 value={datos.horaFin} onChange={(e) => cambiar('horaFin')(e.target.value)} />
             </label>
-            <p className="ancho secundario">Opcional. Los préstamos finalizan automáticamente en la fecha y hora indicadas (hora de Caracas). Deje ambos campos vacíos para finalizar manualmente.</p>
+            <p className="ancho secundario">La devolución se registrará automáticamente en la fecha y hora indicadas (hora de Caracas). Desactive Devolución automática para devolver manualmente.</p>
           </>
         )}
         {conRecurrencia && !anterior && (
@@ -415,7 +425,7 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
         )}
         {modulo.conPrestamoEnMasa && !anterior && (
           <label className="ancho casilla">
-            <input type="checkbox" checked={enMasa !== null} onChange={(e) => { setEnMasa(e.target.checked ? (datos.recursoId ? [datos.recursoId] : []) : null); if (!e.target.checked) setDatos({ ...datos, fechaFin: '', horaFin: '' }); }} />
+            <input type="checkbox" checked={enMasa !== null} onChange={(e) => setEnMasa(e.target.checked ? (datos.recursoId ? [datos.recursoId] : []) : null)} />
             Préstamo en masa
           </label>
         )}

@@ -38,7 +38,7 @@ Aplicación web del **CRAI** (centro de recursos de una universidad) para llevar
   (`activarProgramados` corre al cargar y cada minuto).
 - **Avisos:** una reserva de cubículo está «por vencer» 10 minutos antes de su fin
   (`MINUTOS_AVISO`) y «vencida» después. La campana de notificaciones los reúne.
-- **Finalización automática de laptops:** `hora_fin` / `fin` guarda el fin opcional del préstamo en masa (puede ser otro día). Supabase Cron (`supabase/finalizacion-laptops.sql`) cierra cada minuto con `fin_real = hora_fin`, incluso con la web cerrada; en modo local se recuperan vencidos al abrir y cada diez segundos. No finalizar automáticamente cubículos ni salas.
+- **Finalización automática de laptops:** `hora_fin` / `fin` guarda el fin opcional del préstamo individual o en masa (puede ser otro día), activado con la casilla «Devolución automática». Supabase Cron (`supabase/finalizacion-laptops.sql`) cierra cada minuto con `fin_real = hora_fin`, incluso con la web cerrada; en modo local se recuperan vencidos al abrir y cada diez segundos. No finalizar automáticamente cubículos ni salas.
 - **Cancelar = borrar.** Una reserva o préstamo cancelado se borra y no cuenta en estadísticas.
   Finalizar guarda `finReal` (hora real de devolución o salida).
 - **Reservas recurrentes:** todas las fechas de una serie llevan el mismo `serieId`
