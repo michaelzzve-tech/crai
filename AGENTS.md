@@ -9,7 +9,7 @@ Aplicación web del **CRAI** (centro de recursos de una universidad) para llevar
 
 | Sección (pestaña) | Qué hace |
 |---|---|
-| **Laptops** | Préstamo de laptops: se presta, se registra la devolución. Sin hora de fin prevista. Admite **préstamo en masa** (varias laptops a la misma persona a la vez). |
+| **Laptops** | Préstamo de laptops: se presta, se registra la devolución. Hora de fin opcional para finalización automática de préstamos en masa. Admite **préstamo en masa** (varias laptops a la misma persona a la vez). |
 | **Cubículos** | Reserva de cubículos 1–6 y la sala **Podcast** (código guardado `POD`), con fecha, hora de inicio y de fin, planner (calendario) y reservas recurrentes. |
 | **Salas especiales** | Reserva de salas grandes (Javier, Loyola, Basabe, Piedra, CRAI) con planner, reservas recurrentes, salida anticipada y mantenimiento. |
 | **Informes** (ícono de gráfica en el encabezado) | Estadísticas por rango de fechas con filtros, gráficas, PDF, respaldo en Excel, copia completa (.json) y borrado total. |
@@ -38,6 +38,7 @@ Aplicación web del **CRAI** (centro de recursos de una universidad) para llevar
   (`activarProgramados` corre al cargar y cada minuto).
 - **Avisos:** una reserva de cubículo está «por vencer» 10 minutos antes de su fin
   (`MINUTOS_AVISO`) y «vencida» después. La campana de notificaciones los reúne.
+- **Finalización automática de laptops:** `hora_fin` / `fin` guarda el fin opcional del préstamo en masa (puede ser otro día). Supabase Cron (`supabase/finalizacion-laptops.sql`) cierra cada minuto con `fin_real = hora_fin`, incluso con la web cerrada; en modo local se recuperan vencidos al abrir y cada diez segundos. No finalizar automáticamente cubículos ni salas.
 - **Cancelar = borrar.** Una reserva o préstamo cancelado se borra y no cuenta en estadísticas.
   Finalizar guarda `finReal` (hora real de devolución o salida).
 - **Reservas recurrentes:** todas las fechas de una serie llevan el mismo `serieId`
@@ -63,7 +64,7 @@ npm run build        # tsc -b (revisión de tipos) + vite build → dist/
 npm run preview      # sirve dist/ como en producción (base './')
 ```
 
-**No hay pruebas automáticas.** Antes de dar un cambio por terminado:
+**Pruebas automáticas de finalización de laptops:** `npm test` (sin Supabase). Antes de dar un cambio por terminado:
 1. `npm run lint` y `npm run build` sin errores ni advertencias.
 2. Probarlo en el navegador (`npm run dev` o `npm run preview`). Sin Supabase la app guarda en
    localStorage, así que se pueden sembrar datos de prueba con las claves `biblioteca.v3.<tabla>`

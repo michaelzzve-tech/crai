@@ -262,3 +262,34 @@ src/
 | Usar otra base de datos | crear una clase que implemente `Repositorio` y usarla en `src/data/index.ts` |
 
 > Sin Supabase los datos viven solo en ese navegador y esa computadora.
+
+
+### Finalización automática de préstamos en masa de laptops
+
+Al marcar **Préstamo en masa** aparecen **Fecha de finalización** y **Hora de finalización**
+(opcionales, en hora de Caracas). Pueden ser de otro día, siempre después del inicio y del momento
+actual. Ambos campos vacíos conservan la devolución manual. En **Préstamos activos → Préstamo en
+masa → Editar** puede agregar, cambiar o quitar la finalización de préstamos que ya registró; los
+cambios se aplican a todo el grupo. El lápiz individual conserva y permite editar el fin de una laptop
+que ya lo tenga programado. El cintillo y cada fila muestran la fecha y hora de finalización.
+
+Al vencer, el préstamo pasa al historial con la hora fijada como devolución, actualiza la disponibilidad
+de la laptop y suma las horas de uso hasta ese momento. Puede registrar una devolución antes de
+esa fecha; el cierre automático respeta las devoluciones ya guardadas. No modifica cubículos ni salas.
+
+**Activar el cierre con la web cerrada (una sola vez):**
+
+1. Abra su proyecto en Supabase → **SQL Editor** → **New query**.
+2. Copie todo el archivo `supabase/finalizacion-laptops.sql` y pulse **Run**. No borra datos:
+   programa el cierre de los préstamos con fecha de fin, incluidos los que ya hayan vencido.
+3. El resultado debe mostrar `crai-finalizar-laptops` con `active = true`. La tarea revisa cada
+   minuto; la devolución se guarda con la hora exacta fijada, aunque se procese segundos después.
+
+Se reutiliza la columna existente `prestamos.hora_fin`, sin agregar columnas. Antes de ejecutar el
+script puede guardar y editar las fechas, pero Supabase no hará el cierre automático. En modo local
+(sin Supabase), se revisa cada diez segundos mientras la app esté abierta, desde cualquier módulo,
+y al volver a abrirla se procesan los vencidos con su hora fijada.
+
+Referencia de configuración: [Supabase Cron](https://supabase.com/docs/guides/cron/quickstart).
+
+Pruebas de la programación de laptops: `npm test` (datos en memoria, sin conexión a Supabase).

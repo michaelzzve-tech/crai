@@ -9,7 +9,7 @@ import { useOrden } from '../../hooks/useOrden';
 import { CLAVES_REGISTRO, POR_PAGINA_ACTIVIDAD } from '../../utils/orden';
 import { OrdenLista } from '../OrdenLista';
 import { PestanasReservas, type GrupoReservas } from '../PestanasReservas';
-import { diaDe, diferenciaConPrevisto, duracionEntreFechas, formatearDia, formatearHora } from '../../utils/fechas';
+import { diaDe, diferenciaConPrevisto, duracionEntreFechas, formatearFecha, formatearDia, formatearHora } from '../../utils/fechas';
 import { BuscadorNombre } from '../BuscadorNombre';
 import { coincideNombre } from '../../utils/texto';
 import { CintilloEnMasa } from '../CintilloEnMasa';
@@ -144,7 +144,9 @@ export function RegistrosActivos({ modulo, recursos, registros, ejecutar }: Prop
                     {r.semestre && <div className="secundario">Semestre, nivel o sección: {r.semestre}</div>}
                   </td>
                   <td>{r.motivo}</td>
-                  <td>{inicioTexto(r.inicio)}</td>
+                  <td>{inicioTexto(r.inicio)}
+                    {!conFin && r.fin && <div className="secundario">Finalización automática: {formatearFecha(r.fin)}</div>}
+                  </td>
                   {conFin && r.fin ? (
                     <>
                       <td>{formatearHora(r.fin)}</td>

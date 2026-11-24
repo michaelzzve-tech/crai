@@ -27,6 +27,7 @@ const vacio = (): NuevoRegistro => ({
   fecha: diaDe(),
   horaInicio: horaActual(),
   horaFin: '',
+  fechaFin: '',
   fechaRegistro: diaDe(),
 });
 
@@ -59,6 +60,7 @@ function datosParaModificar(r: Registro): NuevoRegistro {
     fecha: diaDe(r.inicio),
     horaInicio: horaActual(new Date(r.inicio)),
     horaFin: r.fin ? horaActual(new Date(r.fin)) : '',
+    fechaFin: r.fin ? diaDe(r.fin) : '',
     fechaRegistro: r.fechaRegistro ?? (r.creado ? diaDe(r.creado) : ''), // Las reservas viejas sin fecha de registro usan cuándo se crearon
   };
 }
@@ -372,6 +374,21 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
             </label>
           </>
         )}
+        {modulo.conPrestamoEnMasa && (enMasa !== null || grupo || anterior?.fin) && (
+          <>
+            <label htmlFor="registro-fecha-fin">
+              Fecha de finalización
+              <input id="registro-fecha-fin" type="date" min={datos.fecha} required={!!datos.horaFin}
+                value={datos.fechaFin ?? ''} onChange={(e) => cambiar('fechaFin')(e.target.value)} />
+            </label>
+            <label htmlFor="registro-hora-fin-masa">
+              Hora de finalización
+              <input id="registro-hora-fin-masa" type="time" required={!!datos.fechaFin}
+                value={datos.horaFin} onChange={(e) => cambiar('horaFin')(e.target.value)} />
+            </label>
+            <p className="ancho secundario">Opcional. Los préstamos finalizan automáticamente en la fecha y hora indicadas (hora de Caracas). Deje ambos campos vacíos para finalizar manualmente.</p>
+          </>
+        )}
         {conRecurrencia && !anterior && (
           <label className="ancho casilla">
             <input type="checkbox" checked={!!recurrencia} onChange={(e) => { setRecurrencia(e.target.checked ? recurrenciaInicial(datos.fecha) : null); if (e.target.checked) setLaptop(null); }} />
@@ -398,7 +415,7 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
         )}
         {modulo.conPrestamoEnMasa && !anterior && (
           <label className="ancho casilla">
-            <input type="checkbox" checked={enMasa !== null} onChange={(e) => setEnMasa(e.target.checked ? (datos.recursoId ? [datos.recursoId] : []) : null)} />
+            <input type="checkbox" checked={enMasa !== null} onChange={(e) => { setEnMasa(e.target.checked ? (datos.recursoId ? [datos.recursoId] : []) : null); if (!e.target.checked) setDatos({ ...datos, fechaFin: '', horaFin: '' }); }} />
             Préstamo en masa
           </label>
         )}

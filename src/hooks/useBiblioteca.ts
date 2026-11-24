@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Modulo } from '../config/modulos';
 import { repositorio } from '../data';
-import { activarProgramados, asegurarRecursos } from '../services/registroService';
+import { activarProgramados, asegurarRecursos, EVENTO_CAMBIO } from '../services/registroService';
 import type { Recurso, Registro } from '../types';
 import { masRecientesPrimero } from '../utils/orden';
 import { useCambiosEnVivo } from './useCambiosEnVivo';
@@ -36,6 +36,12 @@ export function useBiblioteca(modulo: Modulo) {
     const id = setInterval(() => { recargar().catch(() => {}); }, 60_000);
     return () => clearInterval(id);
   }, [modulo, recargar]);
+
+  useEffect(() => {
+    const alCambiar = () => { recargar().catch(() => {}); };
+    window.addEventListener(EVENTO_CAMBIO, alCambiar);
+    return () => window.removeEventListener(EVENTO_CAMBIO, alCambiar);
+  }, [recargar]);
 
   // Lo que se reserva o cambia en otra cuenta aparece aquí al momento.
   useCambiosEnVivo([modulo.tablaRegistros, modulo.tablaRecursos], recargar);
