@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CalendarioReservas } from './components/CalendarioReservas';
 import { Encabezado, type Pestana, type Vista } from './components/Encabezado';
 import { ErrorPantalla } from './components/ErrorPantalla';
@@ -18,6 +18,7 @@ import { useBiblioteca } from './hooks/useBiblioteca';
 import { errorConfiguracion } from './data/supabaseClient';
 import { useNotificaciones } from './hooks/useNotificaciones';
 import { useSesion } from './hooks/useSesion';
+import { finalizarLaptopsProgramadas } from './services/registroService';
 import type { Notificacion } from './services/notificacionService';
 
 interface Aviso {
@@ -45,6 +46,13 @@ function Pantalla() {
 
 /** Pantalla tras iniciar sesión: encabezado, notificaciones y el módulo elegido. */
 function Principal({ correo, cerrarSesion }: { correo?: string; cerrarSesion?: () => void }) {
+  useEffect(() => {
+    const revisar = () => { finalizarLaptopsProgramadas().catch(() => {}); };
+    revisar();
+    const intervalo = setInterval(revisar, 10_000);
+    window.addEventListener('focus', revisar);
+    return () => { clearInterval(intervalo); window.removeEventListener('focus', revisar); };
+  }, []);
   const [modulo, setModulo] = useState<Modulo>(MODULOS[0]);
   const [pestana, setPestana] = useState<Pestana>('registro');
   const [vista, setVista] = useState<Vista>('modulo');

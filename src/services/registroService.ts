@@ -1,5 +1,5 @@
 import { LAPTOPS, nombreRecurso, type Modulo } from '../config/modulos';
-import { repositorio } from '../data';
+import { repositorio, usaBaseDeDatos } from '../data';
 import type { NuevoRegistro, Recurso, Registro } from '../types';
 import { diaALas, diaDe, formatearDia, formatearHora } from '../utils/fechas';
 import { generarId } from '../utils/id';
@@ -114,12 +114,21 @@ function prepararRegistro(modulo: Modulo, datos: NuevoRegistro, recursos: Recurs
   const dia = datos.fecha || diaDe();
   if (dia < diaDe() && dia !== (anterior && diaDe(anterior.inicio))) throw new Error('La fecha de la reserva no puede ser anterior a hoy.');
   const inicio = diaALas(dia, datos.horaInicio);
-  const fin = modulo.conHoraFin ? diaALas(dia, datos.horaFin) : undefined;
+  const conFinLaptop = modulo.conPrestamoEnMasa && !!(datos.fechaFin || datos.horaFin);
+  if (conFinLaptop && (!datos.fechaFin || !datos.horaFin)) {
+    throw new Error('Indique la fecha y la hora de finalización, o deje ambas vacías.');
+  }
+  const fin = modulo.conHoraFin ? diaALas(dia, datos.horaFin)
+    : conFinLaptop ? diaALas(datos.fechaFin!, datos.horaFin) : undefined;
+  if (fin && !Number.isFinite(fin.getTime())) throw new Error('La fecha y hora de finalización no son válidas.');
   if (fin && fin <= inicio) {
     throw new Error('La hora de fin debe ser posterior a la hora de inicio.');
   }
 
   // Una reserva para más tarde no ocupa el recurso todavía: se marca en uso al llegar su hora.
+  if (conFinLaptop && !anterior?.finReal && fin! <= new Date()) {
+    throw new Error('La finalización automática debe ser posterior al momento actual.');
+  }
   const programado = inicio > new Date();
   // Con hora de fin (cubículos), un recurso en uso solo impide la reserva si el horario choca
   // (lo revisa revisarChoque); un préstamo sin hora de fin necesita el recurso libre ahora.
@@ -405,6 +414,19 @@ export async function finalizar(modulo: Modulo, registro: Registro, momento = ne
   });
   const recursos = await repositorio.listarRecursos(modulo.tablaRecursos);
   const recurso = recursos.find((r) => r.id === registro.recursoId);
-  if (recurso) await repositorio.guardarRecurso(modulo.tablaRecursos, { ...recurso, estado: 'disponible' });
+  if (recurso) await actualizarEstadoRecurso(modulo, recurso.id);
   avisarCambio();
+}
+
+/** En modo local se recuperan también los vencimientos ocurridos con la página cerrada.
+ * En Supabase lo hace Cron, con actualizaciones condicionales dentro de una transacción. */
+export async function finalizarLaptopsProgramadas(ahora = new Date()): Promise<void> {
+  if (usaBaseDeDatos) return;
+  const registros = await repositorio.listarRegistros(LAPTOPS.tablaRegistros);
+  const vencidos = registros.filter((r) => !r.finReal && r.fin && new Date(r.fin) <= ahora);
+  for (const r of vencidos) {
+    await repositorio.guardarRegistro(LAPTOPS.tablaRegistros, { ...r, finReal: r.fin });
+  }
+  for (const id of new Set(vencidos.map((r) => r.recursoId))) await actualizarEstadoRecurso(LAPTOPS, id);
+  if (vencidos.length) avisarCambio();
 }

@@ -3,7 +3,7 @@ import { nombreRecurso, type Modulo } from '../../config/modulos';
 import { useAhora } from '../../hooks/useAhora';
 import { cancelarEnMasa, finalizarEnMasa, gruposEnMasa } from '../../services/registroService';
 import type { Recurso, Registro } from '../../types';
-import { formatearHora } from '../../utils/fechas';
+import { formatearFecha, formatearHora } from '../../utils/fechas';
 import { ModificarReserva } from '../RegistroForm';
 import type { EjecutarAccion } from '../tipos';
 
@@ -42,6 +42,7 @@ export function CintilloEnMasa({ modulo, recursos, registros, ejecutar }: {
                   {g.length} {modulo.recursos.toLowerCase()} ({g.map((r) => nombreRecurso(r.recursoId)).join(', ')})
                   {' · '}{programado ? 'programado para las' : 'desde las'} {formatearHora(g[0].inicio)}
                 </span>
+                {g.some((r) => r.fin) && <span>Finalización automática: {[...new Set(g.map((r) => r.fin ? formatearFecha(r.fin) : 'Sin programar'))].join(' · ')}</span>}
               </div>
               <div className="cintillo-botones">
                 {pregunta ? (

@@ -23,7 +23,7 @@ export interface Registro {
   usuarios?: number; // Cantidad de usuarios (solo reservas de cubículos)
   motivo: string;
   inicio: string; // Hora de inicio, ISO 8601
-  fin?: string; // Hora de fin prevista, ISO 8601 (solo módulos con hora de fin)
+  fin?: string; // Hora de fin prevista, ISO 8601 (cubículos o laptops con finalización automática)
   finReal?: string; // Cuándo se devolvió o liberó; vacío mientras está activo
   serieId?: string; // Igual en todas las fechas de una reserva recurrente (solo cubículos); vacío si es única
   fechaRegistro?: string; // "Fecha de registro": cuándo se pidió la reserva, "AAAA-MM-DD"; solo informativa (solo cubículos)
@@ -43,7 +43,8 @@ export interface NuevoRegistro {
   motivo: string;
   fecha: string; // Día de la reserva, "AAAA-MM-DD" (solo módulos con hora de fin; si no, hoy)
   horaInicio: string; // "HH:MM"
-  horaFin: string; // "HH:MM"; vacío en módulos sin hora de fin
+  fechaFin?: string; // Día de finalización automática de laptops, "AAAA-MM-DD"
+  horaFin: string; // "HH:MM"; opcional en laptops
   fechaRegistro: string; // "AAAA-MM-DD"; solo en módulos con conFechaRegistro
 }
 
