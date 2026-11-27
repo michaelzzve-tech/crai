@@ -225,7 +225,7 @@ export function RegistroForm({ modulo, recursos, ejecutar, inicial, conRecurrenc
   const programado = !!datos.fecha && !!datos.horaInicio
     && diaALas(datos.fecha, datos.horaInicio) > ahora;
   // Con hora de fin (cubículos) también se puede elegir uno en uso: solo se impide si el horario choca.
-  const elegible = (r: Recurso) => r.id === anterior?.recursoId || r.estado === 'disponible' || ((programado || modulo.conHoraFin) && r.estado === 'ocupado');
+  const elegible = (r: Recurso) => modulo.id === 'cubiculos' || r.id === anterior?.recursoId || r.estado === 'disponible' || ((programado || modulo.conHoraFin) && r.estado === 'ocupado');
   // Una laptop (sin hora de fin) en uso solo se ofrece para más tarde.
   const laptopElegible = (r: Recurso) => r.estado === 'disponible' || (programado && r.estado === 'ocupado');
 

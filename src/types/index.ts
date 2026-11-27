@@ -98,3 +98,8 @@ export interface NuevaReservaSala {
   solicitante: string;
   profesor: string;
 }
+
+/** Mantenimiento de un cubículo o del Podcast. */
+export interface MantenimientoCubiculo extends Omit<MantenimientoSala, 'salaId'> {
+  recursoId: string;
+}

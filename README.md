@@ -202,6 +202,18 @@ y pegue los mismos dos valores.
   En **Salas especiales → Espacios**, el botón «A mantenimiento» pide la fecha y hora en que comienza (y, si se
   quiere, el fin y el motivo); desde ese momento la sala no se puede reservar hasta pulsar «Marcar disponible».
   Necesita la tabla `mantenimiento_salas` (ver `supabase/salas-especiales.sql`).
+  En **Cubículos → Espacios**, incluido **Podcast**, se usa el mismo formulario: inicio, fin opcional y motivo.
+  El mantenimiento futuro puede cancelarse; uno activo se termina con «Marcar disponible».
+  El calendario muestra los períodos de mantenimiento y avisa de reservas existentes que coinciden, sin borrarlas.
+  Las reservas nuevas, modificadas, recurrentes o arrastradas no pueden cruzarse con esos períodos.
+  Fuera del período se permite reservar; al llegar el fin indicado deja de mostrarse en mantenimiento.
+  La copia completa incluye estos mantenimientos; las copias antiguas siguen siendo compatibles.
+
+  **Configuración en Supabase (una sola vez):** abra **SQL Editor**, copie el contenido de
+  `supabase/mantenimiento-cubiculos.sql` y pulse **Run**. El script crea la tabla con permisos para
+  bibliotecarios y activa las actualizaciones en vivo; no borra datos. Sin ejecutar el script,
+  el resto de la aplicación sigue funcionando y el formulario indica qué falta al intentar guardar.
+  En modo local no hace falta ejecutar SQL.
 - **Historial** (ícono de reloj): todos los registros, con búsqueda. En los cubículos muestra la hora real de
   salida, cuánto antes o después de lo previsto fue y el tiempo real de uso (también en el Excel y el PDF).
 - **Resumen**: disponibles, en uso, en mantenimiento y (en cubículos) reservas vencidas. Al pasar el mouse por

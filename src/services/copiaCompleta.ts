@@ -1,6 +1,6 @@
 import { MODULOS } from '../config/modulos';
 import { repositorio } from '../data';
-import type { Recurso, Registro, ReservaSala } from '../types';
+import type { MantenimientoCubiculo, Recurso, Registro, ReservaSala } from '../types';
 import { diaDe } from '../utils/fechas';
 import { EVENTO_CAMBIO } from './registroService';
 import { verificar } from './reinicio';
@@ -23,6 +23,7 @@ export interface CopiaCompleta {
   recursos: Record<string, Recurso[]>; // Por tabla: "laptops", "cubiculos"
   registros: Record<string, Registro[]>; // Por tabla: "prestamos", "reservas"
   reservasSalas: ReservaSala[];
+  mantenimientosCubiculos?: MantenimientoCubiculo[];
 }
 
 /** Cuántos elementos trae una copia, para mostrarlos antes de importar. */
@@ -40,7 +41,8 @@ async function armarCopia(): Promise<CopiaCompleta> {
     registros[m.tablaRegistros] = await repositorio.listarRegistros(m.tablaRegistros);
   }
   const reservasSalas = await repositorio.listarReservasSalas();
-  return { formato: FORMATO, version: VERSION, creada: new Date().toISOString(), recursos, registros, reservasSalas };
+  const mantenimientosCubiculos = await repositorio.listarMantenimientosCubiculos();
+  return { mantenimientosCubiculos, formato: FORMATO, version: VERSION, creada: new Date().toISOString(), recursos, registros, reservasSalas };
 }
 
 export function resumirCopia(copia: CopiaCompleta): ResumenCopia {
@@ -50,6 +52,7 @@ export function resumirCopia(copia: CopiaCompleta): ResumenCopia {
       ...MODULOS.map((m) => ({ titulo: m.recursos, cantidad: copia.recursos[m.tablaRecursos]?.length ?? 0 })),
       ...MODULOS.map((m) => ({ titulo: `${m.registros} (${m.recursos.toLowerCase()})`, cantidad: copia.registros[m.tablaRegistros]?.length ?? 0 })),
       { titulo: 'Reservas de salas especiales', cantidad: copia.reservasSalas.length },
+      { titulo: 'Mantenimientos de cubículos', cantidad: copia.mantenimientosCubiculos?.length ?? 0 },
     ],
   };
 }
@@ -90,7 +93,8 @@ export async function leerCopia(archivo: File): Promise<CopiaCompleta> {
   if (
     !listas(recursos, MODULOS.map((m) => m.tablaRecursos), conId) ||
     !listas(registros, MODULOS.map((m) => m.tablaRegistros), conHorario) ||
-    !Array.isArray(reservasSalas) || !reservasSalas.every(conHorario)
+    !Array.isArray(reservasSalas) || !reservasSalas.every(conHorario) ||
+    (datos.mantenimientosCubiculos !== undefined && (!Array.isArray(datos.mantenimientosCubiculos) || !datos.mantenimientosCubiculos.every((m) => conHorario(m) && typeof m.recursoId === 'string')))
   ) {
     throw new Error('La copia está incompleta o dañada; no se importó nada.');
   }
@@ -118,6 +122,14 @@ export async function importarCopia(copia: CopiaCompleta, confirmacion: string):
   const ids = new Set(copia.reservasSalas.map((r) => r.id));
   for (const r of await repositorio.listarReservasSalas()) {
     if (!ids.has(r.id)) await repositorio.borrarReservaSala(r.id);
+  }
+  // Las copias antiguas no incluyen esta tabla y conservan los mantenimientos actuales.
+  if (copia.mantenimientosCubiculos) {
+    for (const m of copia.mantenimientosCubiculos) await repositorio.guardarMantenimientoCubiculo(m);
+    const idsMantenimiento = new Set(copia.mantenimientosCubiculos.map((m) => m.id));
+    for (const m of await repositorio.listarMantenimientosCubiculos()) {
+      if (!idsMantenimiento.has(m.id)) await repositorio.borrarMantenimientoCubiculo(m.id);
+    }
   }
   window.dispatchEvent(new Event(EVENTO_CAMBIO));
   return resumirCopia(copia);

@@ -100,7 +100,7 @@ function Principal({ correo, cerrarSesion }: { correo?: string; cerrarSesion?: (
 
 /** Contenido de un módulo: resumen y la pestaña elegida. */
 function VistaModulo({ modulo, pestana }: { modulo: Modulo; pestana: Pestana }) {
-  const { recursos, registros, recargar, error } = useBiblioteca(modulo);
+  const { recursos, registros, mantenimientos, recargar, error } = useBiblioteca(modulo);
   const [aviso, setAviso] = useState<Aviso | null>(null);
 
   const ejecutar: EjecutarAccion = async (accion, mensajeExito) => {
@@ -130,12 +130,12 @@ function VistaModulo({ modulo, pestana }: { modulo: Modulo; pestana: Pestana }) 
       {pestana === 'registro' && (
         <>
           {modulo.conCalendario
-            ? <CalendarioReservas modulo={modulo} recursos={recursos} registros={registros} ejecutar={ejecutar} />
+            ? <CalendarioReservas mantenimientos={mantenimientos} modulo={modulo} recursos={recursos} registros={registros} ejecutar={ejecutar} />
             : <RegistroForm modulo={modulo} recursos={recursos} ejecutar={ejecutar} />}
           <RegistrosActivos modulo={modulo} recursos={recursos} registros={registros} ejecutar={ejecutar} />
         </>
       )}
-      {pestana === 'recursos' && <RecursoList modulo={modulo} recursos={recursos} registros={registros} ejecutar={ejecutar} />}
+      {pestana === 'recursos' && <RecursoList mantenimientos={mantenimientos} modulo={modulo} recursos={recursos} registros={registros} ejecutar={ejecutar} />}
       {pestana === 'historial' && <Historial modulo={modulo} registros={registros} />}
     </main>
   );
