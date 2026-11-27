@@ -54,7 +54,7 @@ Aplicación web del **CRAI** (centro de recursos de una universidad) para llevar
 
 ## 3. Comandos
 
-Node.js 22 (`.nvmrc`; GitHub Actions usa la misma versión).
+Node.js 26.13.1 (`.nvmrc`; GitHub Actions usa la misma versión).
 
 ```bash
 npm ci               # instalar dependencias exactamente como en package-lock.json
