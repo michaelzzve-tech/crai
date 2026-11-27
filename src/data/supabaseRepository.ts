@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { TABLA_MANTENIMIENTO_SALAS, TABLA_RESERVAS_SALAS } from '../config/salas';
-import type { MantenimientoSala, Recurso, Registro, ReservaSala } from '../types';
+import type { MantenimientoCubiculo, MantenimientoSala, Recurso, Registro, ReservaSala } from '../types';
 import type { Repositorio } from './repository';
 
 // La base de datos usa nombres en snake_case (ver supabase/esquema.sql);
@@ -243,6 +243,33 @@ export class SupabaseRepositorio implements Repositorio {
 
   async borrarMantenimientoSala(id: string) {
     const { error } = await this.db.from(TABLA_MANTENIMIENTO_SALAS).delete().eq('id', id);
+    revisar(error);
+  }
+
+  async listarMantenimientosCubiculos() {
+    const { data, error } = await this.db.from('mantenimiento_cubiculos').select('*');
+    // Instalaciones anteriores siguen funcionando mientras se ejecuta el script nuevo.
+    if (error?.code === 'PGRST205' || error?.code === '42P01') return [];
+    revisar(error);
+    return (data as (Omit<FilaMantenimientoSala, 'sala_id'> & { recurso_id: string })[]).map((f): MantenimientoCubiculo => ({
+      id: f.id, recursoId: f.recurso_id, inicio: iso(f.inicio),
+      fin: f.fin ? iso(f.fin) : undefined, nota: f.nota ?? undefined,
+      creado: f.creado ? iso(f.creado) : iso(f.inicio),
+    }));
+  }
+
+  async guardarMantenimientoCubiculo(m: MantenimientoCubiculo) {
+    const { error } = await this.db.from('mantenimiento_cubiculos').upsert({
+      id: m.id, recurso_id: m.recursoId, inicio: m.inicio, fin: m.fin ?? null, nota: m.nota ?? null,
+    });
+    if (error?.code === 'PGRST205' || error?.code === '42P01') {
+      throw new Error('Para programar mantenimiento de cubículos, ejecute primero supabase/mantenimiento-cubiculos.sql en el SQL Editor de Supabase.');
+    }
+    revisar(error);
+  }
+
+  async borrarMantenimientoCubiculo(id: string) {
+    const { error } = await this.db.from('mantenimiento_cubiculos').delete().eq('id', id);
     revisar(error);
   }
 

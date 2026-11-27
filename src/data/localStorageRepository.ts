@@ -1,5 +1,5 @@
 import { TABLA_MANTENIMIENTO_SALAS, TABLA_RESERVAS_SALAS } from '../config/salas';
-import type { MantenimientoSala, Recurso, Registro, ReservaSala } from '../types';
+import type { MantenimientoCubiculo, MantenimientoSala, Recurso, Registro, ReservaSala } from '../types';
 import type { Repositorio } from './repository';
 
 const clave = (tabla: string) => `biblioteca.v3.${tabla}`;
@@ -74,6 +74,18 @@ export class LocalStorageRepositorio implements Repositorio {
 
   async borrarMantenimientoSala(id: string) {
     escribir(TABLA_MANTENIMIENTO_SALAS, leer<MantenimientoSala>(TABLA_MANTENIMIENTO_SALAS).filter((m) => m.id !== id));
+  }
+
+  async listarMantenimientosCubiculos() {
+    return leer<MantenimientoCubiculo>('mantenimiento_cubiculos');
+  }
+
+  async guardarMantenimientoCubiculo(mantenimiento: MantenimientoCubiculo) {
+    escribir('mantenimiento_cubiculos', upsert(leer<MantenimientoCubiculo>('mantenimiento_cubiculos'), mantenimiento));
+  }
+
+  async borrarMantenimientoCubiculo(id: string) {
+    escribir('mantenimiento_cubiculos', leer<MantenimientoCubiculo>('mantenimiento_cubiculos').filter((m) => m.id !== id));
   }
 
   escucharCambios(tablas: string[], alCambiar: () => void) {

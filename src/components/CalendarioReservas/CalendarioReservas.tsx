@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { HORA_CIERRE } from '../../config/salas';
+import { mantenimientoCubiculoQueChoca } from '../../services/mantenimientoCubiculos';
+import { textoMantenimiento } from '../../services/mantenimientoSalas';
+import { HORA_APERTURA, HORA_CIERRE } from '../../config/salas';
 import { nombreRecurso, type Modulo } from '../../config/modulos';
 import { useAhora } from '../../hooks/useAhora';
 import { useMostrarDiaElegido } from '../../hooks/useMostrarDiaElegido';
@@ -7,8 +9,8 @@ import { useVistaPlanner } from '../../hooks/useVistaPlanner';
 import {
   cancelarReserva, cancelarSerieDesde, editarHorario, estaPorVencer, estaProgramado, estaVencido, finalizar, type NuevoHorario,
 } from '../../services/registroService';
-import type { NuevoRegistro, Recurso, Registro } from '../../types';
-import { diaALas, diaDe, diferenciaConPrevisto, formatearDia, formatearDiaLargo, formatearHora, horaActual } from '../../utils/fechas';
+import type { MantenimientoCubiculo, NuevoRegistro, Recurso, Registro } from '../../types';
+import { diaALas, diaDe, sumarDias, diferenciaConPrevisto, formatearDia, formatearDiaLargo, formatearHora, horaActual } from '../../utils/fechas';
 import { EstadoBadge } from '../EstadoBadge';
 import { BarraSemana, FiltrosPlanner, PlannerSemanal, type EventoPlanner } from '../Planner';
 import { ModificarReserva, RegistroForm } from '../RegistroForm';
@@ -21,6 +23,7 @@ interface Props {
   recursos: Recurso[];
   registros: Registro[];
   ejecutar: EjecutarAccion;
+  mantenimientos: MantenimientoCubiculo[];
 }
 
 /**
@@ -28,7 +31,7 @@ interface Props {
  * se reserva con un clic o con "+ Nueva reserva" (el formulario de siempre, en una ventana),
  * y una reserva se abre con un clic o se arrastra a otro día u hora.
  */
-export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Props) {
+export function CalendarioReservas({ modulo, recursos, registros, ejecutar, mantenimientos }: Props) {
   const { elegido, desde, hasta, cantidad, elegir, tramo, textoPeriodo } = useVistaPlanner();
   const [ocultos, setOcultos] = useState<string[]>([]);
   const [nuevo, setNuevo] = useState<Partial<NuevoRegistro> | null>(null); // Valores iniciales del formulario abierto
@@ -41,6 +44,23 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
   const aLaVista = registros.filter((r) => r.fin && diaDe(r.inicio) >= desde && diaDe(r.inicio) <= hasta);
   const color = (id: string) => modulo.colores[modulo.opciones.indexOf(id)] ?? '#7b8794';
   const nombre = (id: string) => `${modulo.recurso} ${nombreRecurso(id)}`;
+
+  const fichasMantenimiento: EventoPlanner[] = [];
+  for (const m of mantenimientos) {
+    if (ocultos.includes(m.recursoId)) continue;
+    for (let dia = desde; dia <= hasta; dia = sumarDias(dia, 1)) {
+      const inicio = new Date(Math.max(diaALas(dia, `${HORA_APERTURA.toString().padStart(2, '0')}:00`).getTime(), new Date(m.inicio).getTime()));
+      const fin = new Date(Math.min(diaALas(dia, `${HORA_CIERRE}:00`).getTime(), m.fin ? new Date(m.fin).getTime() : Infinity));
+      if (fin <= inicio) continue;
+      fichasMantenimiento.push({
+        id: `mantenimiento-${m.id}-${dia}`, inicio: inicio.toISOString(), fin: fin.toISOString(),
+        columna: m.recursoId, color: color(m.recursoId), titulo: nombre(m.recursoId),
+        movible: false, atenuado: fin <= ahora, etiqueta: 'EN MANTENIMIENTO', etiquetaAviso: true,
+        lineas: ['Mantenimiento', ...(m.nota ? [m.nota] : [])],
+        datos: [['Espacio', nombre(m.recursoId)], ['Mantenimiento', textoMantenimiento(m)], ...(m.nota ? [['Motivo', m.nota] as [string, string]] : [])],
+      });
+    }
+  }
 
   /** Cada reserva tal como se dibuja: el cubículo, quien reservó, el horario y todos sus datos (menos la fecha de registro). Las terminadas no se mueven. */
   const evento = (r: Registro): EventoPlanner => {
@@ -72,6 +92,7 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
       movible: !r.finReal,
       atenuado: !!r.finReal,
       etiqueta: !r.finReal && new Date(r.inicio) <= ahora ? 'EN USO' : undefined,
+      ...(!r.finReal && mantenimientoCubiculoQueChoca(mantenimientos, r.recursoId, new Date(r.inicio), new Date(r.fin!)) ? { etiqueta: 'EN MANTENIMIENTO', etiquetaAviso: true } : {}),
     };
   };
   const registroDe = (e: EventoPlanner) => registros.find((r) => r.id === e.id);
@@ -155,9 +176,9 @@ export function CalendarioReservas({ modulo, recursos, registros, ejecutar }: Pr
             titulo: nombreRecurso(r.id) === r.id ? `${modulo.recurso} ${r.id}` : nombreRecurso(r.id),
             tituloCorto: nombreRecurso(r.id) === r.id ? `${modulo.recurso[0]}${r.id}` : nombreRecurso(r.id),
           }))}
-          reservas={aLaVista.filter((r) => !ocultos.includes(r.recursoId)).map(evento)}
+          reservas={[...aLaVista.filter((r) => !ocultos.includes(r.recursoId)).map(evento), ...fichasMantenimiento]}
           onNueva={(dia, hora) => abrirNuevo(dia, hora)}
-          onAbrir={(e) => setDetalle(e.id)}
+          onAbrir={(e) => { if (registroDe(e)) setDetalle(e.id); }}
           onMover={(e, dia, hora) => { const r = registroDe(e); if (r) void mover(r, dia, hora); }}
         />
       </div>

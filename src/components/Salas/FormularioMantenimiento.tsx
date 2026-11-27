@@ -4,7 +4,7 @@ import type { NuevoMantenimiento } from '../../services/mantenimientoSalas';
 import { diaDe, horaActual } from '../../utils/fechas';
 
 interface Props {
-  sala: Sala;
+  sala: Pick<Sala, 'id' | 'nombre' | 'color'>;
   onGuardar: (datos: NuevoMantenimiento) => Promise<void>; // Lanza un error si no se pudo
   onCerrar: () => void;
 }
@@ -69,7 +69,7 @@ export function FormularioMantenimiento({ sala, onGuardar, onCerrar }: Props) {
             <input id="mant-nota" maxLength={120} placeholder="Ej.: pintura, aire acondicionado…" value={datos.nota} onChange={(e) => cambiar('nota')(e.target.value)} />
           </label>
           <p className="secundario ancho">
-            Desde ese momento la sala aparece «En mantenimiento» y no se puede reservar. Sin fecha de fin, sigue así hasta que pulse «Marcar disponible».
+            Desde ese momento el espacio aparece «En mantenimiento» y no se puede reservar. Sin fecha de fin, sigue así hasta que pulse «Marcar disponible».
           </p>
         </div>
         {error && <div className="aviso aviso-error" role="alert">{error}</div>}

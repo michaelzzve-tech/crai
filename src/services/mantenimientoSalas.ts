@@ -33,7 +33,7 @@ export function mantenimientoQueChoca(lista: MantenimientoSala[], salaId: string
 }
 
 /** Texto corto para avisos: "desde el 05/11, 2:00 p. m." (y "hasta…" si tiene fin). */
-export function textoMantenimiento(m: MantenimientoSala): string {
+export function textoMantenimiento(m: Pick<MantenimientoSala, 'inicio' | 'fin'>): string {
   const desde = `desde el ${formatearDia(diaDe(m.inicio))}, ${formatearHora(m.inicio)}`;
   return m.fin ? `${desde} hasta el ${formatearDia(diaDe(m.fin))}, ${formatearHora(m.fin)}` : desde;
 }

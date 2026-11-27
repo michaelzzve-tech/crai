@@ -1,4 +1,4 @@
-import type { MantenimientoSala, Recurso, Registro, ReservaSala } from '../types';
+import type { MantenimientoCubiculo, MantenimientoSala, Recurso, Registro, ReservaSala } from '../types';
 
 /**
  * Contrato de acceso a datos. Cada método recibe el nombre de la tabla del
@@ -26,6 +26,10 @@ export interface Repositorio {
   listarMantenimientosSalas(): Promise<MantenimientoSala[]>;
   guardarMantenimientoSala(mantenimiento: MantenimientoSala): Promise<void>;
   borrarMantenimientoSala(id: string): Promise<void>;
+
+  listarMantenimientosCubiculos(): Promise<MantenimientoCubiculo[]>;
+  guardarMantenimientoCubiculo(mantenimiento: MantenimientoCubiculo): Promise<void>;
+  borrarMantenimientoCubiculo(id: string): Promise<void>;
 
   /**
    * Avisa con `alCambiar` cada vez que otra cuenta (u otra pestaña) cambia alguna de

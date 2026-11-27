@@ -2,6 +2,7 @@ import { LAPTOPS, nombreRecurso, type Modulo } from '../config/modulos';
 import { repositorio, usaBaseDeDatos } from '../data';
 import type { NuevoRegistro, Recurso, Registro } from '../types';
 import { diaALas, diaDe, formatearDia, formatearHora } from '../utils/fechas';
+import { revisarMantenimientoCubiculo } from './mantenimientoCubiculos';
 import { generarId } from '../utils/id';
 import { validarSerie, type Recurrencia } from './recurrencia';
 
@@ -107,7 +108,7 @@ function revisarChoque(modulo: Modulo, existentes: Registro[], recursoId: string
 
 /** Revisa los datos y arma el registro, sin guardarlo. `programado`: es para más tarde y aún no ocupa el recurso. */
 /** `anterior`: la reserva que se modifica (conserva su id, serie y salida; puede quedar en su fecha aunque ya pasó). */
-function prepararRegistro(modulo: Modulo, datos: NuevoRegistro, recursos: Recurso[], existentes: Registro[], serieId?: string, anterior?: Registro) {
+async function prepararRegistro(modulo: Modulo, datos: NuevoRegistro, recursos: Recurso[], existentes: Registro[], serieId?: string, anterior?: Registro) {
   const recurso = recursos.find((r) => r.id === datos.recursoId);
   if (!recurso) throw new Error(`Seleccione un ${modulo.recurso.toLowerCase()}.`);
 
@@ -135,6 +136,9 @@ function prepararRegistro(modulo: Modulo, datos: NuevoRegistro, recursos: Recurs
   const mismoRecurso = anterior?.recursoId === recurso.id;
   if ((recurso.estado === 'mantenimiento' && !mismoRecurso) || (!mismoRecurso && !programado && !modulo.conHoraFin && recurso.estado !== 'disponible')) {
     throw new Error(`${modulo.recurso} ${nombreRecurso(recurso.id)} no está disponible.`);
+  }
+  if (modulo.id === 'cubiculos' && !anterior?.finReal) {
+    revisarMantenimientoCubiculo(await repositorio.listarMantenimientosCubiculos(), recurso.id, inicio, fin ?? new Date(8.64e15));
   }
   const usuarios = modulo.conUsuarios ? Number(datos.usuarios) : undefined;
   if (usuarios !== undefined && (!Number.isInteger(usuarios) || usuarios < 1)) {
@@ -175,7 +179,7 @@ export async function registrar(modulo: Modulo, datos: NuevoRegistro): Promise<R
     repositorio.listarRecursos(modulo.tablaRecursos),
     repositorio.listarRegistros(modulo.tablaRegistros),
   ]);
-  const { registro, recurso, programado } = prepararRegistro(modulo, datos, recursos, existentes);
+  const { registro, recurso, programado } = await prepararRegistro(modulo, datos, recursos, existentes);
   await repositorio.guardarRegistro(modulo.tablaRegistros, registro);
   if (!programado) await repositorio.guardarRecurso(modulo.tablaRecursos, { ...recurso, estado: 'ocupado' });
   avisarCambio();
@@ -193,13 +197,13 @@ export async function registrarEnMasa(modulo: Modulo, datos: NuevoRegistro, ids:
     repositorio.listarRecursos(modulo.tablaRecursos),
     repositorio.listarRegistros(modulo.tablaRegistros),
   ]);
-  const nuevos = ids.map((id) => {
+  const nuevos = await Promise.all(ids.map(async (id) => {
     try {
-      return prepararRegistro(modulo, { ...datos, recursoId: id }, recursos, existentes);
+      return await prepararRegistro(modulo, { ...datos, recursoId: id }, recursos, existentes);
     } catch (e) {
       throw new Error(`${modulo.recurso} ${nombreRecurso(id)}: ${e instanceof Error ? e.message : String(e)}`);
     }
-  });
+  }));
   for (const n of nuevos) {
     await repositorio.guardarRegistro(modulo.tablaRegistros, n.registro);
     if (!n.programado) await repositorio.guardarRecurso(modulo.tablaRecursos, { ...n.recurso, estado: 'ocupado' });
@@ -236,13 +240,13 @@ export async function modificarEnMasa(modulo: Modulo, grupo: Registro[], datos: 
     repositorio.listarRecursos(modulo.tablaRecursos),
     repositorio.listarRegistros(modulo.tablaRegistros),
   ]);
-  const nuevos = grupo.map((anterior) => {
+  const nuevos = await Promise.all(grupo.map(async (anterior) => {
     try {
-      return prepararRegistro(modulo, { ...datos, recursoId: anterior.recursoId }, recursos, existentes, undefined, anterior).registro;
+      return (await prepararRegistro(modulo, { ...datos, recursoId: anterior.recursoId }, recursos, existentes, undefined, anterior)).registro;
     } catch (e) {
       throw new Error(`${modulo.recurso} ${nombreRecurso(anterior.recursoId)}: ${e instanceof Error ? e.message : String(e)}`);
     }
-  });
+  }));
   for (const r of nuevos) await repositorio.guardarRegistro(modulo.tablaRegistros, r);
   for (const r of nuevos) await actualizarEstadoRecurso(modulo, r.recursoId);
   avisarCambio();
@@ -274,8 +278,8 @@ export async function registrarConLaptop(modulo: Modulo, datos: NuevoRegistro, l
     repositorio.listarRecursos(LAPTOPS.tablaRecursos),
     repositorio.listarRegistros(LAPTOPS.tablaRegistros),
   ]);
-  const reserva = prepararRegistro(modulo, datos, recursos, existentes);
-  const prestamo = prepararRegistro(LAPTOPS, { ...datos, recursoId: laptopId, usuarios: '', horaFin: '', fechaRegistro: '' }, laptops, prestamos);
+  const reserva = await prepararRegistro(modulo, datos, recursos, existentes);
+  const prestamo = await prepararRegistro(LAPTOPS, { ...datos, recursoId: laptopId, usuarios: '', horaFin: '', fechaRegistro: '' }, laptops, prestamos);
   await repositorio.guardarRegistro(modulo.tablaRegistros, reserva.registro);
   await repositorio.guardarRegistro(LAPTOPS.tablaRegistros, prestamo.registro);
   if (!reserva.programado) await repositorio.guardarRecurso(modulo.tablaRecursos, { ...reserva.recurso, estado: 'ocupado' });
@@ -296,11 +300,11 @@ export async function registrarSerie(modulo: Modulo, datos: NuevoRegistro, recur
     repositorio.listarRegistros(modulo.tablaRegistros),
   ]);
   const serieId = generarId();
-  const nuevas: ReturnType<typeof prepararRegistro>[] = [];
+  const nuevas: Awaited<ReturnType<typeof prepararRegistro>>[] = [];
   const choques: string[] = [];
   for (const fecha of fechas) {
     try {
-      nuevas.push(prepararRegistro(modulo, { ...datos, fecha }, recursos, [...existentes, ...nuevas.map((n) => n.registro)], serieId));
+      nuevas.push(await prepararRegistro(modulo, { ...datos, fecha }, recursos, [...existentes, ...nuevas.map((n) => n.registro)], serieId));
     } catch (e) {
       if (!(e instanceof ChoqueDeHorario)) throw e; // Datos incompletos: el mismo error para todas
       choques.push(formatearDia(fecha));
@@ -332,7 +336,7 @@ export async function modificarRegistro(modulo: Modulo, anterior: Registro, dato
     repositorio.listarRecursos(modulo.tablaRecursos),
     repositorio.listarRegistros(modulo.tablaRegistros),
   ]);
-  const { registro } = prepararRegistro(modulo, datos, recursos, existentes, undefined, anterior);
+  const { registro } = await prepararRegistro(modulo, datos, recursos, existentes, undefined, anterior);
   await repositorio.guardarRegistro(modulo.tablaRegistros, registro);
   await actualizarEstadoRecurso(modulo, anterior.recursoId);
   if (registro.recursoId !== anterior.recursoId) await actualizarEstadoRecurso(modulo, registro.recursoId);
@@ -356,6 +360,9 @@ export async function editarHorario(modulo: Modulo, registro: Registro, horario:
   const inicio = diaALas(fecha, horaInicio);
   const fin = diaALas(fecha, horaFin);
   if (fin <= inicio) throw new Error('La hora de fin debe ser posterior a la hora de inicio.');
+  if (modulo.id === 'cubiculos') {
+    revisarMantenimientoCubiculo(await repositorio.listarMantenimientosCubiculos(), registro.recursoId, inicio, fin);
+  }
   revisarChoque(modulo, await repositorio.listarRegistros(modulo.tablaRegistros), registro.recursoId, inicio, fin, registro.id);
 
   await repositorio.guardarRegistro(modulo.tablaRegistros, { ...registro, inicio: inicio.toISOString(), fin: fin.toISOString(), usuarios });
